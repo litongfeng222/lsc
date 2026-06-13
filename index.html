@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#6c5ce7">
+  <title>LSCgroup · 学习小组</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+</head>
+<body>
+
+  <!-- ===== 头部 ===== -->
+  <header>
+    <h1>📚 LSC<span>group</span></h1>
+    <p>Learning · Share · Communicate</p>
+  </header>
+
+  <!-- ===== 统计栏 ===== -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num" id="fileCount">0</div>
+      <div class="stat-label">资料数</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="subjectCount">0</div>
+      <div class="stat-label">科目</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="memberCount">~15</div>
+      <div class="stat-label">小组成员</div>
+    </div>
+  </div>
+
+  <!-- ===== 科目导航 ===== -->
+  <div class="subjects-nav" id="subjectsNav"></div>
+
+  <!-- ===== 文件列表 ===== -->
+  <div class="file-list" id="fileList">
+    <div class="empty-state">
+      <div class="emoji">⏳</div>
+      <h3>加载中...</h3>
+      <p>资料马上就来～</p>
+    </div>
+  </div>
+
+  <!-- ===== 🔐 管理员登录入口 ===== -->
+  <div style="text-align:center;padding:4px 0">
+    <button onclick="showLogin()" id="adminEntryBtn" style="background:none;border:none;color:#b0b0b0;font-size:12px;cursor:pointer">⚙️ 管理员入口</button>
+  </div>
+
+  <!-- ===== 🔐 登录弹窗 ===== -->
+  <div id="loginBox" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 style="margin-bottom:12px">🔐 管理员登录</h3>
+      <input id="pwdInput" type="password" placeholder="请输入管理员密码" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:8px" />
+      <p id="loginError" style="color:#e74c3c;font-size:13px;margin-bottom:8px"></p>
+      <button onclick="doLogin()" style="width:100%;padding:10px;background:#6c5ce7;color:white;border:none;border-radius:10px;font-size:15px;cursor:pointer;font-weight:600">登录</button>
+      <button onclick="hideLogin()" style="width:100%;padding:8px;background:none;border:none;color:#999;font-size:13px;cursor:pointer;margin-top:4px">取消</button>
+    </div>
+  </div>
+
+  <!-- ===== 🛡️ 管理面板 ===== -->
+  <div id="adminPanel" class="hidden">
+    <div style="background:#f0edff;padding:14px 16px;margin:12px 16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:600;color:#6c5ce7">🛡️ 管理员模式</span>
+      <button onclick="doLogout()" style="padding:6px 14px;background:#6c5ce7;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px">退出</button>
+    </div>
+
+    <!-- 上传资料 -->
+    <div style="margin:12px 16px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(108,92,231,0.08)">
+      <h4 style="margin-bottom:12px;font-size:16px">📤 上传资料</h4>
+      <form id="uploadForm">
+        <input id="fileInput" type="file" style="margin-bottom:8px;width:100%" />
+        <input id="uploadName" type="text" placeholder="资料名称（可选）" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:8px" />
+        <select id="uploadSubject" class="subject-select" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:8px"></select>
+        <button id="uploadBtn" type="submit" style="width:100%;padding:10px;background:#00b894;color:white;border:none;border-radius:10px;font-size:15px;cursor:pointer;font-weight:600">📤 上传</button>
+        <p id="uploadStatus" style="font-size:13px;margin-top:6px;color:#636e72"></p>
+      </form>
+    </div>
+
+    <!-- 管理已有资料 -->
+    <div style="margin:12px 16px 24px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(108,92,231,0.08)">
+      <h4 style="margin-bottom:12px;font-size:16px">✏️ 管理资料</h4>
+      <div id="adminFileList"></div>
+    </div>
+  </div>
+
+  <!-- ===== 🔍 预览弹窗 ===== -->
+  <div id="previewModal" class="modal-overlay hidden" onclick="if(event.target===this)closePreview()">
+    <div style="background:white;border-radius:20px;width:92%;max-width:800px;height:85vh;max-height:700px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #eee;flex-shrink:0">
+        <span id="previewTitle" style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px"></span>
+        <button onclick="closePreview()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#999;flex-shrink:0">✕</button>
+      </div>
+      <div id="previewFrame" style="flex:1;overflow:auto;background:#f5f5f5"></div>
+    </div>
+  </div>
+
+  <!-- ===== 🧩 未来模块预留区 ===== -->
+  <div id="moduleSlot" style="display:none;"></div>
+
+  <!-- ===== 底部 ===== -->
+  <footer>
+    Made with ❤️ by <a href="#">LSCgroup</a> · 中考冲刺加油！🎯
+  </footer>
+
+  <!-- ===== 脚本 ===== -->
+  <script src="./js/data.js"></script>
+  <script src="./js/app.js"></script>
+  <script src="./js/admin.js"></script>
+</body>
+</html>

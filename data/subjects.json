@@ -1,0 +1,11 @@
+{
+  "subjects": [
+    { "id": "chinese", "name": "语文", "emoji": "📖", "color": "#e74c3c" },
+    { "id": "math", "name": "数学", "emoji": "📐", "color": "#3498db" },
+    { "id": "english", "name": "英语", "emoji": "🌍", "color": "#2ecc71" },
+    { "id": "physics", "name": "物理", "emoji": "⚡", "color": "#9b59b6" },
+    { "id": "politics", "name": "道法", "emoji": "📜", "color": "#f39c12" },
+    { "id": "method", "name": "学习方法", "emoji": "💡", "color": "#1abc9c" },
+    { "id": "other", "name": "其他", "emoji": "📦", "color": "#95a5a6" }
+  ]
+}
