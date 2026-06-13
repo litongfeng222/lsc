@@ -281,6 +281,13 @@ function setupUpload() {
 
 // ===== 🔍 预览功能 =====
 function previewFile(path, name) {
+  // PDF：浏览器自带预览，直接新标签打开
+  const cleanPath = path.split('?')[0];
+  if (cleanPath.endsWith('.pdf')) {
+    window.open(path, '_blank');
+    return;
+  }
+  // docx及其他：弹窗提示下载
   const modal = document.getElementById('previewModal');
   const frame = document.getElementById('previewFrame');
   const title = document.getElementById('previewTitle');
@@ -289,22 +296,12 @@ function previewFile(path, name) {
   title.textContent = name;
   modal.classList.remove('hidden');
 
-  // 去query参数取真实后缀
-  const cleanPath = path.split('?')[0];
-  const isPDF = cleanPath.endsWith('.pdf');
-  const isDocx = cleanPath.endsWith('.docx') || cleanPath.endsWith('.doc');
-
-  // 所有文档用 Google Docs Viewer（解决云存储iframe限制）
-  frame.innerHTML = `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(path)}&embedded=true" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
-  // 如果Google Viewer加载失败，兜底显示下载链接
-  setTimeout(() => {
-    const f = frame.querySelector('iframe');
-    if (f) {
-      try {
-        // 检查iframe是否加载成功（Google Viewer本身会渲染，不成功会自动显示提示）
-      } catch(e) {}
-    }
-  }, 5000);
+  frame.innerHTML = `<div style="text-align:center;padding:60px 20px">
+    <div style="font-size:56px;margin-bottom:16px">📄</div>
+    <h3 style="margin-bottom:8px;color:#333">${name}</h3>
+    <p style="color:#999;margin-bottom:20px">此格式暂不支持在线预览，请下载后用对应软件打开</p>
+    <a href="${path}" target="_blank" style="display:inline-block;padding:12px 28px;background:#6c5ce7;color:white;border-radius:12px;text-decoration:none;font-size:15px;font-weight:600">⬇ 下载文件</a>
+  </div>`;
 }
     frame.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#999">
       <div style="font-size:48px;margin-bottom:16px">📄</div>
