@@ -7,13 +7,20 @@
   <title>📤 上传资料 · LSCgroup</title>
   <link rel="stylesheet" href="./css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📤</text></svg>">
+  <style>
+    .file-size-limit { font-size:12px; color:#e74c3c; margin-top:4px; }
+    .step-indicator { display:flex; gap:8px; margin-bottom:16px; font-size:12px; }
+    .step { padding:4px 12px; border-radius:20px; background:#f0f0f5; color:#999; }
+    .step.active { background:#6c5ce7; color:white; }
+    .step.done { background:#00b894; color:white; }
+  </style>
 </head>
 <body>
 
   <!-- ===== 头部 ===== -->
   <header style="padding-bottom:20px">
     <h1 style="font-size:22px">📤 分享资料</h1>
-    <p>上传学习资料，与同学们一起进步！</p>
+    <p>上传学习资料，自动永久存储，与同学们一起进步！</p>
   </header>
 
   <!-- ===== 上传表单 ===== -->
@@ -28,16 +35,23 @@
       <select id="shareSubject" class="subject-select" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:14px"></select>
 
       <!-- 文件 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">📎 选择文件</label>
-      <input id="shareFileInput" type="file" style="width:100%;margin-bottom:14px;font-size:14px" required />
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">📎 选择文件（最大25MB）</label>
+      <input id="shareFileInput" type="file" style="width:100%;margin-bottom:4px;font-size:14px" required />
+      <div class="file-size-limit">⚠️ 超过25MB的文件暂不支持，请联系管理员</div>
 
       <!-- 可选：资料名称 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">✏️ 资料名称（可选）</label>
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;margin-top:10px">✏️ 资料名称（可选）</label>
       <input id="shareFileName" type="text" placeholder="留空则使用文件名" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:14px" />
 
       <!-- 提交 -->
       <button id="shareUploadBtn" type="submit" style="width:100%;padding:12px;background:#6c5ce7;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-weight:600">📤 分享资料</button>
       <p id="shareUploadStatus" style="font-size:14px;margin-top:8px;color:#636e72;text-align:center"></p>
+      <div id="uploadProgress" style="display:none;margin-top:8px">
+        <div style="height:6px;background:#e8e8f0;border-radius:3px;overflow:hidden">
+          <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c5ce7,#00b894);border-radius:3px;transition:width 0.3s"></div>
+        </div>
+        <p id="progressText" style="font-size:12px;color:#999;margin-top:4px;text-align:center"></p>
+      </div>
     </form>
   </div>
 
@@ -45,9 +59,10 @@
   <div style="margin:0 16px 24px;background:#f0edff;border-radius:16px;padding:16px">
     <h4 style="margin-bottom:8px;font-size:14px">💡 上传说明</h4>
     <ul style="font-size:13px;color:#555;line-height:1.8;padding-left:16px;margin:0">
-      <li>上传后文件会列入资料列表，所有同学都能看到</li>
+      <li>上传后文件自动存入<span style="font-weight:600;color:#6c5ce7">永久存储</span>，所有同学都能看到</li>
       <li>资料旁边会显示你的名字 👤</li>
-      <li>文件存储在中考后统一部署的云存储上</li>
+      <li>文件存储于 GitHub 仓库，<span style="font-weight:600;color:#00b894">永久有效，永不丢失</span></li>
+      <li>支持 PDF、Word 文档等常见格式，点👁可直接预览</li>
       <li>如有问题，请联系管理员 李同丰</li>
     </ul>
   </div>
@@ -63,6 +78,11 @@
   </footer>
 
   <script>
+    // ===== 配置 =====
+    const REPO_OWNER = 'litongfeng222';
+    const REPO_NAME = 'lsc';
+    const GH_API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
+
     // ===== 加载科目 =====
     let subjects = [];
     async function loadSubjects() {
@@ -77,7 +97,64 @@
       }
     }
 
-    // ===== 上传逻辑 =====
+    // ===== 获取Token（缓存到sessionStorage，安全） =====
+    function getToken() {
+      // 先从管理员那边继承
+      let t = localStorage.getItem('lsc_gh_token');
+      if (!t) {
+        t = sessionStorage.getItem('upload_token');
+      }
+      if (!t) {
+        t = prompt('🔑 请输入访问密钥（找管理员李同丰获取）：');
+        if (t) {
+          sessionStorage.setItem('upload_token', t);
+        }
+      }
+      return t;
+    }
+
+    // ===== GitHub API 工具 =====
+    async function ghFetch(path, options = {}) {
+      const token = getToken();
+      if (!token) throw new Error('需要访问密钥');
+      const res = await fetch(`${GH_API}${path}`, {
+        ...options,
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          ...(options.headers || {})
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || '请求失败');
+      return data;
+    }
+
+    function showProgress(percent, text) {
+      const box = document.getElementById('uploadProgress');
+      const bar = document.getElementById('progressBar');
+      const txt = document.getElementById('progressText');
+      box.style.display = 'block';
+      bar.style.width = percent + '%';
+      txt.textContent = text;
+    }
+
+    // ===== Base64工具（兼容大文件） =====
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          // 去掉 data:...;base64, 前缀
+          const result = reader.result;
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // ===== 上传逻辑：自动存储到GitHub永久版 =====
     document.getElementById('shareUploadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -87,101 +164,108 @@
       if (!uploader) return alert('⚠️ 请填写你的名字');
       if (!file) return alert('⚠️ 请选择要上传的文件');
 
-      const name = document.getElementById('shareFileName').value.trim() || file.name;
+      // 检查文件大小（GitHub API限制25MB）
+      if (file.size > 25 * 1024 * 1024) {
+        return alert('⚠️ 文件超过25MB，请联系管理员处理');
+      }
+
+      const displayName = document.getElementById('shareFileName').value.trim() || file.name;
       const subject = document.getElementById('shareSubject').value;
       const status = document.getElementById('shareUploadStatus');
       const btn = document.getElementById('shareUploadBtn');
+      const sub = subjects.find(s => s.id === subject) || { name: '资料' };
 
-      status.textContent = '⏳ 正在提交...';
+      // 生成存储文件名：科目_上传者_文件名
+      const safeName = file.name.replace(/[<>:"/\\|?*]/g, '_'); // 去掉非法字符
+      const storageName = `${sub.name}_${uploader}_${safeName}`;
+      const storagePath = `assets/files/${encodeURIComponent(storageName)}`;
+      const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${storagePath}`;
+
+      status.textContent = '⏳ 准备上传...';
       btn.disabled = true;
       btn.textContent = '⏳ 上传中...';
+      showProgress(5, '正在读取文件...');
 
       try {
-        // 读取文件为dataURL
-        const reader = new FileReader();
-        reader.onload = async function(evt) {
-          const fileData = evt.target.result;
+        // 1. 将文件转为Base64
+        const base64Content = await blobToBase64(file);
+        showProgress(20, '正在上传文件本体到永久存储...');
 
-          try {
-            // 尝试用GitHub API保存
-            const token = localStorage.getItem('lsc_gh_token');
-            if (token) {
-              // 先从GitHub获取最新文件列表
-              const ghRes = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-              });
-              const ghData = await ghRes.json();
-              let files = [];
-              let sha = null;
+        // 2. 上传文件到GitHub assets/files/
+        // 先查一下这个文件是否已存在
+        let fileSha = null;
+        try {
+          const existing = await ghFetch(`/contents/${storagePath}`);
+          fileSha = existing.sha;
+        } catch(e) {
+          // 文件不存在，正常
+        }
 
-              if (ghData.content) {
-                const decoded = decodeURIComponent(escape(atob(ghData.content)));
-                files = JSON.parse(decoded).files || [];
-                sha = ghData.sha;
-              }
+        showProgress(40, '正在存储到GitHub...');
+        const uploadResult = await ghFetch(`/contents/${storagePath}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `📤 ${uploader} 上传了「${displayName}」`,
+            content: base64Content,
+            sha: fileSha || undefined
+          })
+        });
 
-              // 添加新文件
-              const newFile = {
-                name: name,
-                subject: subject,
-                tag: '新上传',
-                date: new Date().toISOString().split('T')[0],
-                size: file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : Math.ceil(file.size/1024)+' KB',
-                path: '#pending',
-                uploader: uploader
-              };
+        showProgress(70, '正在更新资料列表...');
 
-              files.unshift(newFile); // 最新放最前面
+        // 3. 获取最新的files.json
+        const filesData = await ghFetch('/contents/data/files.json');
+        const decoded = decodeURIComponent(escape(atob(filesData.content)));
+        const parsed = JSON.parse(decoded);
+        const files = parsed.files || [];
+        const filesSha = filesData.sha;
 
-              // 写回GitHub
-              const putRes = await fetch(`https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json`, {
-                method: 'PUT',
-                headers: {
-                  'Authorization': `token ${token}`,
-                  'Accept': 'application/vnd.github.v3+json',
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  message: `📤 ${uploader} 分享了「${name}」`,
-                  content: btoa(unescape(encodeURIComponent(JSON.stringify({files}, null, 2)))),
-                  sha: sha
-                })
-              });
-
-              const putResult = await putRes.json();
-              if (putRes.ok) {
-                status.innerHTML = '✅ 分享成功！<br><small>资料已加入列表，文件本体请联系管理员上传云存储</small>';
-                // 重置表单
-                document.getElementById('shareUploadForm').reset();
-              } else {
-                throw new Error(putResult.message || '保存失败');
-              }
-            } else {
-              // 没有token：存本地
-              const pending = JSON.parse(localStorage.getItem('lsc_pending_uploads') || '[]');
-              pending.push({
-                name, subject, uploader,
-                date: new Date().toISOString().split('T')[0],
-                size: file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : Math.ceil(file.size/1024)+' KB',
-                data: fileData
-              });
-              localStorage.setItem('lsc_pending_uploads', JSON.stringify(pending));
-              status.innerHTML = '✅ 已保存！管理员审核后会添加到列表～';
-              document.getElementById('shareUploadForm').reset();
-            }
-          } catch(err) {
-            status.textContent = '❌ 上传失败：' + err.message;
-          }
-
-          btn.disabled = false;
-          btn.textContent = '📤 分享资料';
+        // 4. 添加新文件记录
+        const newFile = {
+          name: displayName,
+          subject: subject,
+          tag: sub.name,
+          date: new Date().toISOString().split('T')[0],
+          size: file.size > 1024*1024
+            ? (file.size/1024/1024).toFixed(1) + ' MB'
+            : Math.ceil(file.size/1024) + ' KB',
+          path: rawUrl,
+          uploader: uploader
         };
-        reader.readAsDataURL(file);
+
+        files.unshift(newFile);
+
+        showProgress(85, '更新资料列表...');
+
+        // 5. 写回files.json
+        await ghFetch('/contents/data/files.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `📤 ${uploader} 分享了「${displayName}」`,
+            content: btoa(unescape(encodeURIComponent(JSON.stringify({files}, null, 2)))),
+            sha: filesSha
+          })
+        });
+
+        showProgress(100, '✅ 全部完成！');
+        status.innerHTML = `✅ 分享成功！<br><small>👤 ${uploader} · 📂 ${sub.emoji} ${sub.name}<br>📁 ${displayName}<br>🔗 永久有效，所有同学都能查看和下载</small>`;
+
+        // 重置表单
+        document.getElementById('shareUploadForm').reset();
+        setTimeout(() => {
+          document.getElementById('uploadProgress').style.display = 'none';
+          document.getElementById('progressBar').style.width = '0%';
+        }, 3000);
+
       } catch(err) {
         status.textContent = '❌ 上传失败：' + err.message;
-        btn.disabled = false;
-        btn.textContent = '📤 分享资料';
+        showProgress(0, '❌ 失败');
       }
+
+      btn.disabled = false;
+      btn.textContent = '📤 分享资料';
     });
 
     loadSubjects();
