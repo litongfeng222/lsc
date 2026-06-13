@@ -68,7 +68,10 @@
   <!-- ===== 🛡️ 管理面板 ===== -->
   <div id="adminPanel" class="hidden">
     <div style="background:#f0edff;padding:14px 16px;margin:12px 16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-weight:600;color:#6c5ce7">🛡️ 管理员模式</span>
+      <div>
+        <span style="font-weight:600;color:#6c5ce7">🛡️ 管理员模式</span>
+        <span id="adminSyncStatus" style="font-size:12px;color:#00b894;margin-left:8px"></span>
+      </div>
       <button onclick="doLogout()" style="padding:6px 14px;background:#6c5ce7;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px">退出</button>
     </div>
 

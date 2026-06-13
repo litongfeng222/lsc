@@ -113,8 +113,38 @@ async function initAdmin() {
     } catch(e) {}
   }
   loadSubjectOptions();
-  await renderAdminFiles();
+  
+  // 立即用本地数据渲染（秒开！）
+  _adminFiles = window.allFiles || [];
+  renderAdminFilesUI();
+  
+  // 后台悄悄从GitHub同步最新数据
+  setTimeout(syncFromGitHub, 100);
+  
   setupUpload();
+}
+
+// 后台同步GitHub数据（不阻塞界面）
+async function syncFromGitHub() {
+  try {
+    const fresh = await loadGhFiles();
+    if (fresh.length > 0) {
+      _adminFiles = fresh;
+      renderAdminFilesUI();
+      // 同步到主站
+      window.allFiles = [...fresh];
+      if (window.DataLoader) {
+        window.DataLoader.clearCache();
+        window.DataLoader._files = [...fresh];
+      }
+      if (window.renderFiles) window.renderFiles();
+      if (window.updateStats) window.updateStats();
+      document.getElementById('adminSyncStatus').textContent = '✅ 已同步最新';
+      setTimeout(() => { document.getElementById('adminSyncStatus').textContent = ''; }, 3000);
+    }
+  } catch(e) {
+    // 静默失败，本地数据已经显示
+  }
 }
 
 function loadSubjectOptions() {
@@ -125,19 +155,11 @@ function loadSubjectOptions() {
 // ===== 渲染文件管理列表 =====
 let _adminFiles = [];
 
-async function renderAdminFiles() {
+function renderAdminFilesUI() {
   const list = document.getElementById('adminFileList');
   if (!list) return;
 
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:#999">⏳ 加载中...</div>';
-
-  try {
-    _adminFiles = await loadGhFiles();
-  } catch(e) {
-    _adminFiles = window.allFiles || [];
-  }
-
-  if (_adminFiles.length === 0) {
+  if (!_adminFiles || _adminFiles.length === 0) {
     list.innerHTML = '<div class="empty-state"><p>📭 还没有资料</p></div>';
     return;
   }
@@ -218,7 +240,7 @@ async function adminDelete(idx) {
     }
     if (window.renderFiles) window.renderFiles();
     if (window.updateStats) window.updateStats();
-    await renderAdminFiles();
+    renderAdminFilesUI();
   } catch(e) {
     alert('❌ 删除失败：' + e.message);
   }
@@ -270,7 +292,7 @@ function setupUpload() {
 
         fileInput.value = '';
         document.getElementById('uploadName').value = '';
-        renderAdminFiles();
+        renderAdminFilesUI();
       };
       reader.readAsDataURL(file);
     } catch(err) {
