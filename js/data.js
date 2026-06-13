@@ -1,8 +1,7 @@
 /* ===== 🧩 数据加载层 ===== */
-// 后续升级为API接口时，只需改这里，其他代码不动
+// 首次从本地加载，之后从 GitHub API 同步（确保管理员修改立即生效）
 
 const DataLoader = {
-  // 缓存
   _subjects: null,
   _files: null,
 
@@ -15,8 +14,28 @@ const DataLoader = {
     return this._subjects;
   },
 
-  // 获取文件列表
+  // 获取文件列表（优先从GitHub加载）
   async getFiles() {
+    // 尝试从 GitHub API 获取最新数据
+    try {
+      const token = localStorage.getItem('lsc_gh_token');
+      if (token) {
+        const res = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
+          headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        const data = await res.json();
+        if (data.content) {
+          const decoded = decodeURIComponent(escape(atob(data.content)));
+          const parsed = JSON.parse(decoded);
+          this._files = parsed.files;
+          return this._files;
+        }
+      }
+    } catch(e) {
+      // fallback: 从本地加载
+    }
+
+    // 没有token或失败时从本地加载
     if (this._files) return this._files;
     const res = await fetch('./data/files.json');
     const data = await res.json();
@@ -24,9 +43,8 @@ const DataLoader = {
     return this._files;
   },
 
-  // 🚀 未来扩展：从后端API获取
-  // async getFiles() {
-  //   const res = await fetch('/api/files');
-  //   return res.json();
-  // }
+  // 清除缓存（管理员修改后调用）
+  clearCache() {
+    this._files = null;
+  }
 };

@@ -184,11 +184,16 @@ async function adminSave(idx) {
 
   try {
     await saveGhFiles(_adminFiles);
-    // 刷新主页面数据
-    if (window.allFiles) {
-      window.allFiles.length = 0;
-      window.allFiles.push(..._adminFiles);
+    // 刷新所有缓存，让主站重新加载
+    window.allFiles = [..._adminFiles];
+    if (window.DataLoader) {
+      window.DataLoader.clearCache();
+      window.DataLoader._files = [..._adminFiles];
     }
+    // 重新渲染主站
+    if (window.renderFiles) window.renderFiles();
+    if (window.updateStats) window.updateStats();
+
     if (btn) btn.textContent = '✅';
     setTimeout(() => { if (btn) btn.textContent = origText; }, 1500);
   } catch(e) {
@@ -205,10 +210,14 @@ async function adminDelete(idx) {
 
   try {
     await saveGhFiles(_adminFiles);
-    if (window.allFiles) {
-      window.allFiles.length = 0;
-      window.allFiles.push(..._adminFiles);
+    // 刷新所有缓存
+    window.allFiles = [..._adminFiles];
+    if (window.DataLoader) {
+      window.DataLoader.clearCache();
+      window.DataLoader._files = [..._adminFiles];
     }
+    if (window.renderFiles) window.renderFiles();
+    if (window.updateStats) window.updateStats();
     await renderAdminFiles();
   } catch(e) {
     alert('❌ 删除失败：' + e.message);
@@ -280,15 +289,20 @@ function previewFile(path, name) {
   title.textContent = name;
   modal.classList.remove('hidden');
 
+  // 去query参数取真实后缀
+  const cleanPath = path.split('?')[0];
+  const isPDF = cleanPath.endsWith('.pdf');
+  const isDocx = cleanPath.endsWith('.docx') || cleanPath.endsWith('.doc');
+
   // PDF直接预览
-  if (path.endsWith('.pdf')) {
+  if (isPDF) {
     frame.innerHTML = `<iframe src="${path}" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
   }
-  // docx/dox用Google Docs Viewer
-  else if (path.endsWith('.docx') || path.endsWith('.doc')) {
+  // docx用Google Docs Viewer
+  else if (isDocx) {
     frame.innerHTML = `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(path)}&embedded=true" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
   }
-  // 其他格式直接链接
+  // 其他格式
   else {
     frame.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#999">
       <div style="font-size:48px;margin-bottom:16px">📄</div>
