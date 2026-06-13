@@ -99,6 +99,7 @@ function renderFiles() {
             <span>${file.date}</span>
             <span>${file.size}</span>
             <span class="file-badge" style="background: ${color}">${file.tag || subject?.name || '资料'}</span>
+            ${file.uploader ? `<span style="font-size:11px;color:#999">👤 ${file.uploader}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">

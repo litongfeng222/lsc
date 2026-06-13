@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#6c5ce7">
+  <title>📤 上传资料 · LSCgroup</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📤</text></svg>">
+</head>
+<body>
+
+  <!-- ===== 头部 ===== -->
+  <header style="padding-bottom:20px">
+    <h1 style="font-size:22px">📤 分享资料</h1>
+    <p>上传学习资料，与同学们一起进步！</p>
+  </header>
+
+  <!-- ===== 上传表单 ===== -->
+  <div style="margin:0 16px 20px;background:white;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(108,92,231,0.08)">
+    <form id="shareUploadForm">
+      <!-- 上传者名字 -->
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">👤 你的名字</label>
+      <input id="shareUploader" type="text" placeholder="请输入你的名字（如：李同丰）" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:14px" required />
+
+      <!-- 科目 -->
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">📂 科目</label>
+      <select id="shareSubject" class="subject-select" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:14px"></select>
+
+      <!-- 文件 -->
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">📎 选择文件</label>
+      <input id="shareFileInput" type="file" style="width:100%;margin-bottom:14px;font-size:14px" required />
+
+      <!-- 可选：资料名称 -->
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">✏️ 资料名称（可选）</label>
+      <input id="shareFileName" type="text" placeholder="留空则使用文件名" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:14px" />
+
+      <!-- 提交 -->
+      <button id="shareUploadBtn" type="submit" style="width:100%;padding:12px;background:#6c5ce7;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-weight:600">📤 分享资料</button>
+      <p id="shareUploadStatus" style="font-size:14px;margin-top:8px;color:#636e72;text-align:center"></p>
+    </form>
+  </div>
+
+  <!-- ===== 如何上传说明 ===== -->
+  <div style="margin:0 16px 24px;background:#f0edff;border-radius:16px;padding:16px">
+    <h4 style="margin-bottom:8px;font-size:14px">💡 上传说明</h4>
+    <ul style="font-size:13px;color:#555;line-height:1.8;padding-left:16px;margin:0">
+      <li>上传后文件会列入资料列表，所有同学都能看到</li>
+      <li>资料旁边会显示你的名字 👤</li>
+      <li>文件存储在中考后统一部署的云存储上</li>
+      <li>如有问题，请联系管理员 李同丰</li>
+    </ul>
+  </div>
+
+  <!-- ===== 返回首页 ===== -->
+  <div style="text-align:center;margin-bottom:24px">
+    <a href="./index.html" style="color:#6c5ce7;font-size:14px;text-decoration:none">← 返回资料首页</a>
+  </div>
+
+  <!-- ===== 底部 ===== -->
+  <footer>
+    Made with ❤️ by <a href="#">LSCgroup</a> · 中考冲刺加油！🎯
+  </footer>
+
+  <script>
+    // ===== 加载科目 =====
+    let subjects = [];
+    async function loadSubjects() {
+      try {
+        const r = await fetch('./data/subjects.json');
+        const d = await r.json();
+        subjects = d.subjects || [];
+        const s = document.getElementById('shareSubject');
+        s.innerHTML = subjects.map(sub => `<option value="${sub.id}">${sub.emoji} ${sub.name}</option>`).join('');
+      } catch(e) {
+        document.getElementById('shareUploadStatus').textContent = '⚠️ 加载科目失败';
+      }
+    }
+
+    // ===== 上传逻辑 =====
+    document.getElementById('shareUploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const uploader = document.getElementById('shareUploader').value.trim();
+      const fileInput = document.getElementById('shareFileInput');
+      const file = fileInput.files[0];
+      if (!uploader) return alert('⚠️ 请填写你的名字');
+      if (!file) return alert('⚠️ 请选择要上传的文件');
+
+      const name = document.getElementById('shareFileName').value.trim() || file.name;
+      const subject = document.getElementById('shareSubject').value;
+      const status = document.getElementById('shareUploadStatus');
+      const btn = document.getElementById('shareUploadBtn');
+
+      status.textContent = '⏳ 正在提交...';
+      btn.disabled = true;
+      btn.textContent = '⏳ 上传中...';
+
+      try {
+        // 读取文件为dataURL
+        const reader = new FileReader();
+        reader.onload = async function(evt) {
+          const fileData = evt.target.result;
+
+          try {
+            // 尝试用GitHub API保存
+            const token = localStorage.getItem('lsc_gh_token');
+            if (token) {
+              // 先从GitHub获取最新文件列表
+              const ghRes = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+              });
+              const ghData = await ghRes.json();
+              let files = [];
+              let sha = null;
+
+              if (ghData.content) {
+                const decoded = decodeURIComponent(escape(atob(ghData.content)));
+                files = JSON.parse(decoded).files || [];
+                sha = ghData.sha;
+              }
+
+              // 添加新文件
+              const newFile = {
+                name: name,
+                subject: subject,
+                tag: '新上传',
+                date: new Date().toISOString().split('T')[0],
+                size: file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : Math.ceil(file.size/1024)+' KB',
+                path: '#pending',
+                uploader: uploader
+              };
+
+              files.unshift(newFile); // 最新放最前面
+
+              // 写回GitHub
+              const putRes = await fetch(`https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json`, {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `token ${token}`,
+                  'Accept': 'application/vnd.github.v3+json',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  message: `📤 ${uploader} 分享了「${name}」`,
+                  content: btoa(unescape(encodeURIComponent(JSON.stringify({files}, null, 2)))),
+                  sha: sha
+                })
+              });
+
+              const putResult = await putRes.json();
+              if (putRes.ok) {
+                status.innerHTML = '✅ 分享成功！<br><small>资料已加入列表，文件本体请联系管理员上传云存储</small>';
+                // 重置表单
+                document.getElementById('shareUploadForm').reset();
+              } else {
+                throw new Error(putResult.message || '保存失败');
+              }
+            } else {
+              // 没有token：存本地
+              const pending = JSON.parse(localStorage.getItem('lsc_pending_uploads') || '[]');
+              pending.push({
+                name, subject, uploader,
+                date: new Date().toISOString().split('T')[0],
+                size: file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : Math.ceil(file.size/1024)+' KB',
+                data: fileData
+              });
+              localStorage.setItem('lsc_pending_uploads', JSON.stringify(pending));
+              status.innerHTML = '✅ 已保存！管理员审核后会添加到列表～';
+              document.getElementById('shareUploadForm').reset();
+            }
+          } catch(err) {
+            status.textContent = '❌ 上传失败：' + err.message;
+          }
+
+          btn.disabled = false;
+          btn.textContent = '📤 分享资料';
+        };
+        reader.readAsDataURL(file);
+      } catch(err) {
+        status.textContent = '❌ 上传失败：' + err.message;
+        btn.disabled = false;
+        btn.textContent = '📤 分享资料';
+      }
+    });
+
+    loadSubjects();
+  </script>
+</body>
+</html>

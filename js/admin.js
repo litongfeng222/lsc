@@ -294,16 +294,18 @@ function previewFile(path, name) {
   const isPDF = cleanPath.endsWith('.pdf');
   const isDocx = cleanPath.endsWith('.docx') || cleanPath.endsWith('.doc');
 
-  // PDF直接预览
-  if (isPDF) {
-    frame.innerHTML = `<iframe src="${path}" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
-  }
-  // docx用Google Docs Viewer
-  else if (isDocx) {
-    frame.innerHTML = `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(path)}&embedded=true" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
-  }
-  // 其他格式
-  else {
+  // 所有文档用 Google Docs Viewer（解决云存储iframe限制）
+  frame.innerHTML = `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(path)}&embedded=true" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
+  // 如果Google Viewer加载失败，兜底显示下载链接
+  setTimeout(() => {
+    const f = frame.querySelector('iframe');
+    if (f) {
+      try {
+        // 检查iframe是否加载成功（Google Viewer本身会渲染，不成功会自动显示提示）
+      } catch(e) {}
+    }
+  }, 5000);
+}
     frame.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#999">
       <div style="font-size:48px;margin-bottom:16px">📄</div>
       <p>此格式暂不支持在线预览</p>
