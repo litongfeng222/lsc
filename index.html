@@ -117,5 +117,40 @@
   <script src="./js/data.js"></script>
   <script src="./js/app.js"></script>
   <script src="./js/admin.js"></script>
+  <script>
+  // ===== 管理员登录核心（内嵌，不依赖admin.js） =====
+  function showLogin() {
+    var box = document.getElementById('loginBox');
+    if (box) box.classList.remove('hidden');
+  }
+  function hideLogin() {
+    var box = document.getElementById('loginBox');
+    if (box) box.classList.add('hidden');
+  }
+  function doLogin() {
+    var pwd = document.getElementById('pwdInput');
+    if (pwd && pwd.value === 'LSC2026') {
+      localStorage.setItem('lsc_admin', 'yes');
+      document.getElementById('loginBox').classList.add('hidden');
+      document.getElementById('adminPanel').classList.remove('hidden');
+      // 尝试初始化admin.js（如果已加载）
+      if (typeof initAdmin === 'function') initAdmin();
+    } else {
+      var err = document.getElementById('loginError');
+      if (err) err.textContent = '❌ 密码错误';
+    }
+  }
+  function doLogout() {
+    localStorage.removeItem('lsc_admin');
+    location.reload();
+  }
+  // 页面加载后检查是否已登录
+  document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('lsc_admin') === 'yes') {
+      document.getElementById('loginBox').classList.add('hidden');
+      document.getElementById('adminPanel').classList.remove('hidden');
+    }
+  });
+  </script>
 </body>
 </html>
