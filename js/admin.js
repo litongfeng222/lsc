@@ -3,6 +3,8 @@ const ADMIN_PASSWORD = 'LSC2026';
 const REPO_OWNER = 'litongfeng222';
 const REPO_NAME = 'lsc';
 const FILES_PATH = 'data/files.json';
+const ASSETS_PATH = 'assets/files/';
+const RAW_BASE = 'https://raw.githubusercontent.com/litongfeng222/lsc/main/';
 
 // ===== Token 管理（存浏览器，安全） =====
 function getToken() {
@@ -61,21 +63,35 @@ async function ghGet(path) {
   const r = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
   });
+  if (!r.ok) {
+    const err = await r.json();
+    throw new Error(err.message || '获取失败');
+  }
   return r.json();
 }
 
 async function ghPut(path, content, sha, message) {
   const token = getToken();
   if (!token) throw new Error('需要 Token 才能操作');
+  // 对大文件使用更高效的方式
+  const encoded = btoa(unescape(encodeURIComponent(content)));
   const r = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
     method: 'PUT',
-    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': `token ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       message: message || '更新资料列表',
-      content: btoa(unescape(encodeURIComponent(content))),
-      sha: sha
+      content: encoded,
+      sha: sha || undefined
     })
   });
+  if (!r.ok) {
+    const err = await r.json();
+    throw new Error(err.message || '保存失败');
+  }
   return r.json();
 }
 
@@ -113,25 +129,23 @@ async function initAdmin() {
     } catch(e) {}
   }
   loadSubjectOptions();
-  
-  // 立即用本地数据渲染（秒开！）
+
   _adminFiles = window.allFiles || [];
   renderAdminFilesUI();
-  
-  // 后台悄悄从GitHub同步最新数据
+
   setTimeout(syncFromGitHub, 100);
-  
+
   setupUpload();
 }
 
-// 后台同步GitHub数据（不阻塞界面）
 async function syncFromGitHub() {
   try {
+    const token = localStorage.getItem('lsc_gh_token');
+    if (!token) return; // 还没设置Token，不报错
     const fresh = await loadGhFiles();
     if (fresh.length > 0) {
       _adminFiles = fresh;
       renderAdminFilesUI();
-      // 同步到主站
       window.allFiles = [...fresh];
       if (window.DataLoader) {
         window.DataLoader.clearCache();
@@ -139,12 +153,10 @@ async function syncFromGitHub() {
       }
       if (window.renderFiles) window.renderFiles();
       if (window.updateStats) window.updateStats();
-      document.getElementById('adminSyncStatus').textContent = '✅ 已同步最新';
-      setTimeout(() => { document.getElementById('adminSyncStatus').textContent = ''; }, 3000);
+      const s = document.getElementById('adminSyncStatus');
+      if (s) { s.textContent = '✅ 已同步最新'; setTimeout(() => { s.textContent = ''; }, 3000); }
     }
-  } catch(e) {
-    // 静默失败，本地数据已经显示
-  }
+  } catch(e) {}
 }
 
 function loadSubjectOptions() {
@@ -170,7 +182,7 @@ function renderAdminFilesUI() {
       <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
         <span style="font-size:22px;flex-shrink:0">${sub.emoji}</span>
         <div style="flex:1;min-width:0">
-          <input class="admin-name-input" value="${file.name}" data-idx="${idx}" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:3px" />
+          <input class="admin-name-input" value="${file.name.replace(/"/g, '&quot;')}" data-idx="${idx}" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:3px" />
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <select class="admin-subject-select subject-select" data-idx="${idx}" style="flex:1;min-width:60px;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px"></select>
             <span style="font-size:11px;color:#999;line-height:28px">${file.size || ''}</span>
@@ -187,7 +199,7 @@ function renderAdminFilesUI() {
   loadSubjectOptions();
 }
 
-// ===== 真·保存到 GitHub =====
+// ===== 保存/删除（写入GitHub files.json） =====
 async function adminSave(idx) {
   const nameInput = document.querySelector(`.admin-name-input[data-idx="${idx}"]`);
   const subSelect = document.querySelector(`.admin-subject-select[data-idx="${idx}"]`);
@@ -206,16 +218,13 @@ async function adminSave(idx) {
 
   try {
     await saveGhFiles(_adminFiles);
-    // 刷新所有缓存，让主站重新加载
     window.allFiles = [..._adminFiles];
     if (window.DataLoader) {
       window.DataLoader.clearCache();
       window.DataLoader._files = [..._adminFiles];
     }
-    // 重新渲染主站
     if (window.renderFiles) window.renderFiles();
     if (window.updateStats) window.updateStats();
-
     if (btn) btn.textContent = '✅';
     setTimeout(() => { if (btn) btn.textContent = origText; }, 1500);
   } catch(e) {
@@ -224,15 +233,11 @@ async function adminSave(idx) {
   }
 }
 
-// ===== 真·删除 =====
 async function adminDelete(idx) {
   if (!confirm(`确定删除「${_adminFiles[idx]?.name}」吗？`)) return;
-
   _adminFiles.splice(idx, 1);
-
   try {
     await saveGhFiles(_adminFiles);
-    // 刷新所有缓存
     window.allFiles = [..._adminFiles];
     if (window.DataLoader) {
       window.DataLoader.clearCache();
@@ -246,7 +251,63 @@ async function adminDelete(idx) {
   }
 }
 
-// ===== 上传功能（本地预览 + 通知姐） =====
+// ===== 上传文件到 GitHub + 写入 files.json =====
+async function ghUploadFile(file, name) {
+  const token = getToken();
+  if (!token) throw new Error('需要 Token 才能操作');
+
+  // 1. 读取文件为 base64
+  const content = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  // 2. 构造文件名（保留扩展名）
+  const ext = file.name.includes('.') ? file.name.split('.').pop() : '';
+  const cleanName = name.replace(/[<>:"/\\|?*]/g, '_'); // 去掉非法字符
+  const safeName = `${cleanName}.${ext}`;
+  const ghPath = `${ASSETS_PATH}${safeName}`;
+
+  // 3. 检查是否已有同名文件
+  let existingSha = null;
+  const existing = await fetch(
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${ghPath}`,
+    { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' } }
+  );
+  if (existing.ok) {
+    const data = await existing.json();
+    existingSha = data.sha;
+  }
+
+  // 4. 上传文件
+  const uploadResult = await fetch(
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${ghPath}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `📤 上传 ${cleanName}.${ext}`,
+        content: content,
+        sha: existingSha || undefined
+      })
+    }
+  );
+  if (!uploadResult.ok) {
+    const err = await uploadResult.json();
+    throw new Error(err.message || '文件上传失败，请检查Token权限');
+  }
+
+  // 5. 返回 raw 链接
+  return `${RAW_BASE}${ASSETS_PATH}${encodeURIComponent(safeName)}`;
+}
+
+// ===== 上传表单设置 =====
 function setupUpload() {
   const form = document.getElementById('uploadForm');
   if (!form) return;
@@ -257,59 +318,62 @@ function setupUpload() {
     const file = fileInput?.files?.[0];
     if (!file) return alert('⚠️ 请选择一个文件');
 
-    const name = document.getElementById('uploadName')?.value?.trim() || file.name;
+    const name = document.getElementById('uploadName')?.value?.trim() || file.name.replace(/\.[^.]+$/, '');
     const subject = document.getElementById('uploadSubject')?.value || 'other';
     const status = document.getElementById('uploadStatus');
+    const btn = document.getElementById('uploadBtn');
+    if (!status || !btn) return;
 
-    status.textContent = '⏳ 准备上传...';
+    status.textContent = '⏳ 正在上传文件到 GitHub...';
+    btn.disabled = true;
 
     try {
-      // 存到localStorage暂存
-      const previews = JSON.parse(localStorage.getItem('lsc_uploads') || '[]');
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        previews.push({
-          name, subject,
-          tag: '新上传',
-          date: new Date().toISOString().split('T')[0],
-          size: file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : Math.ceil(file.size/1024)+' KB',
-          data: evt.target.result
-        });
-        localStorage.setItem('lsc_uploads', JSON.stringify(previews));
+      // 上传文件本体到 GitHub
+      const rawUrl = await ghUploadFile(file, name);
 
-        // 新上传后自动加到文件列表（用图标代替真实文件）
-        _adminFiles.push({
-          name, subject, tag: '新上传',
-          date: new Date().toISOString().split('T')[0],
-          size: file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : Math.ceil(file.size/1024)+' KB',
-          path: '#pending'
-        });
-        saveGhFiles(_adminFiles).then(() => {
-          status.textContent = '✅ 已添加到列表！文件本体请联系姐上传到云存储～';
-        }).catch(() => {
-          status.textContent = '✅ 已保存到本地，明天姐帮你上传完整版';
-        });
+      // 更新文件列表
+      _adminFiles.push({
+        name: name,
+        subject: subject,
+        path: rawUrl,
+        size: file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : Math.ceil(file.size/1024)+' KB',
+        date: new Date().toISOString().split('T')[0],
+        tag: '新上传'
+      });
 
-        fileInput.value = '';
-        document.getElementById('uploadName').value = '';
-        renderAdminFilesUI();
-      };
-      reader.readAsDataURL(file);
+      await saveGhFiles(_adminFiles);
+
+      // 刷新全站
+      window.allFiles = [..._adminFiles];
+      if (window.DataLoader) {
+        window.DataLoader.clearCache();
+        window.DataLoader._files = [..._adminFiles];
+      }
+      if (window.renderFiles) window.renderFiles();
+      if (window.updateStats) window.updateStats();
+      renderAdminFilesUI();
+
+      status.textContent = '✅ 上传成功！文件已永久存储！';
+      fileInput.value = '';
+      document.getElementById('uploadName').value = '';
     } catch(err) {
       status.textContent = '❌ 上传失败：' + err.message;
     }
+    btn.disabled = false;
   });
 }
 
 // ===== 🔍 预览功能 =====
 function previewFile(path, name) {
-  // PDF：浏览器自带预览，直接新标签打开
+  if (!path || path === '#pending') {
+    alert('⚠️ 此文件尚未完成上传');
+    return;
+  }
   const cleanPath = path.split('?')[0];
   if (cleanPath.endsWith('.pdf')) {
     window.open(path, '_blank');
     return;
   }
-  // docx及其他：弹窗提示下载
   const modal = document.getElementById('previewModal');
   const frame = document.getElementById('previewFrame');
   const title = document.getElementById('previewTitle');
@@ -317,7 +381,6 @@ function previewFile(path, name) {
 
   title.textContent = name;
   modal.classList.remove('hidden');
-
   frame.innerHTML = `<div style="text-align:center;padding:60px 20px">
     <div style="font-size:56px;margin-bottom:16px">📄</div>
     <h3 style="margin-bottom:8px;color:#333">${name}</h3>
