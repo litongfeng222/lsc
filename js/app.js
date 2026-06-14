@@ -111,13 +111,63 @@ function renderFiles() {
   }).join('');
 }
 
-// 下载文件
-function downloadFile(path, name) {
+// 下载文件 + 计数
+async function downloadFile(path, name) {
+  // 先触发下载
   const a = document.createElement('a');
   a.href = path;
   a.download = name;
   a.target = '_blank';
   a.click();
+
+  // 异步增加下载计数（如果用户存了Token）
+  const token = localStorage.getItem('lsc_gh_token');
+  if (!token) return;
+
+  try {
+    // 找到文件名在 allFiles 中的索引
+    const idx = allFiles.findIndex(f => f.path === path || f.name === name);
+    if (idx === -1) return;
+
+    // 从 GitHub 获取最新的 files.json
+    const res = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.content) return;
+    const decoded = decodeURIComponent(escape(atob(data.content)));
+    const parsed = JSON.parse(decoded);
+    const ghFiles = parsed.files;
+
+    // 找到对应文件，累加下载次数
+    const ghIdx = ghFiles.findIndex(f => f.path === path);
+    if (ghIdx === -1) return;
+    ghFiles[ghIdx].downloads = (ghFiles[ghIdx].downloads || 0) + 1;
+
+    // 写回 GitHub
+    const updated = JSON.stringify(parsed, null, 2);
+    const encoded = btoa(unescape(encodeURIComponent(updated)));
+    await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: '⬇️ 下载计数',
+        content: encoded,
+        sha: data.sha
+      })
+    });
+
+    // 同步更新内存数据
+    allFiles[idx].downloads = (allFiles[idx].downloads || 0) + 1;
+  } catch(e) {
+    // 静默失败，不影响下载体验
+    console.warn('下载计数失败（不影响下载）:', e);
+  }
 }
 
 // 更新统计

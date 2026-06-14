@@ -338,7 +338,8 @@ function setupUpload() {
         path: rawUrl,
         size: file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+' MB' : Math.ceil(file.size/1024)+' KB',
         date: new Date().toISOString().split('T')[0],
-        tag: '新上传'
+        tag: '新上传',
+        downloads: 0
       });
 
       await saveGhFiles(_adminFiles);
