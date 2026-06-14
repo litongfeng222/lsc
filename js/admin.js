@@ -325,13 +325,6 @@ function previewFile(path, name) {
     <a href="${path}" target="_blank" style="display:inline-block;padding:12px 28px;background:#6c5ce7;color:white;border-radius:12px;text-decoration:none;font-size:15px;font-weight:600">⬇ 下载文件</a>
   </div>`;
 }
-    frame.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#999">
-      <div style="font-size:48px;margin-bottom:16px">📄</div>
-      <p>此格式暂不支持在线预览</p>
-      <a href="${path}" target="_blank" style="display:inline-block;margin-top:12px;padding:10px 24px;background:#6c5ce7;color:white;border-radius:10px;text-decoration:none">⬇ 下载查看</a>
-    </div>`;
-  }
-}
 
 function closePreview() {
   const modal = document.getElementById('previewModal');
