@@ -53,25 +53,15 @@ body::after {
 
 /* ===== 头部 ===== */
 header {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
-  padding: 24px 24px 16px;
+  padding: 28px 24px 40px;
   text-align: center;
   position: relative;
   overflow: hidden;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 
-/* 只在无背景图时保留原渐变头部 */
-body:not(.has-bg) header {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  text-shadow: none;
-  padding: 28px 24px 40px;
-}
-
-body:not(.has-bg) header::before {
+header::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -89,7 +79,7 @@ body:not(.has-bg) header::before {
 }
 
 header h1 {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
   position: relative;
   z-index: 1;
@@ -99,21 +89,11 @@ header h1 {
 header h1 span { color: #ffeaa7; }
 
 header p {
-  font-size: 13px;
-  opacity: 0.9;
-  margin-top: 4px;
+  font-size: 14px;
+  opacity: 0.85;
+  margin-top: 6px;
   position: relative;
   z-index: 1;
-}
-
-body.has-bg header h1 {
-  font-size: 24px;
-  letter-spacing: 2px;
-}
-
-body.has-bg header p {
-  font-size: 12px;
-  opacity: 0.8;
 }
 
 /* ===== 统计栏 ===== */
