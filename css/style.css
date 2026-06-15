@@ -3,23 +3,52 @@
   --primary: #6c5ce7;
   --primary-light: #a29bfe;
   --primary-dark: #4834d4;
-  --bg: #f8f9ff;
-  --card-bg: #ffffff;
+  --bg: #f5f0ff;
+  --card-bg: rgba(255, 255, 255, 0.6);
+  --card-bg-solid: #ffffff;
   --text: #2d3436;
   --text-light: #636e72;
-  --border: #e8e8f0;
+  --border: rgba(255, 255, 255, 0.3);
   --radius: 16px;
-  --shadow: 0 4px 20px rgba(108, 92, 231, 0.08);
-  --shadow-hover: 0 8px 30px rgba(108, 92, 231, 0.15);
+  --shadow: 0 8px 32px rgba(108, 92, 231, 0.10);
+  --shadow-hover: 0 12px 40px rgba(108, 92, 231, 0.18);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: 16px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
+  background: linear-gradient(135deg, #f5f0ff 0%, #eef4ff 50%, #f0f5ff 100%);
   color: var(--text);
   min-height: 100vh;
+  position: relative;
+}
+
+/* 背景装饰光晕 */
+body::before {
+  content: '';
+  position: fixed;
+  top: -30%;
+  left: -20%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(circle, rgba(108,92,231,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -20%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(162,155,254,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ===== 头部 ===== */
@@ -74,7 +103,10 @@ header p {
   gap: 32px;
   padding: 16px 24px;
   margin: -20px 16px 0;
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   position: relative;
@@ -113,8 +145,10 @@ header p {
   flex-shrink: 0;
   padding: 10px 20px;
   border-radius: 24px;
-  border: 2px solid var(--border);
-  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -126,13 +160,16 @@ header p {
 .subject-tab:hover {
   border-color: var(--primary-light);
   color: var(--primary);
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .subject-tab.active {
-  background: var(--primary);
+  background: rgba(108, 92, 231, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: white;
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+  border-color: rgba(108, 92, 231, 0.4);
+  box-shadow: 0 4px 16px rgba(108, 92, 231, 0.35);
 }
 
 /* ===== 文件列表 ===== */
@@ -144,22 +181,25 @@ header p {
 }
 
 .file-card {
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 16px 18px;
   box-shadow: var(--shadow);
   display: flex;
   align-items: center;
   gap: 14px;
-  transition: all 0.2s;
+  transition: all 0.25s;
   cursor: pointer;
-  border: 2px solid transparent;
 }
 
 .file-card:hover {
   box-shadow: var(--shadow-hover);
-  transform: translateY(-2px);
-  border-color: var(--primary-light);
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(162, 155, 254, 0.4);
 }
 
 .file-icon {
@@ -208,7 +248,9 @@ header p {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: none;
   font-size: 16px;
   cursor: pointer;
@@ -268,13 +310,31 @@ footer a {
 }
 
 /* ===== 响应式 ===== */
+/* ===== 管理面板卡片玻璃化 ===== */
+#adminPanel > div[style*="background:white"] {
+  background: rgba(255,255,255,0.6) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+/* ===== 排名弹窗、预览弹窗内部玻璃化 ===== */
+#rankingModal > div,
+#previewModal > div {
+  background: rgba(255,255,255,0.8) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}
+
 /* ===== 🔐 管理员相关样式 ===== */
 .hidden { display: none !important; }
 
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -282,7 +342,10 @@ footer a {
 }
 
 .modal {
-  background: white;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
   padding: 24px;
   border-radius: 20px;
   width: 85%;
@@ -295,10 +358,12 @@ footer a {
   align-items: center;
   gap: 10px;
   padding: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   margin-bottom: 8px;
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .admin-file-card:hover {
