@@ -2,6 +2,8 @@
 let subjects = [];
 let allFiles = [];
 let currentSubject = 'all';
+// 标签颜色配置（从 subjects.json 或 localStorage 加载）
+let tagConfigs = {};
 
 // 暴露全局供admin.js使用
 window.subjects = subjects;
@@ -10,9 +12,12 @@ window.allFiles = allFiles;
 // 页面加载
 document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
+  renderDock();        // 渲染底部dock栏
   renderSubjects();
   renderFiles();
   updateStats();
+  applyBgFromConfig();  // 加载背景图
+  loadTagConfigs();     // 加载标签颜色配置
 });
 
 // 加载数据
@@ -23,7 +28,79 @@ async function loadData() {
   window.allFiles = allFiles;
 }
 
-// 渲染分类标签
+// ===== 渲染底部dock栏（鸿蒙液态玻璃风格） =====
+function renderDock() {
+  const container = document.getElementById('dockContainer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="bottom-dock">
+      <a href="./upload.html" class="dock-btn dock-btn-primary" ontouchstart="">
+        <span>📤</span>
+        <span>分享资料</span>
+      </a>
+      <div class="dock-divider"></div>
+      <button class="dock-btn-circle" onclick="showRanking()" ontouchstart="" title="排行榜">
+        🏆
+      </button>
+    </div>
+  `;
+
+  document.body.classList.add('has-dock');
+}
+
+// ===== 标签颜色配置 =====
+function loadTagConfigs() {
+  // 先从 localStorage 加载（本地缓存）
+  const cached = localStorage.getItem('lsc_tag_configs');
+  if (cached) {
+    try { tagConfigs = JSON.parse(cached); } catch(e) {}
+  }
+
+  // 再从 subjects.json 的默认标签读取
+  (subjects || []).forEach(s => {
+    if (!tagConfigs[s.id]) {
+      tagConfigs[s.id] = { name: s.name, emoji: s.emoji, color: s.color || '#636e72' };
+    }
+  });
+
+  // 标记已加载，供 admin.js 使用
+  window._tagConfigs = tagConfigs;
+}
+
+// 获取标签颜色（优先 tags，否则使用学科色）
+function getTagStyle(tag, subjectId) {
+  // 自定义标签配置中查
+  for (const [id, cfg] of Object.entries(tagConfigs)) {
+    if (cfg.name === tag) {
+      return { bg: cfg.color + '20', color: cfg.color, labelBg: cfg.color };
+    }
+  }
+  // 学科默认色
+  const sub = subjects.find(s => s.id === subjectId);
+  const c = sub ? sub.color : '#636e72';
+  return { bg: c + '20', color: c, labelBg: c };
+}
+
+// ===== 背景图支持 =====
+function applyBgFromConfig() {
+  const bgUrl = localStorage.getItem('lsc_bg_image');
+  if (bgUrl) {
+    document.body.style.backgroundImage = `url(${bgUrl})`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundAttachment = 'fixed';
+    document.body.style.backgroundPosition = 'center';
+    document.body.classList.add('has-bg');
+    // 预览
+    const preview = document.getElementById('bgPreview');
+    if (preview) preview.style.backgroundImage = `url(${bgUrl})`;
+  }
+}
+
+// 供 admin.js 调用的全局方法
+window.applyBgFromConfig = applyBgFromConfig;
+
+// ===== 渲染分类标签 =====
 function renderSubjects() {
   const nav = document.getElementById('subjectsNav');
   
@@ -88,9 +165,13 @@ function renderFiles() {
     const emoji = subject ? subject.emoji : '📄';
     const color = subject ? subject.color : '#636e72';
 
+    // 获取标签样式（优先标签配置）
+    const tag = file.tag || subject?.name || '资料';
+    const tagStyle = getTagStyle(tag, file.subject);
+
     return `
       <div class="file-card" onclick="downloadFile('${file.path}', '${file.name.replace(/'/g, "\\'")}')">
-        <div class="file-icon" style="background: ${color}20; color: ${color}">
+        <div class="file-icon" style="background: ${tagStyle.bg}; color: ${tagStyle.color}">
           ${emoji}
         </div>
         <div class="file-info">
@@ -98,7 +179,7 @@ function renderFiles() {
           <div class="file-meta">
             <span>${file.date}</span>
             <span>${file.size}</span>
-            <span class="file-badge" style="background: ${color}">${file.tag || subject?.name || '资料'}</span>
+            <span class="file-badge" style="background: ${tagStyle.labelBg}">${tag}</span>
             ${file.uploader ? `<span style="font-size:11px;color:#999">👤 ${file.uploader}</span>` : ''}
           </div>
         </div>

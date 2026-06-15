@@ -16,11 +16,11 @@
     <p>Learning · Share · Communicate</p>
   </header>
 
-  <!-- ===== 分享上传入口 + 排名入口 ===== -->
-  <div style="margin: -8px 16px 12px; text-align:center; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap">
-    <a href="./upload.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:linear-gradient(135deg,rgba(108,92,231,0.85),rgba(162,155,254,0.85));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:white;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 4px 20px rgba(108,92,231,0.25);border:1px solid rgba(255,255,255,0.2)">📤 我也要分享资料</a>
-    <span onclick="showRanking()" style="font-size:13px;color:#6c5ce7;cursor:pointer;white-space:nowrap;font-weight:500;padding:6px 12px;background:rgba(255,255,255,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.4);border-radius:8px;display:inline-flex;align-items:center;gap:4px">🏆 排名</span>
-  </div>
+  <!-- ===== 底部dock栏（由js动态注入） ===== -->
+  <div id="dockContainer"></div>
+  
+  <!-- ===== 背景图遮罩（由js动态控制） ===== -->
+  <div class="bg-overlay" id="bgOverlay"></div>
 
   <!-- ===== 统计栏 ===== -->
   <div class="stats-bar">
@@ -89,9 +89,41 @@
     </div>
 
     <!-- 管理已有资料 -->
-    <div style="margin:12px 16px 24px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(108,92,231,0.08)">
+    <div style="margin:12px 16px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(108,92,231,0.08)">
       <h4 style="margin-bottom:12px;font-size:16px">✏️ 管理资料</h4>
       <div id="adminFileList"></div>
+    </div>
+
+    <!-- 🔖 标签颜色编辑 -->
+    <div style="margin:12px 16px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(108,92,231,0.08)">
+      <h4 style="margin-bottom:12px;font-size:16px">🎨 标签颜色 &amp; 常用标签</h4>
+      
+      <!-- 标签列表 -->
+      <div id="tagConfigList" style="margin-bottom:12px"></div>
+      
+      <!-- 添加新标签 -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input id="newTagName" type="text" placeholder="标签名" style="flex:1;min-width:80px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px" />
+        <input id="newTagColor" type="color" value="#6c5ce7" style="width:34px;height:34px;border:none;border-radius:8px;cursor:pointer;padding:0" />
+        <button onclick="addNewTag()" style="padding:7px 14px;background:#6c5ce7;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px">+ 添加</button>
+      </div>
+      
+      <div style="font-size:12px;color:#999;margin-bottom:8px">💡 修改后记得点保存</div>
+      <button onclick="saveTagConfigToGh()" style="width:100%;padding:10px;background:#6c5ce7;color:white;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-weight:600">💾 保存标签配置</button>
+      <p id="tagSaveStatus" style="font-size:13px;margin-top:6px;color:#636e72"></p>
+    </div>
+
+    <!-- 🖼️ 背景图设置 -->
+    <div style="margin:12px 16px 24px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(108,92,231,0.08)">
+      <h4 style="margin-bottom:12px;font-size:16px">🖼️ 页面背景图</h4>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input id="bgImageInput" type="text" placeholder="粘贴图片URL..." style="flex:1;min-width:150px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px" />
+        <button onclick="applyBgImage()" style="padding:7px 14px;background:#6c5ce7;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px">应用</button>
+        <button onclick="clearBgImage()" style="padding:7px 14px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px">清除</button>
+      </div>
+      <div id="bgPreview" style="margin-top:8px;width:100%;height:60px;border-radius:10px;background-size:cover;background-position:center;border:1px solid #eee"></div>
+      <p style="font-size:12px;color:#999;margin-top:6px">💡 设置后对所有访客生效，背景图URL永久保存</p>
+      <p id="bgSaveStatus" style="font-size:13px;margin-top:4px;color:#636e72"></p>
     </div>
   </div>
 
