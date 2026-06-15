@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderFiles();
   updateStats();
   loadTagConfigs();     // 加载标签颜色配置
-  applyBgFromConfig();  // 加载背景图
 });
 
 // 加载数据

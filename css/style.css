@@ -53,30 +53,47 @@ body::after {
 
 /* ===== 头部 ===== */
 header {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
-  padding: 20px 24px 14px;
+  padding: 28px 24px 24px;
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
+header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  animation: float 20s linear infinite;
+}
+
+@keyframes float {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-30px, -30px); }
+}
+
 header h1 {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
   letter-spacing: 1px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 header h1 span { color: #ffeaa7; }
 
 header p {
-  font-size: 12px;
-  opacity: 0.8;
-  margin-top: 3px;
-  text-shadow: 0 1px 6px rgba(0,0,0,0.3);
+  font-size: 14px;
+  opacity: 0.85;
+  margin-top: 6px;
+  position: relative;
+  z-index: 1;
 }
 
 /* ===== 统计栏 ===== */
