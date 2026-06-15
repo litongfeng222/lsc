@@ -55,7 +55,7 @@ body::after {
 header {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
-  padding: 28px 24px 40px;
+  padding: 28px 24px 24px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -102,7 +102,7 @@ header p {
   justify-content: center;
   gap: 32px;
   padding: 16px 24px;
-  margin: -20px 16px 0;
+  margin: 0 16px;
   background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
