@@ -585,11 +585,8 @@ function previewFile(path, name) {
   const cleanPath = path.split('?')[0];
   const ext = cleanPath.split('.').pop().toLowerCase();
 
-  if (ext === 'pdf') {
-    // PDF 浏览器直接打开
-    window.open(cleanPath, '_blank');
-  } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
-    // Office 文档用 Microsoft Office Online Viewer（国内可访问，比Google快）
+  if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
+    // PDF和Office文档用 Microsoft Office Online Viewer（国内可访问）
     window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(cleanPath)}`, '_blank');
   } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
     // 图片直接打开
