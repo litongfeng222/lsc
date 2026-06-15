@@ -576,17 +576,16 @@ function loadBgUI() {
   if (preview) preview.style.backgroundImage = `url(${bgUrl})`;
 }
 
-// ===== 🔍 预览功能 =====
+// ===== 🔍 预览功能（使用 Google Docs Viewer） =====
 function previewFile(path, name) {
   if (!path || path === '#pending') {
     alert('⚠️ 此文件尚未完成上传');
     return;
   }
   const cleanPath = path.split('?')[0];
-  if (cleanPath.endsWith('.pdf')) {
-    window.open(path, '_blank');
-    return;
-  }
+  const ext = cleanPath.split('.').pop().toLowerCase();
+  const supported = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
+
   const modal = document.getElementById('previewModal');
   const frame = document.getElementById('previewFrame');
   const title = document.getElementById('previewTitle');
@@ -594,12 +593,19 @@ function previewFile(path, name) {
 
   title.textContent = name;
   modal.classList.remove('hidden');
-  frame.innerHTML = `<div style="text-align:center;padding:60px 20px">
-    <div style="font-size:56px;margin-bottom:16px">📄</div>
-    <h3 style="margin-bottom:8px;color:#333">${name}</h3>
-    <p style="color:#999;margin-bottom:20px">此格式暂不支持在线预览，请下载后用对应软件打开</p>
-    <a href="${path}" target="_blank" style="display:inline-block;padding:12px 28px;background:#6c5ce7;color:white;border-radius:12px;text-decoration:none;font-size:15px;font-weight:600">⬇ 下载文件</a>
-  </div>`;
+
+  if (supported.includes(ext)) {
+    // 使用 Google Docs Viewer 在线预览
+    const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(cleanPath)}&embedded=true`;
+    frame.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
+  } else {
+    frame.innerHTML = `<div style="text-align:center;padding:60px 20px">
+      <div style="font-size:56px;margin-bottom:16px">📄</div>
+      <h3 style="margin-bottom:8px;color:#333">${name}</h3>
+      <p style="color:#999;margin-bottom:20px">此格式暂不支持在线预览，请下载后用对应软件打开</p>
+      <a href="${path}" target="_blank" style="display:inline-block;padding:12px 28px;background:#6c5ce7;color:white;border-radius:12px;text-decoration:none;font-size:15px;font-weight:600">⬇ 下载文件</a>
+    </div>`;
+  }
 }
 
 function closePreview() {

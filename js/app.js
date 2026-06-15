@@ -198,7 +198,7 @@ function renderFiles() {
           </div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
-          <button class="file-icon-btn file-preview-btn" onclick="event.stopPropagation(); if(window.previewFile)previewFile('${file.path}', '${file.name.replace(/'/g, "\\'")}')" style="width:34px;height:34px;border-radius:50%;background:var(--bg);border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-light)">👁</button>
+          <button class="file-icon-btn file-preview-btn" onclick="event.stopPropagation(); if(window.previewFile)previewFile('${file.path}', '${file.name.replace(/'/g, "\\'")}')" style="padding:4px 10px;border-radius:8px;background:var(--bg);border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-weight:500">预览</button>
           <button class="file-download" onclick="event.stopPropagation(); downloadFile('${file.path}', '${file.name.replace(/'/g, "\\'")}')">⬇</button>
         </div>
       </div>
