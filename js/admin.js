@@ -576,7 +576,7 @@ function loadBgUI() {
   if (preview) preview.style.backgroundImage = `url(${bgUrl})`;
 }
 
-// ===== 🔍 预览功能 =====
+// ===== 🔍 预览功能（新标签页打开，更快更稳定） =====
 function previewFile(path, name) {
   if (!path || path === '#pending') {
     alert('⚠️ 此文件尚未完成上传');
@@ -585,44 +585,39 @@ function previewFile(path, name) {
   const cleanPath = path.split('?')[0];
   const ext = cleanPath.split('.').pop().toLowerCase();
 
-  const modal = document.getElementById('previewModal');
-  const title = document.getElementById('previewTitle');
-  if (!modal) return;
-
-  title.textContent = name;
-  modal.classList.remove('hidden');
-
-  // 获取实际内容容器高度
-  const frame = document.getElementById('previewFrame');
-  if (!frame) return;
-  
-  // 先清空
-  frame.innerHTML = '';
-  
   if (ext === 'pdf') {
-    // PDF 用浏览器原生阅读器
-    frame.innerHTML = `<iframe src="${cleanPath}" style="width:100%;height:100%;border:none"></iframe>`;
+    // PDF 浏览器直接打开
+    window.open(cleanPath, '_blank');
   } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
-    // Office 文档用 Google Docs Viewer
-    const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(cleanPath)}&embedded=true`;
-    frame.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:100%;border:none"></iframe>`;
+    // Office 文档用 Google Docs Viewer 新标签打开（比iframe稳定）
+    window.open(`https://docs.google.com/gview?url=${encodeURIComponent(cleanPath)}`, '_blank');
+  } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+    // 图片直接打开
+    window.open(cleanPath, '_blank');
   } else if (ext === 'txt') {
-    // 纯文本直接用 fetch 预览
+    // 纯文本弹窗显示
+    const modal = document.getElementById('previewModal');
+    const title = document.getElementById('previewTitle');
+    const frame = document.getElementById('previewFrame');
+    if (!modal || !frame) return;
+    title.textContent = name;
+    modal.classList.remove('hidden');
+    frame.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999">⏳ 加载中...</div>';
     fetch(cleanPath)
       .then(r => r.text())
       .then(text => {
-        frame.innerHTML = `<pre style="padding:20px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-wrap:break-word;margin:0">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
+        frame.innerHTML = `<pre style="padding:20px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-wrap:break-word;margin:0;background:transparent">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
       })
       .catch(() => {
         frame.innerHTML = `<div style="text-align:center;padding:60px 20px"><p style="color:#999">⚠️ 无法加载文件内容</p></div>`;
       });
   } else {
-    frame.innerHTML = `<div style="text-align:center;padding:60px 20px">
-      <div style="font-size:56px;margin-bottom:16px">📄</div>
-      <h3 style="margin-bottom:8px;color:#333">${name}</h3>
-      <p style="color:#999;margin-bottom:20px">此格式暂不支持在线预览，请下载后用对应软件打开</p>
-      <a href="${path}" target="_blank" style="display:inline-block;padding:12px 28px;background:#6c5ce7;color:white;border-radius:12px;text-decoration:none;font-size:15px;font-weight:600">⬇ 下载文件</a>
-    </div>`;
+    // 不支持预览，直接下载
+    const a = document.createElement('a');
+    a.href = cleanPath;
+    a.download = name;
+    a.target = '_blank';
+    a.click();
   }
 }
 
