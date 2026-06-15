@@ -585,9 +585,12 @@ function previewFile(path, name) {
   const cleanPath = path.split('?')[0];
   const ext = cleanPath.split('.').pop().toLowerCase();
 
-  if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
-    // PDF和Office文档用 Microsoft Office Online Viewer（国内可访问）
+  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
+    // Office文档用 Microsoft Office Online Viewer（国内可访问）
     window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(cleanPath)}`, '_blank');
+  } else if (ext === 'pdf') {
+    // PDF用 Google Docs Viewer（Microsoft Viewer不支持raw.githubusercontent的PDF）
+    window.open(`https://docs.google.com/gview?url=${encodeURIComponent(cleanPath)}&embedded=false`, '_blank');
   } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
     // 图片直接打开
     window.open(cleanPath, '_blank');
