@@ -589,8 +589,8 @@ function previewFile(path, name) {
     // PDF 浏览器直接打开
     window.open(cleanPath, '_blank');
   } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
-    // Office 文档用 Google Docs Viewer 新标签打开（比iframe稳定）
-    window.open(`https://docs.google.com/gview?url=${encodeURIComponent(cleanPath)}`, '_blank');
+    // Office 文档用 Microsoft Office Online Viewer（国内可访问，比Google快）
+    window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(cleanPath)}`, '_blank');
   } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
     // 图片直接打开
     window.open(cleanPath, '_blank');
