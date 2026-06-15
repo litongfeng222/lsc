@@ -576,7 +576,7 @@ function loadBgUI() {
   if (preview) preview.style.backgroundImage = `url(${bgUrl})`;
 }
 
-// ===== 🔍 预览功能（使用 Google Docs Viewer） =====
+// ===== 🔍 预览功能 =====
 function previewFile(path, name) {
   if (!path || path === '#pending') {
     alert('⚠️ 此文件尚未完成上传');
@@ -584,20 +584,38 @@ function previewFile(path, name) {
   }
   const cleanPath = path.split('?')[0];
   const ext = cleanPath.split('.').pop().toLowerCase();
-  const supported = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
 
   const modal = document.getElementById('previewModal');
-  const frame = document.getElementById('previewFrame');
   const title = document.getElementById('previewTitle');
-  if (!modal || !frame) return;
+  if (!modal) return;
 
   title.textContent = name;
   modal.classList.remove('hidden');
 
-  if (supported.includes(ext)) {
-    // 使用 Google Docs Viewer 在线预览
+  // 获取实际内容容器高度
+  const frame = document.getElementById('previewFrame');
+  if (!frame) return;
+  
+  // 先清空
+  frame.innerHTML = '';
+  
+  if (ext === 'pdf') {
+    // PDF 用浏览器原生阅读器
+    frame.innerHTML = `<iframe src="${cleanPath}" style="width:100%;height:100%;border:none"></iframe>`;
+  } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
+    // Office 文档用 Google Docs Viewer
     const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(cleanPath)}&embedded=true`;
-    frame.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
+    frame.innerHTML = `<iframe src="${viewerUrl}" style="width:100%;height:100%;border:none"></iframe>`;
+  } else if (ext === 'txt') {
+    // 纯文本直接用 fetch 预览
+    fetch(cleanPath)
+      .then(r => r.text())
+      .then(text => {
+        frame.innerHTML = `<pre style="padding:20px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-wrap:break-word;margin:0">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
+      })
+      .catch(() => {
+        frame.innerHTML = `<div style="text-align:center;padding:60px 20px"><p style="color:#999">⚠️ 无法加载文件内容</p></div>`;
+      });
   } else {
     frame.innerHTML = `<div style="text-align:center;padding:60px 20px">
       <div style="font-size:56px;margin-bottom:16px">📄</div>
