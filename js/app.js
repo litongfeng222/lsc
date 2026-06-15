@@ -83,8 +83,22 @@ function getTagStyle(tag, subjectId) {
 }
 
 // ===== 背景图支持 =====
-function applyBgFromConfig() {
-  const bgUrl = localStorage.getItem('lsc_bg_image');
+async function applyBgFromConfig() {
+  // 优先从 localStorage 读取（管理员手动设置的）
+  let bgUrl = localStorage.getItem('lsc_bg_image');
+
+  // 没有本地缓存则从 subjects.json 加载
+  if (!bgUrl) {
+    try {
+      const r = await fetch('./data/subjects.json?' + Date.now());
+      const d = await r.json();
+      if (d.bgImage) {
+        bgUrl = d.bgImage;
+        localStorage.setItem('lsc_bg_image', bgUrl);
+      }
+    } catch(e) {}
+  }
+
   if (bgUrl) {
     document.body.style.backgroundImage = `url(${bgUrl})`;
     document.body.style.backgroundSize = 'cover';
