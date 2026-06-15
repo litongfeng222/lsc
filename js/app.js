@@ -17,12 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderFiles();
   updateStats();
   loadTagConfigs();     // 加载标签颜色配置
-  
-  // 清理任何残留的背景图设置
-  if (document.body.classList.contains('has-bg')) {
-    document.body.classList.remove('has-bg');
-  }
-  localStorage.removeItem('lsc_bg_image');
+  applyBgFromConfig();  // 加载背景图
 });
 
 // 加载数据
