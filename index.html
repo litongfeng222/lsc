@@ -142,12 +142,17 @@
 
   <!-- ===== 🔍 预览弹窗 ===== -->
   <div id="previewModal" class="modal-overlay hidden" onclick="if(event.target===this)closePreview()">
-    <div style="background:white;border-radius:20px;width:92%;max-width:800px;height:85vh;max-height:700px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.3);flex-shrink:0">
+    <div style="background:white;border-radius:20px;width:94%;max-width:820px;height:88vh;max-height:720px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.2);transition:all 0.25s">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.3);flex-shrink:0;background:rgba(255,255,255,0.5)">
         <span id="previewTitle" style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px"></span>
-        <button onclick="closePreview()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#999;flex-shrink:0">✕</button>
+        <button onclick="closePreview()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#999;flex-shrink:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.15s" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background=''">✕</button>
       </div>
-      <div id="previewFrame" style="flex:1;overflow:auto;background:#f5f5f5"></div>
+      <div id="previewFrame" style="flex:1;overflow:auto;background:#f5f5f5;position:relative">
+        <div id="previewLoading" style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px;color:#999">
+          <div style="width:32px;height:32px;border:3px solid rgba(108,92,231,0.12);border-top-color:#6c5ce7;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+          <p style="font-size:14px">⏳ 加载预览中...</p>
+        </div>
+      </div>
     </div>
   </div>
 

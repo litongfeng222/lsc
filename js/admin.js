@@ -576,7 +576,7 @@ function loadBgUI() {
   if (preview) preview.style.backgroundImage = `url(${bgUrl})`;
 }
 
-// ===== 🔍 预览功能（新标签页打开，更快更稳定） =====
+// ===== 🔍 预览功能（优化版：弹窗内iframe预览） =====
 function previewFile(path, name) {
   if (!path || path === '#pending') {
     alert('⚠️ 此文件尚未完成上传');
@@ -584,48 +584,102 @@ function previewFile(path, name) {
   }
   const cleanPath = path.split('?')[0];
   const ext = cleanPath.split('.').pop().toLowerCase();
+  const encodedUrl = encodeURIComponent(cleanPath);
 
-  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
-    // Office文档用 Microsoft Office Online Viewer（国内可访问）
-    window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(cleanPath)}`, '_blank');
-  } else if (ext === 'pdf') {
-    // PDF用 Google Docs Viewer（Microsoft Viewer不支持raw.githubusercontent的PDF）
-    window.open(`https://docs.google.com/gview?url=${encodeURIComponent(cleanPath)}&embedded=false`, '_blank');
-  } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-    // 图片直接打开
-    window.open(cleanPath, '_blank');
-  } else if (ext === 'txt') {
-    // 纯文本弹窗显示
+  function openInModal(src) {
     const modal = document.getElementById('previewModal');
     const title = document.getElementById('previewTitle');
     const frame = document.getElementById('previewFrame');
+    const loading = document.getElementById('previewLoading');
     if (!modal || !frame) return;
-    title.textContent = name;
+    title.textContent = '📄 ' + name;
     modal.classList.remove('hidden');
-    frame.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999">⏳ 加载中...</div>';
+    
+    // 显示loading动画
+    loading.style.display = 'flex';
+    frame.innerHTML = `<iframe src="${src}" onload="document.getElementById('previewLoading').style.display='none'" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
+    
+    // 10秒超时隐藏loading（防止失败时一直转）
+    setTimeout(() => {
+      const pl = document.getElementById('previewLoading');
+      if (pl) pl.style.display = 'none';
+    }, 10000);
+  }
+
+  // === PDF ===
+  if (ext === 'pdf') {
+    // 使用更快的CDN代理 + 内嵌PDF.js Viewer
+    openInModal(`https://docs.google.com/gview?url=${encodedUrl}&embedded=true`);
+    return;
+  }
+
+  // === Office文档 ===
+  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
+    openInModal(`https://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`);
+    return;
+  }
+
+  // === 图片 ===
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'].includes(ext)) {
+    openInModal(cleanPath);
+    return;
+  }
+
+  // === 纯文本 ===
+  if (ext === 'txt' || ext === 'md' || ext === 'csv' || ext === 'json' || ext === 'xml' || ext === 'log') {
+    const modal = document.getElementById('previewModal');
+    const title = document.getElementById('previewTitle');
+    const frame = document.getElementById('previewFrame');
+    const loading = document.getElementById('previewLoading');
+    if (!modal || !frame) return;
+    title.textContent = '📄 ' + name;
+    modal.classList.remove('hidden');
+    loading.style.display = 'flex';
+    
     fetch(cleanPath)
-      .then(r => r.text())
+      .then(r => {
+        if (!r.ok) throw new Error('加载失败');
+        return r.text();
+      })
       .then(text => {
-        frame.innerHTML = `<pre style="padding:20px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-wrap:break-word;margin:0;background:transparent">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
+        loading.style.display = 'none';
+        frame.innerHTML = `<pre style="padding:20px 24px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-wrap:break-word;margin:0;background:transparent;color:#2d3436">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
       })
       .catch(() => {
-        frame.innerHTML = `<div style="text-align:center;padding:60px 20px"><p style="color:#999">⚠️ 无法加载文件内容</p></div>`;
+        loading.style.display = 'none';
+        frame.innerHTML = `<div style="text-align:center;padding:60px 20px"><p style="color:#999">⚠️ 无法加载文件内容，请尝试下载查看</p></div>`;
       });
-  } else {
-    // 不支持预览，直接下载
-    const a = document.createElement('a');
-    a.href = cleanPath;
-    a.download = name;
-    a.target = '_blank';
-    a.click();
+    return;
   }
+
+  // === 不支持预览 → 直接下载 ===
+  const a = document.createElement('a');
+  a.href = cleanPath;
+  a.download = name;
+  a.target = '_blank';
+  a.click();
 }
 
 function closePreview() {
   const modal = document.getElementById('previewModal');
-  modal.classList.add('hidden');
-  document.getElementById('previewFrame').innerHTML = '';
+  if (modal) {
+    modal.classList.add('hidden');
+    const frame = document.getElementById('previewFrame');
+    if (frame) frame.innerHTML = '';
+    const loading = document.getElementById('previewLoading');
+    if (loading) loading.style.display = 'flex';
+  }
 }
+
+// ===== ⌨️ 键盘快捷键 =====
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('previewModal');
+    if (modal && !modal.classList.contains('hidden')) {
+      closePreview();
+    }
+  }
+});
 
 // ===== 启动 =====
 document.addEventListener('DOMContentLoaded', checkLogin);

@@ -12,6 +12,7 @@ window.allFiles = allFiles;
 // 页面加载
 document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
+  document.getElementById('loadingIndicator')?.classList.add('hidden');
   renderDock();        // 渲染底部dock栏
   renderSubjects();
   renderFiles();
@@ -150,6 +151,11 @@ function filterSubject(subjectId, tabElement) {
   renderFiles();
 }
 
+// 获取文件类型图标
+function getFileExt(path) {
+  return path.split('?')[0].split('.').pop().toLowerCase();
+}
+
 // 渲染文件列表
 function renderFiles() {
   const container = document.getElementById('fileList');
@@ -173,7 +179,7 @@ function renderFiles() {
     return;
   }
 
-  container.innerHTML = filtered.map(file => {
+  container.innerHTML = filtered.map((file, idx) => {
     const subject = subjects.find(s => s.id === file.subject);
     const emoji = subject ? subject.emoji : '📄';
     const color = subject ? subject.color : '#636e72';
@@ -181,14 +187,21 @@ function renderFiles() {
     // 获取标签样式（优先标签配置）
     const tag = file.tag || subject?.name || '资料';
     const tagStyle = getTagStyle(tag, file.subject);
+    
+    // 文件类型标记
+    const ext = getFileExt(file.path);
+    const previewable = ['pdf','doc','docx','xls','xlsx','ppt','pptx','jpg','jpeg','png','gif','webp','svg','txt'].includes(ext);
+    
+    // 延迟动画（前12个有错开延迟）
+    const delay = Math.min(idx * 40, 480);
 
     return `
-      <div class="file-card" onclick="downloadFile('${file.path}', '${file.name.replace(/'/g, "\\'")}')">
+      <div class="file-card" style="--delay:${delay}ms" onclick="downloadFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">
         <div class="file-icon" style="background: ${tagStyle.bg}; color: ${tagStyle.color}">
           ${emoji}
         </div>
         <div class="file-info">
-          <div class="file-name">${file.name}</div>
+          <div class="file-name">${file.name} <span class="file-type-badge">${ext}</span></div>
           <div class="file-meta">
             <span>${file.date}</span>
             <span>${file.size}</span>
@@ -197,12 +210,15 @@ function renderFiles() {
           </div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
-          <button class="file-icon-btn file-preview-btn" onclick="event.stopPropagation(); if(window.previewFile)previewFile('${file.path}', '${file.name.replace(/'/g, "\\'")}')" style="padding:4px 10px;border-radius:8px;background:var(--bg);border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-weight:500">预览</button>
-          <button class="file-download" onclick="event.stopPropagation(); downloadFile('${file.path}', '${file.name.replace(/'/g, "\\'")}')">⬇</button>
+          ${previewable ? `<button class="file-icon-btn file-preview-btn" onclick="event.stopPropagation(); if(window.previewFile)previewFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')" style="padding:4px 10px;border-radius:8px;background:var(--bg);border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-weight:500">👁 预览</button>` : ''}
+          <button class="file-download" onclick="event.stopPropagation(); downloadFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">⬇</button>
         </div>
       </div>
     `;
   }).join('');
+
+  // 强制触发重排以启动动画
+  void container.offsetWidth;
 }
 
 // 下载文件 + 计数
