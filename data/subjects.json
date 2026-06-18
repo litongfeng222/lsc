@@ -98,6 +98,41 @@
       "name": "笔记",
       "emoji": "🏷",
       "color": "#6c5ce7"
+    },
+    "chinese": {
+      "name": "重要",
+      "emoji": "📖",
+      "color": "#e74c3c"
+    },
+    "math": {
+      "name": "数学",
+      "emoji": "📐",
+      "color": "#3498db"
+    },
+    "english": {
+      "name": "英语",
+      "emoji": "🌍",
+      "color": "#2ecc71"
+    },
+    "physics": {
+      "name": "物理",
+      "emoji": "⚡",
+      "color": "#9b59b6"
+    },
+    "politics": {
+      "name": "道法",
+      "emoji": "📜",
+      "color": "#f39c12"
+    },
+    "method": {
+      "name": "学习方法",
+      "emoji": "💡",
+      "color": "#1abc9c"
+    },
+    "other": {
+      "name": "其他",
+      "emoji": "📦",
+      "color": "#95a5a6"
     }
   }
 }
