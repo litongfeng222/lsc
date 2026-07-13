@@ -3,136 +3,119 @@
     {
       "id": "chinese",
       "name": "语文",
-      "emoji": "📖",
+      "emoji": "",
       "color": "#e74c3c"
     },
     {
       "id": "math",
       "name": "数学",
-      "emoji": "📐",
+      "emoji": "",
       "color": "#3498db"
     },
     {
       "id": "english",
       "name": "英语",
-      "emoji": "🌍",
+      "emoji": "",
       "color": "#2ecc71"
     },
     {
       "id": "physics",
       "name": "物理",
-      "emoji": "⚡",
+      "emoji": "",
       "color": "#9b59b6"
     },
     {
+      "id": "chemistry",
+      "name": "化学",
+      "emoji": "",
+      "color": "#e67e22"
+    },
+    {
+      "id": "biology",
+      "name": "生物",
+      "emoji": "",
+      "color": "#27ae60"
+    },
+    {
       "id": "politics",
-      "name": "道法",
-      "emoji": "📜",
+      "name": "政治",
+      "emoji": "",
       "color": "#f39c12"
+    },
+    {
+      "id": "geography",
+      "name": "地理",
+      "emoji": "",
+      "color": "#1abc9c"
+    },
+    {
+      "id": "history",
+      "name": "历史",
+      "emoji": "",
+      "color": "#8e44ad"
     },
     {
       "id": "method",
       "name": "学习方法",
-      "emoji": "💡",
+      "emoji": "",
       "color": "#1abc9c"
-    },
-    {
-      "id": "other",
-      "name": "其他",
-      "emoji": "📦",
-      "color": "#95a5a6"
     }
   ],
   "extraTags": {
     "tag_1781533449548": {
       "name": "万唯资料",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533459531": {
       "name": "万唯练习",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533462745": {
       "name": "学校资料",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533466807": {
       "name": "学校练习",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533494196": {
       "name": "答案",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533499926": {
       "name": "试卷",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533524001": {
       "name": "练习（有答案）",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533534432": {
       "name": "练习（无答案）",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533541267": {
       "name": "考试思路",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533545930": {
       "name": "学习方法",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
     },
     "tag_1781533550970": {
       "name": "笔记",
-      "emoji": "🏷",
+      "emoji": "",
       "color": "#6c5ce7"
-    },
-    "chinese": {
-      "name": "重要",
-      "emoji": "📖",
-      "color": "#e74c3c"
-    },
-    "math": {
-      "name": "数学",
-      "emoji": "📐",
-      "color": "#3498db"
-    },
-    "english": {
-      "name": "英语",
-      "emoji": "🌍",
-      "color": "#2ecc71"
-    },
-    "physics": {
-      "name": "物理",
-      "emoji": "⚡",
-      "color": "#9b59b6"
-    },
-    "politics": {
-      "name": "道法",
-      "emoji": "📜",
-      "color": "#f39c12"
-    },
-    "method": {
-      "name": "学习方法",
-      "emoji": "💡",
-      "color": "#1abc9c"
-    },
-    "other": {
-      "name": "其他",
-      "emoji": "📦",
-      "color": "#95a5a6"
     }
   }
 }
