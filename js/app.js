@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderFiles();
   populateSubjectSelect();
   loadTagConfigs();
+  renderDock();
 });
 
 // 加载数据
@@ -30,7 +31,6 @@ async function loadData() {
 function populateSubjectSelect() {
   const select = document.getElementById('searchSubject');
   if (!select) return;
-  // 保留"全部科目"选项
   select.innerHTML = '<option value="all">全部科目</option>';
   subjects.forEach(s => {
     const opt = document.createElement('option');
@@ -52,14 +52,66 @@ function fuzzyMatch(text, query) {
   if (!query) return true;
   const t = text.toLowerCase();
   const q = query.toLowerCase();
-  // 1. 子串匹配（"期末" 能匹配 "期末考试"）
   if (t.includes(q)) return true;
-  // 2. 逐字匹配（"学期末考试" 能匹配 "期末考试"）
   let qi = 0;
   for (let i = 0; i < t.length && qi < q.length; i++) {
     if (t[i] === q[qi]) qi++;
   }
   return qi === q.length;
+}
+
+// ===== 渲染底部dock栏（灵动收圆风格） =====
+function renderDock() {
+  const container = document.getElementById('dockContainer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="bottom-dock" id="bottomDock">
+      <a href="./upload.html" class="dock-btn dock-btn-primary" ontouchstart="">
+        <span class="dock-icon">⏫</span>
+        <span class="dock-label">分享资料</span>
+      </a>
+      <div class="dock-divider"></div>
+      <button class="dock-btn-circle" onclick="showRanking()" ontouchstart="" title="排行榜">
+        🏆
+      </button>
+    </div>
+  `;
+
+  document.body.classList.add('has-dock');
+
+  // 监听滚动实现dock栏收起/展开
+  setupDockScroll();
+}
+
+function setupDockScroll() {
+  const dock = document.getElementById('bottomDock');
+  if (!dock) return;
+
+  let lastScrollY = 0;
+  let ticking = false;
+
+  // 先获取dock的原始完整高度作为展开状态
+  const expandClass = 'dock-expanded';
+  dock.classList.add(expandClass);
+
+  window.addEventListener('scroll', () => {
+    lastScrollY = window.scrollY;
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        // 如果滚动位置 > 50px，收起成小圆球
+        if (lastScrollY > 50) {
+          dock.classList.remove(expandClass);
+          dock.classList.add('dock-collapsed');
+        } else {
+          dock.classList.add(expandClass);
+          dock.classList.remove('dock-collapsed');
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
 }
 
 // ===== 标签颜色配置 =====
@@ -146,7 +198,7 @@ function getFileExt(path) {
   return path.split('?')[0].split('.').pop().toLowerCase();
 }
 
-// ===== 渲染文件列表（支持搜索和筛选） =====
+// ===== 渲染文件列表 =====
 function renderFiles(query, subjectFilter) {
   const container = document.getElementById('fileList');
   if (!container) return;
@@ -155,14 +207,11 @@ function renderFiles(query, subjectFilter) {
   const subFilter = subjectFilter || currentSubject;
 
   let filtered = allFiles.filter(f => {
-    // 科目筛选
     if (subFilter !== 'all' && f.subject !== subFilter) return false;
-    // 模糊搜索
     if (q && !fuzzyMatch(f.name, q)) return false;
     return true;
   });
 
-  // 按时间排序（最新的在前面）
   filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   if (filtered.length === 0) {
@@ -184,6 +233,7 @@ function renderFiles(query, subjectFilter) {
     const ext = getFileExt(file.path);
     const previewable = ['pdf','doc','docx','xls','xlsx','ppt','pptx','jpg','jpeg','png','gif','webp','svg','txt'].includes(ext);
     const delay = Math.min(idx * 40, 480);
+    const downloads = file.downloads || 0;
 
     return `
       <div class="file-card" style="--delay:${delay}ms">
@@ -193,6 +243,7 @@ function renderFiles(query, subjectFilter) {
             <span>${file.date}</span>
             <span>${file.size}</span>
             <span class="file-badge" style="background: ${tagStyle.labelBg}">${tag}</span>
+            <span class="download-count">⬇ ${downloads}</span>
             ${file.uploader ? `<span>👤 ${file.uploader}</span>` : ''}
           </div>
         </div>
@@ -253,6 +304,7 @@ async function downloadFile(path, name) {
     });
 
     allFiles[idx].downloads = (allFiles[idx].downloads || 0) + 1;
+    renderFiles();
   } catch(e) {
     console.warn('下载计数失败（不影响下载）:', e);
   }
