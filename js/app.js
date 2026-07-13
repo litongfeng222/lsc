@@ -1,8 +1,7 @@
-/* ===== 师大附·11班·学习小组 主程序 ===== */
+/* ===== 学习小组 主程序 ===== */
 let subjects = [];
 let allFiles = [];
 let currentSubject = 'all';
-// 标签颜色配置（从 subjects.json 或 localStorage 加载）
 let tagConfigs = {};
 
 // 暴露全局供admin.js使用
@@ -13,11 +12,10 @@ window.allFiles = allFiles;
 document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
   document.getElementById('loadingIndicator')?.classList.add('hidden');
-  renderDock();        // 渲染底部dock栏
   renderSubjects();
   renderFiles();
-  updateStats();
-  loadTagConfigs();     // 加载标签颜色配置
+  populateSubjectSelect();
+  loadTagConfigs();
 });
 
 // 加载数据
@@ -28,55 +26,62 @@ async function loadData() {
   window.allFiles = allFiles;
 }
 
-// ===== 渲染底部dock栏（鸿蒙液态玻璃风格） =====
-function renderDock() {
-  const container = document.getElementById('dockContainer');
-  if (!container) return;
+// 填充搜索框的科目下拉
+function populateSubjectSelect() {
+  const select = document.getElementById('searchSubject');
+  if (!select) return;
+  // 保留"全部科目"选项
+  select.innerHTML = '<option value="all">全部科目</option>';
+  subjects.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name;
+    select.appendChild(opt);
+  });
+}
 
-  container.innerHTML = `
-    <div class="bottom-dock">
-      <a href="./upload.html" class="dock-btn dock-btn-primary" ontouchstart="">
-        <span>📤</span>
-        <span>分享资料</span>
-      </a>
-      <div class="dock-divider"></div>
-      <button class="dock-btn-circle" onclick="showRanking()" ontouchstart="" title="排行榜">
-        🏆
-      </button>
-    </div>
-  `;
+// ===== 模糊搜索 =====
+function doSearch() {
+  const query = document.getElementById('searchInput')?.value?.trim() || '';
+  const subjectFilter = document.getElementById('searchSubject')?.value || 'all';
+  renderFiles(query, subjectFilter);
+}
 
-  document.body.classList.add('has-dock');
+// 简单中文模糊匹配
+function fuzzyMatch(text, query) {
+  if (!query) return true;
+  const t = text.toLowerCase();
+  const q = query.toLowerCase();
+  // 1. 子串匹配（"期末" 能匹配 "期末考试"）
+  if (t.includes(q)) return true;
+  // 2. 逐字匹配（"学期末考试" 能匹配 "期末考试"）
+  let qi = 0;
+  for (let i = 0; i < t.length && qi < q.length; i++) {
+    if (t[i] === q[qi]) qi++;
+  }
+  return qi === q.length;
 }
 
 // ===== 标签颜色配置 =====
 function loadTagConfigs() {
-  // 先从 localStorage 加载（本地缓存）
   const cached = localStorage.getItem('lsc_tag_configs');
   if (cached) {
     try { tagConfigs = JSON.parse(cached); } catch(e) {}
   }
-
-  // 再从 subjects.json 的默认标签读取
   (subjects || []).forEach(s => {
     if (!tagConfigs[s.id]) {
       tagConfigs[s.id] = { name: s.name, emoji: s.emoji, color: s.color || '#636e72' };
     }
   });
-
-  // 标记已加载，供 admin.js 使用
   window._tagConfigs = tagConfigs;
 }
 
-// 获取标签颜色（优先 tags，否则使用学科色）
 function getTagStyle(tag, subjectId) {
-  // 自定义标签配置中查
   for (const [id, cfg] of Object.entries(tagConfigs)) {
     if (cfg.name === tag) {
       return { bg: cfg.color + '20', color: cfg.color, labelBg: cfg.color };
     }
   }
-  // 学科默认色
   const sub = subjects.find(s => s.id === subjectId);
   const c = sub ? sub.color : '#636e72';
   return { bg: c + '20', color: c, labelBg: c };
@@ -84,10 +89,7 @@ function getTagStyle(tag, subjectId) {
 
 // ===== 背景图支持 =====
 async function applyBgFromConfig() {
-  // 优先从 localStorage 读取（管理员手动设置的）
   let bgUrl = localStorage.getItem('lsc_bg_image');
-
-  // 没有本地缓存则从 subjects.json 加载
   if (!bgUrl) {
     try {
       const r = await fetch('./data/subjects.json?' + Date.now());
@@ -98,72 +100,67 @@ async function applyBgFromConfig() {
       }
     } catch(e) {}
   }
-
   if (bgUrl) {
     document.body.style.backgroundImage = `url(${bgUrl})`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundAttachment = 'fixed';
     document.body.style.backgroundPosition = 'center';
     document.body.classList.add('has-bg');
-    // 预览
     const preview = document.getElementById('bgPreview');
     if (preview) preview.style.backgroundImage = `url(${bgUrl})`;
   }
 }
-
-// 供 admin.js 调用的全局方法
 window.applyBgFromConfig = applyBgFromConfig;
 
-// ===== 渲染分类标签 =====
+// ===== 渲染科目导航 =====
 function renderSubjects() {
   const nav = document.getElementById('subjectsNav');
-  
-  // "全部" 标签
+  if (!nav) return;
+
   const allTab = document.createElement('div');
   allTab.className = 'subject-tab active';
-  allTab.textContent = '📂 全部';
+  allTab.textContent = '全部';
   allTab.dataset.subject = 'all';
   allTab.onclick = () => filterSubject('all', allTab);
   nav.appendChild(allTab);
 
-  // 各科目标签
   subjects.forEach(sub => {
     const tab = document.createElement('div');
     tab.className = 'subject-tab';
-    tab.textContent = `${sub.emoji} ${sub.name}`;
+    tab.textContent = sub.name;
     tab.dataset.subject = sub.id;
     tab.onclick = () => filterSubject(sub.id, tab);
     nav.appendChild(tab);
   });
 }
 
-// 筛选科目
 function filterSubject(subjectId, tabElement) {
   currentSubject = subjectId;
-  
-  // 更新标签高亮
   document.querySelectorAll('.subject-tab').forEach(t => t.classList.remove('active'));
   tabElement.classList.add('active');
-
-  // 滚动到标签位置
   tabElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-
-  renderFiles();
+  doSearch();
 }
 
-// 获取文件类型图标
 function getFileExt(path) {
   return path.split('?')[0].split('.').pop().toLowerCase();
 }
 
-// 渲染文件列表
-function renderFiles() {
+// ===== 渲染文件列表（支持搜索和筛选） =====
+function renderFiles(query, subjectFilter) {
   const container = document.getElementById('fileList');
-  
-  // 筛选
-  const filtered = currentSubject === 'all'
-    ? allFiles
-    : allFiles.filter(f => f.subject === currentSubject);
+  if (!container) return;
+
+  const q = (query || '').trim().toLowerCase();
+  const subFilter = subjectFilter || currentSubject;
+
+  let filtered = allFiles.filter(f => {
+    // 科目筛选
+    if (subFilter !== 'all' && f.subject !== subFilter) return false;
+    // 模糊搜索
+    if (q && !fuzzyMatch(f.name, q)) return false;
+    return true;
+  });
 
   // 按时间排序（最新的在前面）
   filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -172,8 +169,8 @@ function renderFiles() {
     container.innerHTML = `
       <div class="empty-state">
         <div class="emoji">📭</div>
-        <h3>这里还没有资料</h3>
-        <p>资料正在路上，稍后再来看看吧～</p>
+        <h3>没有找到资料</h3>
+        <p>换个关键词试试吧</p>
       </div>
     `;
     return;
@@ -181,65 +178,50 @@ function renderFiles() {
 
   container.innerHTML = filtered.map((file, idx) => {
     const subject = subjects.find(s => s.id === file.subject);
-    const emoji = subject ? subject.emoji : '📄';
     const color = subject ? subject.color : '#636e72';
-
-    // 获取标签样式（优先标签配置）
     const tag = file.tag || subject?.name || '资料';
     const tagStyle = getTagStyle(tag, file.subject);
-    
-    // 文件类型标记
     const ext = getFileExt(file.path);
     const previewable = ['pdf','doc','docx','xls','xlsx','ppt','pptx','jpg','jpeg','png','gif','webp','svg','txt'].includes(ext);
-    
-    // 延迟动画（前12个有错开延迟）
     const delay = Math.min(idx * 40, 480);
 
     return `
-      <div class="file-card" style="--delay:${delay}ms" onclick="downloadFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">
-        <div class="file-icon" style="background: ${tagStyle.bg}; color: ${tagStyle.color}">
-          ${emoji}
-        </div>
-        <div class="file-info">
+      <div class="file-card" style="--delay:${delay}ms">
+        <div class="file-info" onclick="downloadFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">
           <div class="file-name">${file.name} <span class="file-type-badge">${ext}</span></div>
           <div class="file-meta">
             <span>${file.date}</span>
             <span>${file.size}</span>
             <span class="file-badge" style="background: ${tagStyle.labelBg}">${tag}</span>
-            ${file.uploader ? `<span style="font-size:11px;color:#999">👤 ${file.uploader}</span>` : ''}
+            ${file.uploader ? `<span>👤 ${file.uploader}</span>` : ''}
           </div>
         </div>
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          ${previewable ? `<button class="file-icon-btn file-preview-btn" onclick="event.stopPropagation(); if(window.previewFile)previewFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')" style="padding:4px 10px;border-radius:8px;background:var(--bg);border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-weight:500">👁 预览</button>` : ''}
+        <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
+          ${previewable ? `<button class="file-icon-btn file-preview-btn" onclick="event.stopPropagation(); if(window.previewFile)previewFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">👁</button>` : ''}
           <button class="file-download" onclick="event.stopPropagation(); downloadFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">⬇</button>
         </div>
       </div>
     `;
   }).join('');
 
-  // 强制触发重排以启动动画
   void container.offsetWidth;
 }
 
 // 下载文件 + 计数
 async function downloadFile(path, name) {
-  // 先触发下载
   const a = document.createElement('a');
   a.href = path;
   a.download = name;
   a.target = '_blank';
   a.click();
 
-  // 异步增加下载计数（如果用户存了Token）
   const token = localStorage.getItem('lsc_gh_token');
   if (!token) return;
 
   try {
-    // 找到文件名在 allFiles 中的索引
     const idx = allFiles.findIndex(f => f.path === path || f.name === name);
     if (idx === -1) return;
 
-    // 从 GitHub 获取最新的 files.json
     const res = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
       headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
     });
@@ -250,12 +232,10 @@ async function downloadFile(path, name) {
     const parsed = JSON.parse(decoded);
     const ghFiles = parsed.files;
 
-    // 找到对应文件，累加下载次数
     const ghIdx = ghFiles.findIndex(f => f.path === path);
     if (ghIdx === -1) return;
     ghFiles[ghIdx].downloads = (ghFiles[ghIdx].downloads || 0) + 1;
 
-    // 写回 GitHub
     const updated = JSON.stringify(parsed, null, 2);
     const encoded = btoa(unescape(encodeURIComponent(updated)));
     await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
@@ -272,20 +252,8 @@ async function downloadFile(path, name) {
       })
     });
 
-    // 同步更新内存数据
     allFiles[idx].downloads = (allFiles[idx].downloads || 0) + 1;
   } catch(e) {
-    // 静默失败，不影响下载体验
     console.warn('下载计数失败（不影响下载）:', e);
   }
 }
-
-// 更新统计
-function updateStats() {
-  document.getElementById('fileCount').textContent = allFiles.length;
-  // 资料大小后续可计算
-}
-
-// ===== 🧩 模块扩展预留 =====
-// 后续添加模块时，在这里注册
-// const MODULES = {};
