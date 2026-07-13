@@ -108,6 +108,14 @@ async function loadGhFiles() {
 
 async function saveGhFiles(files) {
   const json = JSON.stringify({ files }, null, 2);
+  // 每次保存前先获取最新的 sha，避免 sha 过期或缺失
+  try {
+    const latest = await ghGet(FILES_PATH);
+    window._ghSha = latest.sha;
+  } catch(e) {
+    // 如果文件还没有（首次），sha 传 undefined 即可
+    window._ghSha = undefined;
+  }
   const result = await ghPut(FILES_PATH, json, window._ghSha, '📝 管理员更新资料');
   if (result.content) {
     window._ghSha = result.content.sha;
