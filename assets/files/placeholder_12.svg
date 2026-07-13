@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#fd79a8" opacity="0.3"/>
+  <rect x="50" y="50" width="700" height="500" rx="20" fill="#fd79a8" opacity="0.5"/>
+  <text x="400" y="300" text-anchor="middle" dominant-baseline="central" font-size="48" fill="white" font-weight="bold" opacity="0.8">占位图 12</text>
+</svg>
