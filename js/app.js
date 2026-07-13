@@ -283,7 +283,6 @@ async function downloadFile(path, name) {
 // 更新统计
 function updateStats() {
   document.getElementById('fileCount').textContent = allFiles.length;
-  document.getElementById('subjectCount').textContent = subjects.length;
   // 资料大小后续可计算
 }
 
