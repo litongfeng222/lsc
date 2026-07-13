@@ -2,6 +2,7 @@
 let subjects = [];
 let allFiles = [];
 let currentSubject = 'all';
+let currentSort = 'date_desc';
 let tagConfigs = {};
 
 // 暴露全局供admin.js使用
@@ -10,8 +11,10 @@ window.allFiles = allFiles;
 
 // 页面加载
 document.addEventListener('DOMContentLoaded', async () => {
+  // 先显示骨架屏
+  showSkeleton();
   await loadData();
-  document.getElementById('loadingIndicator')?.classList.add('hidden');
+  hideSkeleton();
   renderSubjects();
   renderFiles();
   populateSubjectSelect();
@@ -40,6 +43,22 @@ function populateSubjectSelect() {
   });
 }
 
+// ===== 骨架屏 =====
+function showSkeleton() {
+  const container = document.getElementById('fileList');
+  if (!container) return;
+  container.innerHTML = Array.from({length: 6}, (_, i) => `
+    <div class="skeleton-card" style="animation-delay:${i * 0.06}s">
+      <div class="skeleton-line skeleton-name"></div>
+      <div class="skeleton-line skeleton-meta"></div>
+    </div>
+  `).join('');
+}
+
+function hideSkeleton() {
+  // 自然被renderFiles覆盖
+}
+
 // ===== 模糊搜索 =====
 function doSearch() {
   const query = document.getElementById('searchInput')?.value?.trim() || '';
@@ -47,7 +66,6 @@ function doSearch() {
   renderFiles(query, subjectFilter);
 }
 
-// 简单中文模糊匹配
 function fuzzyMatch(text, query) {
   if (!query) return true;
   const t = text.toLowerCase();
@@ -58,6 +76,44 @@ function fuzzyMatch(text, query) {
     if (t[i] === q[qi]) qi++;
   }
   return qi === q.length;
+}
+
+// ===== 搜索高亮 =====
+function highlightText(text, query) {
+  if (!query) return escapeHtml(text);
+  const q = query.toLowerCase();
+  const t = text;
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(q);
+  if (idx !== -1) {
+    return escapeHtml(t.slice(0, idx)) + '<mark>' + escapeHtml(t.slice(idx, idx + q.length)) + '</mark>' + escapeHtml(t.slice(idx + q.length));
+  }
+  // 逐字匹配
+  let result = '';
+  let qi = 0;
+  for (let i = 0; i < t.length && qi < q.length; i++) {
+    if (t[i].toLowerCase() === q[qi]) {
+      result += '<mark>' + escapeHtml(t[i]) + '</mark>';
+      qi++;
+    } else {
+      result += escapeHtml(t[i]);
+    }
+  }
+  result += escapeHtml(t.slice(result.replace(/<\/?mark>/g, '').length));
+  return result;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ===== 排序 =====
+function setSort(mode) {
+  currentSort = mode;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === mode));
+  doSearch();
 }
 
 // ===== 渲染底部dock栏（华为音乐式渐进收圆） =====
@@ -91,58 +147,41 @@ function setupDockProgressive() {
   const ballIcon = document.getElementById('dockBallIcon');
   if (!dock || !inner || !ballIcon) return;
 
-  // 记录dock完全展开时的宽度
   let fullWidth = 0;
-  let scrollDir = 'down';
-  let prevScrollY = 0;
   let ticking = false;
   let isBall = false;
 
-  // 先展开量一下宽度
   dock.style.transition = 'none';
   inner.style.opacity = '1';
   ballIcon.style.display = 'none';
   fullWidth = dock.offsetWidth;
-  // 加一点余量更自然
   fullWidth = Math.max(fullWidth, 180);
 
   const MIN_WIDTH = 52;
-  const SCROLL_RANGE = 300; // 从开始变化到完全缩成球的滚动距离
+  const SCROLL_RANGE = 300;
 
   function updateDock(scrollY) {
-    // 前50px不变，之后渐变
     let raw = 0;
     if (scrollY > 50) {
       raw = Math.min((scrollY - 50) / SCROLL_RANGE, 1);
     }
-    // 用 ease-out 曲线让变化更自然
     const progress = raw * (2 - raw);
-
-    // 计算宽度（线性插值）
     const w = fullWidth - (fullWidth - MIN_WIDTH) * progress;
-
-    // 计算 border-radius（60px → 50% = 26px）
     const br = 60 - (60 - 26) * progress;
-
-    // 内按钮透明度（1 → 0，后段更快淡出）
     const innerOpacity = Math.max(1 - progress * 1.4, 0);
-
-    // 背景颜色插值（玻璃 → 紫色）
     const bgAlpha = 0.15 + 0.7 * progress;
 
-    // 应用样式
     dock.style.width = Math.round(w) + 'px';
     dock.style.borderRadius = Math.round(br) + 'px';
     dock.style.background = progress < 0.05
       ? 'rgba(255, 255, 255, 0.15)'
       : `rgba(108, 92, 231, ${Math.min(bgAlpha, 0.85)})`;
     dock.style.backdropFilter = progress < 0.05
-      ? `blur(var(--dock-blur))`
+      ? 'blur(var(--dock-blur))'
       : `blur(${Math.round(38 - 18 * progress)}px)`;
     inner.style.opacity = innerOpacity;
     inner.style.pointerEvents = innerOpacity < 0.2 ? 'none' : 'auto';
 
-    // 判断是否完全成球
     const nowIsBall = progress > 0.92;
     if (nowIsBall && !isBall) {
       ballIcon.style.display = 'flex';
@@ -152,18 +191,14 @@ function setupDockProgressive() {
       isBall = true;
     } else if (!nowIsBall && isBall) {
       ballIcon.style.opacity = '0';
-      setTimeout(() => {
-        if (!isBall) ballIcon.style.display = 'none';
-      }, 200);
+      setTimeout(() => { if (!isBall) ballIcon.style.display = 'none'; }, 200);
       dock.style.cursor = 'default';
       isBall = false;
     }
   }
 
-  // 初始状态
   updateDock(0);
 
-  // 点击球展开到全尺寸
   dock.addEventListener('click', function onDockClick(e) {
     if (isBall) {
       e.stopPropagation();
@@ -171,14 +206,9 @@ function setupDockProgressive() {
     }
   });
 
-  // 滚动时渐进变化
   window.addEventListener('scroll', () => {
     if (!ticking) {
-      requestAnimationFrame(() => {
-        const sy = window.scrollY;
-        updateDock(sy);
-        ticking = false;
-      });
+      requestAnimationFrame(() => { updateDock(window.scrollY); ticking = false; });
       ticking = true;
     }
   }, { passive: true });
@@ -216,10 +246,7 @@ async function applyBgFromConfig() {
     try {
       const r = await fetch('./data/subjects.json?' + Date.now());
       const d = await r.json();
-      if (d.bgImage) {
-        bgUrl = d.bgImage;
-        localStorage.setItem('lsc_bg_image', bgUrl);
-      }
+      if (d.bgImage) { bgUrl = d.bgImage; localStorage.setItem('lsc_bg_image', bgUrl); }
     } catch(e) {}
   }
   if (bgUrl) {
@@ -268,6 +295,14 @@ function getFileExt(path) {
   return path.split('?')[0].split('.').pop().toLowerCase();
 }
 
+// ===== 最新动态（最近3条） =====
+function getRecentActivity(files) {
+  return files.slice(0, 3).map(f => {
+    const sub = subjects.find(s => s.id === f.subject);
+    return { name: f.name, uploader: f.uploader || '管理员', date: f.date, subject: sub?.name || '资料' };
+  });
+}
+
 // ===== 渲染文件列表 =====
 function renderFiles(query, subjectFilter) {
   const container = document.getElementById('fileList');
@@ -282,44 +317,75 @@ function renderFiles(query, subjectFilter) {
     return true;
   });
 
-  filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+  // 排序
+  switch (currentSort) {
+    case 'date_desc': filtered.sort((a, b) => new Date(b.date) - new Date(a.date)); break;
+    case 'date_asc':  filtered.sort((a, b) => new Date(a.date) - new Date(b.date)); break;
+    case 'downloads': filtered.sort((a, b) => (b.downloads || 0) - (a.downloads || 0)); break;
+    case 'name':      filtered.sort((a, b) => a.name.localeCompare(b.name, 'zh')); break;
+  }
 
-  if (filtered.length === 0) {
+  if (filtered.length === 0 && !document.querySelector('.skeleton-card')) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="emoji">📭</div>
         <h3>没有找到资料</h3>
-        <p>换个关键词试试吧</p>
+        <p>${q ? '换个关键词试试吧' : '还没有人上传资料，快来分享吧～'}</p>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = filtered.map((file, idx) => {
+  // 最新动态提示条
+  const recent = getRecentActivity(filtered);
+  const recentHtml = recent.length > 0 ? `
+    <div class="recent-bar">
+      <span class="recent-dot"></span>
+      <span>最近更新：${recent.map(r => `${r.uploader}分享了「${r.name}」`).join(' · ')}</span>
+    </div>
+  ` : '';
+
+  // 排序按钮
+  const sorts = [
+    { id: 'date_desc', label: '最新' },
+    { id: 'downloads', label: '热门' },
+    { id: 'name',      label: '名称' }
+  ];
+  const sortHtml = `
+    <div class="sort-bar">
+      ${sorts.map(s => `<button class="sort-btn${currentSort === s.id ? ' active' : ''}" data-sort="${s.id}" onclick="setSort('${s.id}')">${s.label}</button>`).join('')}
+      <span class="sort-count">共 ${filtered.length} 份资料</span>
+    </div>
+  `;
+
+  container.innerHTML = recentHtml + sortHtml + filtered.map((file, idx) => {
     const subject = subjects.find(s => s.id === file.subject);
     const color = subject ? subject.color : '#636e72';
     const tag = file.tag || subject?.name || '资料';
     const tagStyle = getTagStyle(tag, file.subject);
     const ext = getFileExt(file.path);
     const previewable = ['pdf','doc','docx','xls','xlsx','ppt','pptx','jpg','jpeg','png','gif','webp','svg','txt'].includes(ext);
-    const delay = Math.min(idx * 40, 480);
+    const delay = Math.min(idx * 30, 400);
     const downloads = file.downloads || 0;
 
+    // 高亮文件名
+    const displayName = q ? highlightText(file.name, q) : escapeHtml(file.name);
+
     return `
-      <div class="file-card" style="--delay:${delay}ms">
+      <div class="file-card" style="--delay:${delay}ms" data-name="${escapeHtml(file.name)}">
         <div class="file-info" onclick="downloadFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">
-          <div class="file-name">${file.name} <span class="file-type-badge">${ext}</span></div>
+          <div class="file-name">${displayName} <span class="file-type-badge">${ext}</span></div>
           <div class="file-meta">
             <span>${file.date}</span>
             <span>${file.size}</span>
-            <span class="file-badge" style="background: ${tagStyle.labelBg}">${tag}</span>
+            <span class="file-badge" style="background:${tagStyle.labelBg}">${tag}</span>
             <span class="download-count">⬇ ${downloads}</span>
-            ${file.uploader ? `<span>👤 ${file.uploader}</span>` : ''}
+            ${file.uploader ? `<span>👤 ${escapeHtml(file.uploader)}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
           ${previewable ? `<button class="file-icon-btn file-preview-btn" onclick="event.stopPropagation(); if(window.previewFile)previewFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">👁</button>` : ''}
-          <button class="file-download" onclick="event.stopPropagation(); downloadFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}')">⬇</button>
+          <button class="file-download-btn" id="dlbtn-${idx}" onclick="event.stopPropagation(); downloadFile('${file.path.replace(/'/g, "\\'")}', '${file.name.replace(/'/g, "\\'")}', this)">⬇</button>
         </div>
       </div>
     `;
@@ -328,13 +394,19 @@ function renderFiles(query, subjectFilter) {
   void container.offsetWidth;
 }
 
-// 下载文件 + 计数
-async function downloadFile(path, name) {
+// 下载文件 + 计数 + 按钮动效
+async function downloadFile(path, name, btn) {
   const a = document.createElement('a');
   a.href = path;
   a.download = name;
   a.target = '_blank';
   a.click();
+
+  // 按钮动效
+  if (btn) {
+    btn.classList.add('dl-clicked');
+    setTimeout(() => btn.classList.remove('dl-clicked'), 600);
+  }
 
   const token = localStorage.getItem('lsc_gh_token');
   if (!token) return;
@@ -374,7 +446,6 @@ async function downloadFile(path, name) {
     });
 
     allFiles[idx].downloads = (allFiles[idx].downloads || 0) + 1;
-    renderFiles();
   } catch(e) {
     console.warn('下载计数失败（不影响下载）:', e);
   }

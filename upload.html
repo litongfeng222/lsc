@@ -8,11 +8,11 @@
   <link rel="stylesheet" href="./css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📤</text></svg>">
   <style>
-    .file-size-limit { font-size:12px; color:#e74c3c; margin-top:4px; }
-    .step-indicator { display:flex; gap:8px; margin-bottom:16px; font-size:12px; }
-    .step { padding:4px 12px; border-radius:20px; background:#f0f0f5; color:#999; }
-    .step.active { background:#6c5ce7; color:white; }
-    .step.done { background:#00b894; color:white; }
+    .file-size-limit { font-size:12px; color:rgba(255,255,255,0.6); margin-top:4px; }
+    .upload-page label { color: rgba(255,255,255,0.9); font-weight: 600; }
+    .upload-page input, .upload-page select { background: rgba(255,255,255,0.2) !important; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.35) !important; color: white !important; }
+    .upload-page input::placeholder { color: rgba(255,255,255,0.5); }
+    .upload-page select option { color: #333; background: white; }
   </style>
 </head>
 <body>
@@ -23,53 +23,57 @@
     <p>上传学习资料，自动永久存储，与同学们一起进步！</p>
   </header>
 
-  <!-- ===== 上传表单 ===== -->
-  <div style="margin:0 16px 20px;background:white;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(108,92,231,0.08)">
+  <!-- ===== 上传表单（毛玻璃风格） ===== -->
+  <div class="upload-page" style="margin:0 16px 20px">
+    <div class="glass-panel">
     <form id="shareUploadForm">
       <!-- 上传者名字 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">👤 你的名字</label>
-      <input id="shareUploader" type="text" placeholder="请输入你的名字（如：李同丰）" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:14px" required />
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;color:white">👤 你的名字</label>
+      <input id="shareUploader" type="text" placeholder="请输入你的名字（如：李同丰）" style="width:100%;padding:10px 14px;border-radius:10px;font-size:15px;margin-bottom:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);color:white" required />
 
       <!-- 科目 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">📂 科目</label>
-      <select id="shareSubject" class="subject-select" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:14px"></select>
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;color:white">📂 科目</label>
+      <select id="shareSubject" class="subject-select" style="width:100%;padding:10px 14px;border-radius:10px;font-size:15px;margin-bottom:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);color:white"></select>
 
       <!-- 文件 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px">📎 选择文件（最大25MB）</label>
-      <input id="shareFileInput" type="file" style="width:100%;margin-bottom:4px;font-size:14px" required />
-      <div class="file-size-limit">⚠️ 超过25MB的文件暂不支持，请联系管理员</div>
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;color:white">📎 选择文件（最大25MB）</label>
+      <input id="shareFileInput" type="file" style="width:100%;margin-bottom:4px;font-size:14px;color:white" required />
+      <div class="file-size-limit" style="color:rgba(255,255,255,0.6)">⚠️ 超过25MB的文件暂不支持，请联系管理员</div>
 
       <!-- 可选：资料名称 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;margin-top:10px">✏️ 资料名称（可选）</label>
-      <input id="shareFileName" type="text" placeholder="留空则使用文件名" style="width:100%;padding:10px 14px;border:2px solid #e8e8f0;border-radius:10px;font-size:15px;margin-bottom:14px" />
+      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;margin-top:10px;color:white">✏️ 资料名称（可选）</label>
+      <input id="shareFileName" type="text" placeholder="留空则使用文件名" style="width:100%;padding:10px 14px;border-radius:10px;font-size:15px;margin-bottom:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);color:white" />
 
       <!-- 提交 -->
-      <button id="shareUploadBtn" type="submit" style="width:100%;padding:12px;background:#6c5ce7;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-weight:600">📤 分享资料</button>
-      <p id="shareUploadStatus" style="font-size:14px;margin-top:8px;color:#636e72;text-align:center"></p>
+      <button id="shareUploadBtn" type="submit" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(108,92,231,0.92),rgba(162,155,254,0.88));color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-weight:600;box-shadow:0 4px 20px rgba(108,92,231,0.3)">📤 分享资料</button>
+      <p id="shareUploadStatus" style="font-size:14px;margin-top:8px;color:rgba(255,255,255,0.8);text-align:center"></p>
       <div id="uploadProgress" style="display:none;margin-top:8px">
-        <div style="height:6px;background:#e8e8f0;border-radius:3px;overflow:hidden">
+        <div style="height:6px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden">
           <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c5ce7,#00b894);border-radius:3px;transition:width 0.3s"></div>
         </div>
-        <p id="progressText" style="font-size:12px;color:#999;margin-top:4px;text-align:center"></p>
+        <p id="progressText" style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;text-align:center"></p>
       </div>
     </form>
+    </div>
   </div>
 
-  <!-- ===== 如何上传说明 ===== -->
-  <div style="margin:0 16px 24px;background:#f0edff;border-radius:16px;padding:16px">
-    <h4 style="margin-bottom:8px;font-size:14px">💡 上传说明</h4>
-    <ul style="font-size:13px;color:#555;line-height:1.8;padding-left:16px;margin:0">
-      <li>上传后文件自动存入<span style="font-weight:600;color:#6c5ce7">永久存储</span>，所有同学都能看到</li>
+  <!-- ===== 如何上传说明（毛玻璃风格） ===== -->
+  <div style="margin:0 16px 24px">
+    <div class="glass-panel">
+    <h4 style="margin-bottom:8px;font-size:14px;color:white">💡 上传说明</h4>
+    <ul style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.8;padding-left:16px;margin:0">
+      <li>上传后文件自动存入<span style="font-weight:600;color:#a29bfe">永久存储</span>，所有同学都能看到</li>
       <li>资料旁边会显示你的名字 👤</li>
       <li>文件存储于 GitHub 仓库，<span style="font-weight:600;color:#00b894">永久有效，永不丢失</span></li>
       <li>支持 PDF、Word 文档等常见格式，点👁可直接预览</li>
       <li>如有问题，请联系管理员 李同丰</li>
     </ul>
+    </div>
   </div>
 
   <!-- ===== 返回首页 ===== -->
   <div style="text-align:center;margin-bottom:24px">
-    <a href="./index.html" style="color:#6c5ce7;font-size:14px;text-decoration:none">← 返回资料首页</a>
+    <a href="./index.html" style="color:white;font-size:14px;text-decoration:none;opacity:0.8">← 返回资料首页</a>
   </div>
 
   <!-- ===== 底部 ===== -->
