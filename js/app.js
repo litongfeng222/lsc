@@ -60,78 +60,128 @@ function fuzzyMatch(text, query) {
   return qi === q.length;
 }
 
-// ===== 渲染底部dock栏（灵动收圆风格） =====
+// ===== 渲染底部dock栏（华为音乐式渐进收圆） =====
 function renderDock() {
   const container = document.getElementById('dockContainer');
   if (!container) return;
 
   container.innerHTML = `
     <div class="bottom-dock" id="bottomDock">
-      <a href="./upload.html" class="dock-btn dock-btn-primary" ontouchstart="">
-        <span class="dock-icon">⏫</span>
-        <span class="dock-label">分享资料</span>
-      </a>
-      <div class="dock-divider"></div>
-      <button class="dock-btn-circle" onclick="showRanking()" ontouchstart="" title="排行榜">
-        🏆
-      </button>
+      <div class="dock-inner" id="dockInner">
+        <a href="./upload.html" class="dock-btn dock-btn-primary" ontouchstart="">
+          <span class="dock-icon">⏫</span>
+          <span class="dock-label">分享资料</span>
+        </a>
+        <div class="dock-divider"></div>
+        <button class="dock-btn-circle" onclick="showRanking()" ontouchstart="" title="排行榜">
+          🏆
+        </button>
+      </div>
+      <div class="dock-ball-icon" id="dockBallIcon">+</div>
     </div>
   `;
 
   document.body.classList.add('has-dock');
-
-  // 监听滚动实现dock栏收起/展开
-  setupDockScroll();
+  setupDockProgressive();
 }
 
-function setupDockScroll() {
+function setupDockProgressive() {
   const dock = document.getElementById('bottomDock');
-  if (!dock) return;
+  const inner = document.getElementById('dockInner');
+  const ballIcon = document.getElementById('dockBallIcon');
+  if (!dock || !inner || !ballIcon) return;
 
-  let lastScrollY = 0;
+  // 记录dock完全展开时的宽度
+  let fullWidth = 0;
+  let scrollDir = 'down';
+  let prevScrollY = 0;
   let ticking = false;
-  let expandedByClick = false;
+  let isBall = false;
 
-  const expandClass = 'dock-expanded';
-  const collapseClass = 'dock-collapsed';
-  dock.classList.add(expandClass);
+  // 先展开量一下宽度
+  dock.style.transition = 'none';
+  inner.style.opacity = '1';
+  ballIcon.style.display = 'none';
+  fullWidth = dock.offsetWidth;
+  // 加一点余量更自然
+  fullWidth = Math.max(fullWidth, 180);
 
-  // 点击dock（小圆球时）展开
-  dock.addEventListener('click', (e) => {
-    if (dock.classList.contains(collapseClass)) {
+  const MIN_WIDTH = 52;
+  const SCROLL_RANGE = 300; // 从开始变化到完全缩成球的滚动距离
+
+  function updateDock(scrollY) {
+    // 前50px不变，之后渐变
+    let raw = 0;
+    if (scrollY > 50) {
+      raw = Math.min((scrollY - 50) / SCROLL_RANGE, 1);
+    }
+    // 用 ease-out 曲线让变化更自然
+    const progress = raw * (2 - raw);
+
+    // 计算宽度（线性插值）
+    const w = fullWidth - (fullWidth - MIN_WIDTH) * progress;
+
+    // 计算 border-radius（60px → 50% = 26px）
+    const br = 60 - (60 - 26) * progress;
+
+    // 内按钮透明度（1 → 0，后段更快淡出）
+    const innerOpacity = Math.max(1 - progress * 1.4, 0);
+
+    // 背景颜色插值（玻璃 → 紫色）
+    const bgAlpha = 0.15 + 0.7 * progress;
+
+    // 应用样式
+    dock.style.width = Math.round(w) + 'px';
+    dock.style.borderRadius = Math.round(br) + 'px';
+    dock.style.background = progress < 0.05
+      ? 'rgba(255, 255, 255, 0.15)'
+      : `rgba(108, 92, 231, ${Math.min(bgAlpha, 0.85)})`;
+    dock.style.backdropFilter = progress < 0.05
+      ? `blur(var(--dock-blur))`
+      : `blur(${Math.round(38 - 18 * progress)}px)`;
+    inner.style.opacity = innerOpacity;
+    inner.style.pointerEvents = innerOpacity < 0.2 ? 'none' : 'auto';
+
+    // 判断是否完全成球
+    const nowIsBall = progress > 0.92;
+    if (nowIsBall && !isBall) {
+      ballIcon.style.display = 'flex';
+      ballIcon.style.opacity = '0';
+      requestAnimationFrame(() => { ballIcon.style.opacity = '1'; });
+      dock.style.cursor = 'pointer';
+      isBall = true;
+    } else if (!nowIsBall && isBall) {
+      ballIcon.style.opacity = '0';
+      setTimeout(() => {
+        if (!isBall) ballIcon.style.display = 'none';
+      }, 200);
+      dock.style.cursor = 'default';
+      isBall = false;
+    }
+  }
+
+  // 初始状态
+  updateDock(0);
+
+  // 点击球展开到全尺寸
+  dock.addEventListener('click', function onDockClick(e) {
+    if (isBall) {
       e.stopPropagation();
-      dock.classList.remove(collapseClass);
-      dock.classList.add(expandClass);
-      expandedByClick = true;
-      // 3秒后如果还没滚动回顶部，再自动收起
-      setTimeout(() => { expandedByClick = false; }, 3000);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   });
 
+  // 滚动时渐进变化
   window.addEventListener('scroll', () => {
-    lastScrollY = window.scrollY;
     if (!ticking) {
-      window.requestAnimationFrame(() => {
-        if (lastScrollY > 50) {
-          if (!expandedByClick) {
-            dock.classList.remove(expandClass);
-            dock.classList.add(collapseClass);
-          } else if (lastScrollY > 300) {
-            // 点开后又滑了很多，重新收起
-            dock.classList.remove(expandClass);
-            dock.classList.add(collapseClass);
-            expandedByClick = false;
-          }
-        } else {
-          dock.classList.add(expandClass);
-          dock.classList.remove(collapseClass);
-          expandedByClick = false;
-        }
+      requestAnimationFrame(() => {
+        const sy = window.scrollY;
+        updateDock(sy);
         ticking = false;
       });
       ticking = true;
     }
-  });
+  }, { passive: true });
 }
 
 // ===== 标签颜色配置 =====

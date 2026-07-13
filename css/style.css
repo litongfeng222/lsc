@@ -297,7 +297,7 @@ header h1 {
   color: var(--text);
 }
 
-/* ===== 底部dock栏 - 灵动收圆风格 ===== */
+/* ===== 底部dock栏 - 华为音乐式渐变动画 ===== */
 .bottom-dock {
   position: fixed;
   bottom: 28px;
@@ -305,6 +305,7 @@ header h1 {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   padding: 10px 18px 10px 22px;
   background: rgba(255, 255, 255, 0.15);
@@ -314,58 +315,38 @@ header h1 {
   border-radius: 60px;
   box-shadow: 0 8px 40px rgba(108, 92, 231, 0.12), inset 0 1px 0 rgba(255,255,255,0.4);
   z-index: 50;
-  transition: all 0.5s cubic-bezier(0.34, 1.2, 0.64, 1);
-  white-space: nowrap;
-}
-
-/* 展开状态（默认） */
-.bottom-dock.dock-expanded {
-  padding: 10px 18px 10px 22px;
-  border-radius: 60px;
-  gap: 14px;
   width: auto;
+  min-width: 52px;
+  height: 52px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 0.3s, box-shadow 0.3s;
+  cursor: default;
 }
 
-/* 收起状态（滚动后缩小成圆球） */
-.bottom-dock.dock-collapsed {
-  padding: 0;
-  gap: 0;
+.dock-ball-icon {
+  position: absolute;
+  display: none;
+  align-items: center;
+  justify-content: center;
   width: 52px;
   height: 52px;
-  border-radius: 50%;
-  justify-content: center;
-  background: rgba(108, 92, 231, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-color: rgba(255,255,255,0.3);
-  box-shadow: 0 4px 20px rgba(108,92,231,0.3);
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.bottom-dock.dock-collapsed::after {
-  content: '+';
-  font-size: 28px;
+  font-size: 30px;
   color: white;
-  font-weight: 300;
+  font-weight: 200;
   line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  z-index: 1;
 }
 
-/* 收起时隐藏内部按钮 */
-.bottom-dock.dock-collapsed .dock-btn,
-.bottom-dock.dock-collapsed .dock-btn-circle,
-.bottom-dock.dock-collapsed .dock-divider {
-  display: none;
-}
-
-/* 点击收起的圆球展开dock */
-.bottom-dock.dock-collapsed {
-  animation: dockPulse 2s ease-in-out infinite;
-}
-
-@keyframes dockPulse {
-  0%, 100% { box-shadow: 0 4px 20px rgba(108,92,231,0.3); }
-  50% { box-shadow: 0 4px 30px rgba(108,92,231,0.5); }
+/* dock内部内容容器 */
+.dock-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: opacity 0.08s linear;
+  flex-shrink: 0;
 }
 
 .dock-btn {
@@ -429,30 +410,6 @@ body.has-dock::after {
   content: '';
   display: block;
   height: 90px;
-}
-
-/* 桌面触发的hover */
-@media (hover: hover) {
-  .bottom-dock.dock-collapsed:hover {
-    width: auto;
-    height: auto;
-    padding: 10px 18px 10px 22px;
-    border-radius: 60px;
-    gap: 14px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(var(--dock-blur));
-    -webkit-backdrop-filter: blur(var(--dock-blur));
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    animation: none;
-  }
-  .bottom-dock.dock-collapsed:hover::after {
-    display: none;
-  }
-  .bottom-dock.dock-collapsed:hover .dock-btn,
-  .bottom-dock.dock-collapsed:hover .dock-btn-circle,
-  .bottom-dock.dock-collapsed:hover .dock-divider {
-    display: flex;
-  }
 }
 
 /* 毛玻璃加强: 文件卡片、科目标签等背景更通透 */
