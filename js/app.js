@@ -90,22 +90,42 @@ function setupDockScroll() {
 
   let lastScrollY = 0;
   let ticking = false;
+  let expandedByClick = false;
 
-  // 先获取dock的原始完整高度作为展开状态
   const expandClass = 'dock-expanded';
+  const collapseClass = 'dock-collapsed';
   dock.classList.add(expandClass);
+
+  // 点击dock（小圆球时）展开
+  dock.addEventListener('click', (e) => {
+    if (dock.classList.contains(collapseClass)) {
+      e.stopPropagation();
+      dock.classList.remove(collapseClass);
+      dock.classList.add(expandClass);
+      expandedByClick = true;
+      // 3秒后如果还没滚动回顶部，再自动收起
+      setTimeout(() => { expandedByClick = false; }, 3000);
+    }
+  });
 
   window.addEventListener('scroll', () => {
     lastScrollY = window.scrollY;
     if (!ticking) {
       window.requestAnimationFrame(() => {
-        // 如果滚动位置 > 50px，收起成小圆球
         if (lastScrollY > 50) {
-          dock.classList.remove(expandClass);
-          dock.classList.add('dock-collapsed');
+          if (!expandedByClick) {
+            dock.classList.remove(expandClass);
+            dock.classList.add(collapseClass);
+          } else if (lastScrollY > 300) {
+            // 点开后又滑了很多，重新收起
+            dock.classList.remove(expandClass);
+            dock.classList.add(collapseClass);
+            expandedByClick = false;
+          }
         } else {
           dock.classList.add(expandClass);
-          dock.classList.remove('dock-collapsed');
+          dock.classList.remove(collapseClass);
+          expandedByClick = false;
         }
         ticking = false;
       });
