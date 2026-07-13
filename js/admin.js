@@ -1,4 +1,4 @@
-// ===== 🔐 LSCgroup 管理后台（GitHub API 真保存版） =====
+// ===== 🔐 师大附·11班·学习小组 管理后台（GitHub API 真保存版） =====
 const ADMIN_PASSWORD = 'LSC2026';
 const REPO_OWNER = 'litongfeng222';
 const REPO_NAME = 'lsc';

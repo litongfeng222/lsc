@@ -1,4 +1,4 @@
-/* ===== LSCgroup 主程序 ===== */
+/* ===== 师大附·11班·学习小组 主程序 ===== */
 let subjects = [];
 let allFiles = [];
 let currentSubject = 'all';
