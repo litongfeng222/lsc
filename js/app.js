@@ -116,102 +116,128 @@ function setSort(mode) {
   doSearch();
 }
 
-// ===== 渲染底部dock栏（华为音乐式渐进收圆） =====
+// ===== 🎵 底部dock栏 — 华为音乐风格双态任务栏 =====
 function renderDock() {
   const container = document.getElementById('dockContainer');
   if (!container) return;
 
+  // 获取当前页面标识
+  const isUploadPage = location.pathname.includes('upload');
+  const pageIcon = isUploadPage ? '📤' : '📚';
+
   container.innerHTML = `
-    <div class="bottom-dock" id="bottomDock">
-      <div class="dock-inner" id="dockInner">
-        <a href="./upload.html" class="dock-btn dock-btn-primary" ontouchstart="">
-          <span class="dock-icon">⏫</span>
-          <span class="dock-label">分享资料</span>
+    <div class="dock" id="bottomDock">
+      <!-- 展开态：功能按钮区 -->
+      <div class="dock-expanded" id="dockExpanded">
+        <a href="./index.html" class="dock-btn" id="dockHomeBtn" ontouchstart="">
+          <span class="dock-icon">🏠</span>
+          <span class="dock-label">首页</span>
         </a>
-        <div class="dock-divider"></div>
-        <button class="dock-btn-circle" onclick="showRanking()" ontouchstart="" title="排行榜">
-          🏆
+        <a href="./upload.html" class="dock-btn dock-btn-highlight" id="dockUploadBtn" ontouchstart="">
+          <span class="dock-icon">➕</span>
+          <span class="dock-label">分享</span>
+        </a>
+        <button class="dock-btn" id="dockRankBtn" ontouchstart="">
+          <span class="dock-icon">🏆</span>
+          <span class="dock-label">排行</span>
+        </button>
+        <button class="dock-btn" id="dockInfoBtn" ontouchstart="">
+          <span class="dock-icon">📢</span>
+          <span class="dock-label">动态</span>
         </button>
       </div>
-      <div class="dock-ball-icon" id="dockBallIcon">+</div>
+
+      <!-- 紧缩态：左图标 + 右实时信息 -->
+      <div class="dock-compact" id="dockCompact">
+        <div class="dock-compact-icon" id="dockCompactIcon">${pageIcon}</div>
+        <div class="dock-compact-info" id="dockCompactInfo">
+          <div class="dock-compact-title" id="dockCompactTitle">师大附·11班</div>
+          <div class="dock-compact-desc" id="dockCompactDesc">学习小组</div>
+        </div>
+      </div>
     </div>
   `;
 
   document.body.classList.add('has-dock');
-  setupDockProgressive();
+
+  // 绑定按钮事件
+  document.getElementById('dockRankBtn')?.addEventListener('click', showRanking);
+  document.getElementById('dockInfoBtn')?.addEventListener('click', () => {
+    document.getElementById('subjectsNav')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // 绑定按钮弹性点击特效
+  document.querySelectorAll('.dock-btn').forEach(btn => {
+    btn.addEventListener('mousedown', function(e) {
+      this.classList.add('dock-btn-press');
+    });
+    btn.addEventListener('mouseup', function(e) {
+      this.classList.remove('dock-btn-press');
+      this.classList.add('dock-btn-release');
+      setTimeout(() => this.classList.remove('dock-btn-release'), 400);
+    });
+    btn.addEventListener('mouseleave', function(e) {
+      this.classList.remove('dock-btn-press');
+    });
+  });
+
+  setupDockSmart();
 }
 
-function setupDockProgressive() {
+function setupDockSmart() {
   const dock = document.getElementById('bottomDock');
-  const inner = document.getElementById('dockInner');
-  const ballIcon = document.getElementById('dockBallIcon');
-  if (!dock || !inner || !ballIcon) return;
+  const expanded = document.getElementById('dockExpanded');
+  const compact = document.getElementById('dockCompact');
+  if (!dock || !expanded || !compact) return;
 
-  let fullWidth = 0;
+  const THRESHOLD = 20; // 滚动超过20px触发切换
+  let isCompact = false;
   let ticking = false;
-  let isBall = false;
 
-  dock.style.transition = 'none';
-  inner.style.opacity = '1';
-  ballIcon.style.display = 'none';
-  fullWidth = dock.offsetWidth;
-  fullWidth = Math.max(fullWidth, 180);
+  function transitionToCompact(compact) {
+    if (isCompact === compact) return;
+    isCompact = compact;
 
-  const MIN_WIDTH = 52;
-  const SCROLL_RANGE = 300;
-
-  function updateDock(scrollY) {
-    let raw = 0;
-    if (scrollY > 50) {
-      raw = Math.min((scrollY - 50) / SCROLL_RANGE, 1);
-    }
-    const progress = raw * (2 - raw);
-    const w = fullWidth - (fullWidth - MIN_WIDTH) * progress;
-    const br = 60 - (60 - 26) * progress;
-    const innerOpacity = Math.max(1 - progress * 1.4, 0);
-    const bgAlpha = 0.15 + 0.7 * progress;
-
-    dock.style.width = Math.round(w) + 'px';
-    dock.style.borderRadius = Math.round(br) + 'px';
-    dock.style.background = progress < 0.05
-      ? 'rgba(255, 255, 255, 0.15)'
-      : `rgba(108, 92, 231, ${Math.min(bgAlpha, 0.85)})`;
-    dock.style.backdropFilter = progress < 0.05
-      ? 'blur(var(--dock-blur))'
-      : `blur(${Math.round(38 - 18 * progress)}px)`;
-    inner.style.opacity = innerOpacity;
-    inner.style.pointerEvents = innerOpacity < 0.2 ? 'none' : 'auto';
-
-    const nowIsBall = progress > 0.92;
-    if (nowIsBall && !isBall) {
-      ballIcon.style.display = 'flex';
-      ballIcon.style.opacity = '0';
-      requestAnimationFrame(() => { ballIcon.style.opacity = '1'; });
-      dock.style.cursor = 'pointer';
-      isBall = true;
-    } else if (!nowIsBall && isBall) {
-      ballIcon.style.opacity = '0';
-      setTimeout(() => { if (!isBall) ballIcon.style.display = 'none'; }, 200);
-      dock.style.cursor = 'default';
-      isBall = false;
+    if (compact) {
+      // 展开态 → 紧缩态
+      expanded.classList.add('dock-expanded-exit');
+      expanded.classList.remove('dock-expanded-enter');
+      compact.classList.add('dock-compact-enter');
+      compact.classList.remove('dock-compact-exit');
+      // 背景变色（紫色）
+      dock.classList.add('dock-condensed');
+    } else {
+      // 紧缩态 → 展开态
+      expanded.classList.remove('dock-expanded-exit');
+      expanded.classList.add('dock-expanded-enter');
+      compact.classList.remove('dock-compact-enter');
+      compact.classList.add('dock-compact-exit');
+      dock.classList.remove('dock-condensed');
     }
   }
 
-  updateDock(0);
+  function onScroll() {
+    const scrollY = window.scrollY || window.pageYOffset;
+    transitionToCompact(scrollY > THRESHOLD);
+  }
 
-  dock.addEventListener('click', function onDockClick(e) {
-    if (isBall) {
-      e.stopPropagation();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  });
+  // 初始状态
+  transitionToCompact(false);
+  onScroll();
 
   window.addEventListener('scroll', () => {
     if (!ticking) {
-      requestAnimationFrame(() => { updateDock(window.scrollY); ticking = false; });
+      requestAnimationFrame(() => { onScroll(); ticking = false; });
       ticking = true;
     }
   }, { passive: true });
+
+  // 紧缩态点击回到顶部
+  dock.addEventListener('click', function onDockClick(e) {
+    if (isCompact && !e.target.closest('.dock-btn')) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
 }
 
 // ===== 标签颜色配置 =====
