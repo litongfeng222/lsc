@@ -9,17 +9,38 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📤</text></svg>">
   <style>
     .file-size-limit { font-size:12px; color:rgba(255,255,255,0.6); margin-top:4px; }
-    .upload-page label { color: rgba(255,255,255,0.9); font-weight: 600; }
-    .upload-page input, .upload-page select { background: rgba(255,255,255,0.25) !important; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.4) !important; color: #2d3436 !important; }
-    .upload-page input::placeholder { color: rgba(0,0,0,0.55); }
-    .upload-page select option { color: #333; background: white; }
+
+    /* 浅色模式 — 文字深色，看得清 */
+    .upl-label { font-weight:600; font-size:14px; display:block; margin-bottom:6px; color:#2d3436; }
+    .upl-input { width:100%; padding:10px 14px; border-radius:10px; font-size:15px; margin-bottom:14px; background:rgba(255,255,255,0.35); border:1px solid rgba(0,0,0,0.12); color:#2d3436; }
+    .upl-input::placeholder { color: rgba(0,0,0,0.5); }
+    .upl-file-input { width:100%; margin-bottom:4px; font-size:14px; color:#2d3436; }
+    .upl-submit-btn { width:100%; padding:12px; background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:white; border:none; border-radius:10px; font-size:16px; cursor:pointer; font-weight:600; box-shadow:0 4px 20px rgba(108,92,231,0.3); }
+    .upl-status { font-size:14px; margin-top:8px; color:#2d3436; text-align:center; }
+    .upl-progress-track { height:6px; background:rgba(0,0,0,0.1); border-radius:3px; overflow:hidden; }
+    .upl-progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#6c5ce7,#00b894); border-radius:3px; transition:width 0.3s; }
+    .upl-progress-text { font-size:12px; color:#636e72; margin-top:4px; text-align:center; }
+    .upl-section-title { margin-bottom:8px; font-size:14px; color:#2d3436; }
+    .upl-info-list { font-size:13px; color:#505060; line-height:1.8; padding-left:16px; margin:0; }
+    .upl-highlight { font-weight:600; color:#6c5ce7; }
+    .upl-accent { font-weight:600; color:#00b894; }
+    .upl-back-link { color:#6c5ce7; font-size:14px; text-decoration:none; opacity:0.85; }
 
     @media (prefers-color-scheme: dark) {
       .file-size-limit { color: rgba(255,255,255,0.5); }
-      .upload-page label { color: rgba(230,225,245,0.95); }
-      .upload-page input, .upload-page select { background: rgba(0,0,0,0.35) !important; border-color: rgba(139,124,247,0.25) !important; color: #e8e6f0 !important; }
-      .upload-page input::placeholder { color: rgba(255,255,255,0.45); }
-      .upload-page select option { color: #e8e6f0; background: #1e1c2d; }
+      .upl-label { color: #e8e6f0; }
+      .upl-input { background: rgba(0,0,0,0.35); border-color: rgba(139,124,247,0.25); color: #e8e6f0; }
+      .upl-input::placeholder { color: rgba(255,255,255,0.45); }
+      .upl-file-input { color: #e8e6f0; }
+      .upl-submit-btn { background:linear-gradient(135deg,rgba(108,92,231,0.92),rgba(162,155,254,0.88)); }
+      .upl-status { color: #e8e6f0; }
+      .upl-progress-track { background:rgba(255,255,255,0.15); }
+      .upl-progress-text { color: rgba(255,255,255,0.6); }
+      .upl-section-title { color: #e8e6f0; }
+      .upl-info-list { color: #b0aec0; }
+      .upl-highlight { color: #b8b0ff; }
+      .upl-accent { color: #34d399; }
+      .upl-back-link { color: #b8b0ff; }
     }
   </style>
 </head>
@@ -36,30 +57,30 @@
     <div class="glass-panel">
     <form id="shareUploadForm">
       <!-- 上传者名字 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;color:white">👤 你的名字</label>
-      <input id="shareUploader" type="text" placeholder="请输入你的名字（如：李同丰）" style="width:100%;padding:10px 14px;border-radius:10px;font-size:15px;margin-bottom:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);color:white" required />
+      <label class="upl-label">👤 你的名字</label>
+      <input id="shareUploader" type="text" placeholder="请输入你的名字（如：李同丰）" class="upl-input" required />
 
       <!-- 科目 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;color:white">📂 科目</label>
-      <select id="shareSubject" class="subject-select" style="width:100%;padding:10px 14px;border-radius:10px;font-size:15px;margin-bottom:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);color:white"></select>
+      <label class="upl-label">📂 科目</label>
+      <select id="shareSubject" class="upl-input subject-select"></select>
 
       <!-- 文件 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;color:white">📎 选择文件（最大25MB）</label>
-      <input id="shareFileInput" type="file" style="width:100%;margin-bottom:4px;font-size:14px;color:white" required />
-      <div class="file-size-limit" style="color:rgba(255,255,255,0.6)">⚠️ 超过25MB的文件暂不支持，请联系管理员</div>
+      <label class="upl-label">📎 选择文件（最大25MB）</label>
+      <input id="shareFileInput" type="file" class="upl-file-input" required />
+      <div class="file-size-limit">⚠️ 超过25MB的文件暂不支持，请联系管理员</div>
 
       <!-- 可选：资料名称 -->
-      <label style="font-weight:600;font-size:14px;display:block;margin-bottom:6px;margin-top:10px;color:white">✏️ 资料名称（可选）</label>
-      <input id="shareFileName" type="text" placeholder="留空则使用文件名" style="width:100%;padding:10px 14px;border-radius:10px;font-size:15px;margin-bottom:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);color:white" />
+      <label class="upl-label" style="margin-top:10px">✏️ 资料名称（可选）</label>
+      <input id="shareFileName" type="text" placeholder="留空则使用文件名" class="upl-input" />
 
       <!-- 提交 -->
-      <button id="shareUploadBtn" type="submit" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(108,92,231,0.92),rgba(162,155,254,0.88));color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-weight:600;box-shadow:0 4px 20px rgba(108,92,231,0.3)">📤 分享资料</button>
-      <p id="shareUploadStatus" style="font-size:14px;margin-top:8px;color:rgba(255,255,255,0.8);text-align:center"></p>
+      <button id="shareUploadBtn" type="submit" class="upl-submit-btn">📤 分享资料</button>
+      <p id="shareUploadStatus" class="upl-status"></p>
       <div id="uploadProgress" style="display:none;margin-top:8px">
-        <div style="height:6px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden">
-          <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c5ce7,#00b894);border-radius:3px;transition:width 0.3s"></div>
+        <div class="upl-progress-track">
+          <div id="progressBar" class="upl-progress-bar"></div>
         </div>
-        <p id="progressText" style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;text-align:center"></p>
+        <p id="progressText" class="upl-progress-text"></p>
       </div>
     </form>
     </div>
@@ -68,11 +89,11 @@
   <!-- ===== 如何上传说明（毛玻璃风格） ===== -->
   <div style="margin:0 16px 24px">
     <div class="glass-panel">
-    <h4 style="margin-bottom:8px;font-size:14px;color:white">💡 上传说明</h4>
-    <ul style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.8;padding-left:16px;margin:0">
-      <li>上传后文件自动存入<span style="font-weight:600;color:#a29bfe">永久存储</span>，所有同学都能看到</li>
+    <h4 class="upl-section-title">💡 上传说明</h4>
+    <ul class="upl-info-list">
+      <li>上传后文件自动存入<span class="upl-highlight">永久存储</span>，所有同学都能看到</li>
       <li>资料旁边会显示你的名字 👤</li>
-      <li>文件存储于 GitHub 仓库，<span style="font-weight:600;color:#00b894">永久有效，永不丢失</span></li>
+      <li>文件存储于 GitHub 仓库，<span class="upl-accent">永久有效，永不丢失</span></li>
       <li>支持 PDF、Word 文档等常见格式，点👁可直接预览</li>
       <li>如有问题，请联系管理员 李同丰</li>
     </ul>
@@ -81,7 +102,7 @@
 
   <!-- ===== 返回首页 ===== -->
   <div style="text-align:center;margin-bottom:24px">
-    <a href="./index.html" style="color:white;font-size:14px;text-decoration:none;opacity:0.8">← 返回资料首页</a>
+    <a href="./index.html" class="upl-back-link">← 返回资料首页</a>
   </div>
 
   <!-- ===== 底部 ===== -->
