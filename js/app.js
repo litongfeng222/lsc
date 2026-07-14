@@ -117,9 +117,10 @@ function setSort(mode) {
 }
 
 
-// ===== 🎵 底部dock双栏 — JS直接控制宽度 =====
+
+// ===== 🎵 底部dock双栏 — JS直接控制宽度（v3 初始不动画） =====
 function renderDock() {
-  const container = document.getElementById('dockContainer');
+  var container = document.getElementById('dockContainer');
   if (!container) return;
 
   container.innerHTML =
@@ -151,7 +152,7 @@ function renderDock() {
     if (nav) nav.scrollIntoView({ behavior: 'smooth' });
   });
 
-  // 按钮弹性
+  // 按钮弹性触感
   document.querySelectorAll('.dl-btn').forEach(function(btn) {
     btn.addEventListener('mousedown', function() { this.style.transform = 'scale(0.88)'; });
     btn.addEventListener('mouseup', function() {
@@ -168,55 +169,42 @@ function renderDock() {
 function initDockBars() {
   var left = document.getElementById('dockLeft');
   var right = document.getElementById('dockRight');
-  var lInner = document.getElementById('dlInner');
-  var rInner = document.getElementById('drInner');
-  if (!left || !right || !lInner || !rInner) return;
+  if (!left || !right) return;
 
   var THRESHOLD = 16;
   var isCollapsed = false;
   var ticking = false;
   var animId = null;
 
-  // 获取完整宽度
-  function getLeftFullW() {
-    // 先设auto让浏览器算出实际宽度
-    left.style.width = '';
-    left.style.padding = '';
-    var w = lInner.scrollWidth + 20;
-    return w;
-  }
-  function getRightFullW() {
-    right.style.width = '';
-    right.style.padding = '';
-    var w = rInner.scrollWidth + 28;
-    return w;
-  }
+  // 只测一次初始宽度
+  var leftFullW = Math.round(left.getBoundingClientRect().width);
+  var rightFullW = Math.round(right.getBoundingClientRect().width);
 
-  // easeOutBack — 带弹性过冲
+  // 直接设固定宽度，不动画
+  left.style.width = leftFullW + 'px';
+  right.style.width = rightFullW + 'px';
+
+  // easeOutBack
   function easeOutBack(t) {
     var c = 1.70158;
     return 1 + c * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2);
   }
 
-  // easeInOutQuad — 平滑
+  // easeInOutQuad
   function easeInOutQuad(t) {
     return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
   }
 
-  // 扩张动画（单个条）
   function expandBar(el, targetW, duration, callback) {
     if (animId) cancelAnimationFrame(animId);
     el.classList.remove('db-hidden');
-    var startW = 0;
-    if (el.offsetWidth > 0) startW = el.offsetWidth;
     var startTime = performance.now();
 
     function step(now) {
       var elapsed = now - startTime;
       var t = Math.min(elapsed / duration, 1);
       var p = easeOutBack(t);
-      var w = startW + (targetW - startW) * p;
-      el.style.width = Math.round(w) + 'px';
+      el.style.width = Math.round(targetW * p) + 'px';
       if (t < 1) {
         animId = requestAnimationFrame(step);
       } else {
@@ -227,20 +215,19 @@ function initDockBars() {
     animId = requestAnimationFrame(step);
   }
 
-  // 收缩动画（两个条同时）
-  function collapseBars(lFull, rFull, callback) {
+  function collapseBars(callback) {
     if (animId) cancelAnimationFrame(animId);
     var startTime = performance.now();
     var duration = 300;
+    var lStart = leftFullW;
+    var rStart = rightFullW;
 
     function step(now) {
       var elapsed = now - startTime;
       var t = Math.min(elapsed / duration, 1);
       var p = easeInOutQuad(t);
-      var lw = lFull * (1 - p);
-      var rw = rFull * (1 - p);
-      left.style.width = Math.round(lw) + 'px';
-      right.style.width = Math.round(rw) + 'px';
+      left.style.width = Math.round(lStart * (1 - p)) + 'px';
+      right.style.width = Math.round(rStart * (1 - p)) + 'px';
       if (t < 1) {
         animId = requestAnimationFrame(step);
       } else {
@@ -260,27 +247,24 @@ function initDockBars() {
       // 展开→收起
       left.classList.remove('db-hidden');
       right.classList.remove('db-hidden');
-      var lFull = left.offsetWidth;
-      var rFull = right.offsetWidth;
-      collapseBars(lFull, rFull);
+      // 恢复完整宽度再收缩
+      left.style.width = leftFullW + 'px';
+      right.style.width = rightFullW + 'px';
+      requestAnimationFrame(function() {
+        collapseBars();
+      });
     } else {
-      // 收起→展开：右栏先弹，再左栏
+      // 收起→展开
       left.classList.remove('db-hidden');
       right.classList.remove('db-hidden');
-
-      var rTarget = getRightFullW();
-      var lTarget = getLeftFullW();
-
-      // 先把left设成0
+      // 从0开始
       left.style.width = '0px';
       right.style.width = '0px';
-
-      // 延迟一小帧确保宽度已设为0
       requestAnimationFrame(function() {
-        // 先展开右栏
-        expandBar(right, rTarget, 350, function() {
-          // 右栏完成后展开左栏
-          expandBar(left, lTarget, 350);
+        // 右栏先弹
+        expandBar(right, rightFullW, 350, function() {
+          // 左栏跟随
+          expandBar(left, leftFullW, 350);
         });
       });
     }
@@ -288,14 +272,26 @@ function initDockBars() {
 
   function onScroll() {
     var scrollY = window.scrollY || window.pageYOffset;
-    goCollapsed(scrollY > THRESHOLD);
+    if (scrollY > THRESHOLD) {
+      if (!isCollapsed) goCollapsed(true);
+    } else {
+      if (isCollapsed) goCollapsed(false);
+    }
   }
 
-  // 初始：设好宽度
-  left.style.width = getLeftFullW() + 'px';
-  right.style.width = getRightFullW() + 'px';
-
-  onScroll();
+  // 初始状态：根据当前scrollY决定是否折叠，但不产生动画
+  var initialScrollY = window.scrollY || window.pageYOffset;
+  if (initialScrollY > THRESHOLD) {
+    isCollapsed = true;
+    left.classList.add('db-hidden');
+    right.classList.add('db-hidden');
+    left.style.width = '0px';
+    right.style.width = '0px';
+  } else {
+    isCollapsed = false;
+    left.style.width = leftFullW + 'px';
+    right.style.width = rightFullW + 'px';
+  }
 
   window.addEventListener('scroll', function() {
     if (!ticking) {
@@ -311,13 +307,30 @@ function initDockBars() {
     }
   });
 }
+
+function loadTagConfigs() {
+  const cached = localStorage.getItem('lsc_tag_configs');
+  if (cached) {
+    try { tagConfigs = JSON.parse(cached); } catch(e) {}
+  }
+  (subjects || []).forEach(s => {
+    if (!tagConfigs[s.id]) {
+      tagConfigs[s.id] = { name: s.name, emoji: s.emoji, color: s.color || '#636e72' };
+    }
+  });
+  window._tagConfigs = tagConfigs;
+}
+
+function getTagStyle(tag, subjectId) {
+  for (const [id, cfg] of Object.entries(tagConfigs)) {
+    if (cfg.name === tag) {
+      return { bg: cfg.color + '20', color: cfg.color, labelBg: cfg.color };
     }
   }
   const sub = subjects.find(s => s.id === subjectId);
   const c = sub ? sub.color : '#636e72';
   return { bg: c + '20', color: c, labelBg: c };
 }
-
 // ===== 背景图支持 =====
 async function applyBgFromConfig() {
   let bgUrl = localStorage.getItem('lsc_bg_image');
