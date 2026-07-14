@@ -300,6 +300,37 @@ function initDockBars() {
     }
   }, { passive: true });
 
+  // 窗口尺寸变化时重新测量
+  var resizeTimer = null;
+  var resizeTicking = false;
+  window.addEventListener('resize', function() {
+    if (!resizeTicking) {
+      resizeTicking = true;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function() {
+        resizeTicking = false;
+        left.style.width = '';
+        right.style.width = '';
+        left.classList.remove('db-hidden');
+        right.classList.remove('db-hidden');
+        leftFullW = Math.round(left.getBoundingClientRect().width);
+        rightFullW = Math.round(right.getBoundingClientRect().width);
+        var sy = window.scrollY || window.pageYOffset;
+        if (sy > THRESHOLD) {
+          isCollapsed = true;
+          left.classList.add('db-hidden');
+          right.classList.add('db-hidden');
+          left.style.width = '0px';
+          right.style.width = '0px';
+        } else {
+          isCollapsed = false;
+          left.style.width = leftFullW + 'px';
+          right.style.width = rightFullW + 'px';
+        }
+      }, 150);
+    }
+  });
+
   // 紧缩态点击空白回到顶部
   document.getElementById('dockBars')?.addEventListener('click', function(e) {
     if (isCollapsed && !e.target.closest('.dl-btn')) {
