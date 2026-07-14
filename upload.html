@@ -13,6 +13,14 @@
     .upload-page input, .upload-page select { background: rgba(255,255,255,0.2) !important; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.35) !important; color: white !important; }
     .upload-page input::placeholder { color: rgba(255,255,255,0.5); }
     .upload-page select option { color: #333; background: white; }
+
+    @media (prefers-color-scheme: dark) {
+      .file-size-limit { color: rgba(255,255,255,0.5); }
+      .upload-page label { color: rgba(230,225,245,0.95); }
+      .upload-page input, .upload-page select { background: rgba(0,0,0,0.35) !important; border-color: rgba(139,124,247,0.25) !important; color: #e8e6f0 !important; }
+      .upload-page input::placeholder { color: rgba(255,255,255,0.45); }
+      .upload-page select option { color: #e8e6f0; background: #1e1c2d; }
+    }
   </style>
 </head>
 <body>
