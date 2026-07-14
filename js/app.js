@@ -116,165 +116,201 @@ function setSort(mode) {
   doSearch();
 }
 
-// ===== 🎵 底部dock栏 — 华为音乐风格双栏系统 =====
-// 左：功能区（按钮栏） 右：实况区（实时信息条）
-// 往下滑合并缩窄，往上滑时右栏先跳起、左栏跟随展开
+
+// ===== 🎵 底部dock双栏 — JS直接控制宽度 =====
 function renderDock() {
   const container = document.getElementById('dockContainer');
   if (!container) return;
 
-  container.innerHTML = `
-    <div class="dock-area" id="dockArea">
-      <!-- 左：功能栏 -->
-      <div class="dock-bar dock-left" id="dockLeft">
-        <a href="./index.html" class="dl-btn" id="dlHome" ontouchstart="">
-          <span class="dl-icon">🏠</span>
-          <span class="dl-label">首页</span>
-        </a>
-        <a href="./upload.html" class="dl-btn dl-btn-highlight" id="dlUpload" ontouchstart="">
-          <span>➕</span>
-          <span class="dl-label">分享</span>
-        </a>
-        <button class="dl-btn" id="dlRank" ontouchstart="">
-          <span>🏆</span>
-          <span class="dl-label">排行</span>
-        </button>
-        <button class="dl-btn" id="dlInfo" ontouchstart="">
-          <span>📢</span>
-          <span class="dl-label">动态</span>
-        </button>
-      </div>
-
-      <!-- 右：实况条 -->
-      <div class="dock-bar dock-right" id="dockRight">
-        <div class="dr-icon" id="drIcon">📚</div>
-        <div class="dr-text" id="drText">
-          <div class="dr-title" id="drTitle">学习小组</div>
-          <div class="dr-desc" id="drDesc">师大附·11班</div>
-        </div>
-      </div>
-    </div>
-  `;
+  container.innerHTML =
+    '<div id="dockBars" class="dock-bars">' +
+      '<div id="dockLeft" class="dock-bar dock-bar-left">' +
+        '<div class="dl-inner" id="dlInner">' +
+          '<a href="./index.html" class="dl-btn" ontouchstart="">🏠 首页</a>' +
+          '<a href="./upload.html" class="dl-btn dl-btn-sp" ontouchstart="">➕ 分享</a>' +
+          '<button class="dl-btn" id="dlRankBtn" ontouchstart="">🏆 排行</button>' +
+          '<button class="dl-btn" id="dlInfoBtn" ontouchstart="">📢 动态</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="dockRight" class="dock-bar dock-bar-right">' +
+        '<div class="dr-inner" id="drInner">' +
+          '<div class="dr-icon">📚</div>' +
+          '<div class="dr-text">' +
+            '<div class="dr-title">学习小组</div>' +
+            '<div class="dr-desc">师大附·11班</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
 
   document.body.classList.add('has-dock');
 
-  // 绑定按钮事件
-  document.getElementById('dlRank')?.addEventListener('click', showRanking);
-  document.getElementById('dlInfo')?.addEventListener('click', () => {
-    document.getElementById('subjectsNav')?.scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('dlRankBtn')?.addEventListener('click', showRanking);
+  document.getElementById('dlInfoBtn')?.addEventListener('click', function() {
+    var nav = document.getElementById('subjectsNav');
+    if (nav) nav.scrollIntoView({ behavior: 'smooth' });
   });
 
-  // 绑定按钮弹性点击
-  document.querySelectorAll('.dl-btn').forEach(btn => {
-    btn.addEventListener('mousedown', function() { this.classList.add('dlb-press'); });
+  // 按钮弹性
+  document.querySelectorAll('.dl-btn').forEach(function(btn) {
+    btn.addEventListener('mousedown', function() { this.style.transform = 'scale(0.88)'; });
     btn.addEventListener('mouseup', function() {
-      this.classList.remove('dlb-press');
-      this.classList.add('dlb-release');
-      setTimeout(() => this.classList.remove('dlb-release'), 500);
+      var self = this;
+      self.style.transform = 'scale(1.15)';
+      setTimeout(function() { self.style.transform = 'scale(1)'; }, 150);
     });
-    btn.addEventListener('mouseleave', function() { this.classList.remove('dlb-press'); });
+    btn.addEventListener('mouseleave', function() { this.style.transform = 'scale(1)'; });
   });
 
-  setupDockBars();
+  initDockBars();
 }
 
-function setupDockBars() {
-  const area = document.getElementById('dockArea');
-  const left = document.getElementById('dockLeft');
-  const right = document.getElementById('dockRight');
-  if (!area || !left || !right) return;
+function initDockBars() {
+  var left = document.getElementById('dockLeft');
+  var right = document.getElementById('dockRight');
+  var lInner = document.getElementById('dlInner');
+  var rInner = document.getElementById('drInner');
+  if (!left || !right || !lInner || !rInner) return;
 
-  const THRESHOLD = 16;
-  let collapsed = false;
-  let ticking = false;
+  var THRESHOLD = 16;
+  var isCollapsed = false;
+  var ticking = false;
+  var animId = null;
 
-  // 获取两个栏各自的初始宽度
-  let leftFullW = 0;
-  let rightFullW = 0;
-
-  function measureWidths() {
-    left.style.transition = 'none';
-    right.style.transition = 'none';
-    left.classList.remove('dl-collapsed');
-    right.classList.remove('dr-collapsed');
-    leftFullW = left.offsetWidth;
-    rightFullW = right.offsetWidth;
+  // 获取完整宽度
+  function getLeftFullW() {
+    // 先设auto让浏览器算出实际宽度
+    left.style.width = '';
+    left.style.padding = '';
+    var w = lInner.scrollWidth + 20;
+    return w;
+  }
+  function getRightFullW() {
+    right.style.width = '';
+    right.style.padding = '';
+    var w = rInner.scrollWidth + 28;
+    return w;
   }
 
-  measureWidths();
+  // easeOutBack — 带弹性过冲
+  function easeOutBack(t) {
+    var c = 1.70158;
+    return 1 + c * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2);
+  }
+
+  // easeInOutQuad — 平滑
+  function easeInOutQuad(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  // 扩张动画（单个条）
+  function expandBar(el, targetW, duration, callback) {
+    if (animId) cancelAnimationFrame(animId);
+    el.classList.remove('db-hidden');
+    var startW = 0;
+    if (el.offsetWidth > 0) startW = el.offsetWidth;
+    var startTime = performance.now();
+
+    function step(now) {
+      var elapsed = now - startTime;
+      var t = Math.min(elapsed / duration, 1);
+      var p = easeOutBack(t);
+      var w = startW + (targetW - startW) * p;
+      el.style.width = Math.round(w) + 'px';
+      if (t < 1) {
+        animId = requestAnimationFrame(step);
+      } else {
+        el.style.width = targetW + 'px';
+        if (callback) callback();
+      }
+    }
+    animId = requestAnimationFrame(step);
+  }
+
+  // 收缩动画（两个条同时）
+  function collapseBars(lFull, rFull, callback) {
+    if (animId) cancelAnimationFrame(animId);
+    var startTime = performance.now();
+    var duration = 300;
+
+    function step(now) {
+      var elapsed = now - startTime;
+      var t = Math.min(elapsed / duration, 1);
+      var p = easeInOutQuad(t);
+      var lw = lFull * (1 - p);
+      var rw = rFull * (1 - p);
+      left.style.width = Math.round(lw) + 'px';
+      right.style.width = Math.round(rw) + 'px';
+      if (t < 1) {
+        animId = requestAnimationFrame(step);
+      } else {
+        left.classList.add('db-hidden');
+        right.classList.add('db-hidden');
+        if (callback) callback();
+      }
+    }
+    animId = requestAnimationFrame(step);
+  }
 
   function goCollapsed(c) {
-    if (collapsed === c) return;
-    collapsed = c;
+    if (isCollapsed === c) return;
+    isCollapsed = c;
 
     if (c) {
-      // 展开 → 收起：同时缩
-      left.classList.add('dl-collapsed');
-      right.classList.add('dr-collapsed');
-      area.classList.add('da-collapsed');
+      // 展开→收起
+      left.classList.remove('db-hidden');
+      right.classList.remove('db-hidden');
+      var lFull = left.offsetWidth;
+      var rFull = right.offsetWidth;
+      collapseBars(lFull, rFull);
     } else {
-      // 收起 → 展开：右栏先跳，左栏稍后
-      right.classList.remove('dr-collapsed');
-      right.classList.add('dr-expanding');
-      area.classList.remove('da-collapsed');
-      area.classList.add('da-expanding');
+      // 收起→展开：右栏先弹，再左栏
+      left.classList.remove('db-hidden');
+      right.classList.remove('db-hidden');
 
-      // 右栏展开动画完成后触发左栏
-      const onRightDone = () => {
-        right.classList.remove('dr-expanding');
-        left.classList.remove('dl-collapsed');
-        left.classList.add('dl-expanding');
-        area.classList.remove('da-expanding');
+      var rTarget = getRightFullW();
+      var lTarget = getLeftFullW();
 
-        const onLeftDone = () => {
-          left.classList.remove('dl-expanding');
-        };
-        left.addEventListener('animationend', onLeftDone, { once: true });
-      };
-      right.addEventListener('animationend', onRightDone, { once: true });
+      // 先把left设成0
+      left.style.width = '0px';
+      right.style.width = '0px';
+
+      // 延迟一小帧确保宽度已设为0
+      requestAnimationFrame(function() {
+        // 先展开右栏
+        expandBar(right, rTarget, 350, function() {
+          // 右栏完成后展开左栏
+          expandBar(left, lTarget, 350);
+        });
+      });
     }
   }
 
   function onScroll() {
-    const scrollY = window.scrollY || window.pageYOffset;
+    var scrollY = window.scrollY || window.pageYOffset;
     goCollapsed(scrollY > THRESHOLD);
   }
 
+  // 初始：设好宽度
+  left.style.width = getLeftFullW() + 'px';
+  right.style.width = getRightFullW() + 'px';
+
   onScroll();
 
-  window.addEventListener('scroll', () => {
+  window.addEventListener('scroll', function() {
     if (!ticking) {
-      requestAnimationFrame(() => { onScroll(); ticking = false; });
+      requestAnimationFrame(function() { onScroll(); ticking = false; });
       ticking = true;
     }
   }, { passive: true });
 
   // 紧缩态点击空白回到顶部
-  area.addEventListener('click', function(e) {
-    if (collapsed && !e.target.closest('.dl-btn')) {
+  document.getElementById('dockBars')?.addEventListener('click', function(e) {
+    if (isCollapsed && !e.target.closest('.dl-btn')) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   });
 }
-
-// ===== 标签颜色配置 =====
-function loadTagConfigs() {
-  const cached = localStorage.getItem('lsc_tag_configs');
-  if (cached) {
-    try { tagConfigs = JSON.parse(cached); } catch(e) {}
-  }
-  (subjects || []).forEach(s => {
-    if (!tagConfigs[s.id]) {
-      tagConfigs[s.id] = { name: s.name, emoji: s.emoji, color: s.color || '#636e72' };
-    }
-  });
-  window._tagConfigs = tagConfigs;
-}
-
-function getTagStyle(tag, subjectId) {
-  for (const [id, cfg] of Object.entries(tagConfigs)) {
-    if (cfg.name === tag) {
-      return { bg: cfg.color + '20', color: cfg.color, labelBg: cfg.color };
     }
   }
   const sub = subjects.find(s => s.id === subjectId);

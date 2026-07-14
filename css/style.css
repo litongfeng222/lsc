@@ -487,8 +487,8 @@ header p {
   color: var(--text);
 }
 
-/* ===== 🎵 Dock双栏系统 — 左功能栏 + 右实况条 ===== */
-.dock-area {
+/* ===== 🎵 Dock双栏 — 左功能栏 + 右实况条 ===== */
+.dock-bars {
   position: fixed;
   bottom: 24px;
   left: 50%;
@@ -500,7 +500,6 @@ header p {
   cursor: default;
 }
 
-/* ===== 通用栏条 ===== */
 .dock-bar {
   display: flex;
   align-items: center;
@@ -510,52 +509,34 @@ header p {
   -webkit-backdrop-filter: blur(42px);
   border: 1px solid rgba(255, 255, 255, 0.45);
   box-shadow: 0 8px 40px rgba(108, 92, 231, 0.10), inset 0 1px 0 rgba(255,255,255,0.35);
-  white-space: nowrap;
   overflow: hidden;
-  transition: max-width 0.4s cubic-bezier(0.34, 1.4, 0.64, 1),
-              opacity 0.25s ease,
-              padding 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
-              border-width 0.35s ease,
-              background 0.35s ease,
-              border-color 0.35s ease,
-              box-shadow 0.35s ease;
+  white-space: nowrap;
 }
 
-/* ===== 左：功能栏 ===== */
-.dock-left {
-  border-radius: 26px;
+.dock-bar-left {
+  border-radius: 28px;
   gap: 4px;
-  padding: 0 8px;
-  max-width: 400px;
+  padding: 0 10px;
 }
 
-.dock-left.dl-collapsed {
-  max-width: 0 !important;
-  padding: 0 !important;
-  border-width: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  opacity: 0;
-  pointer-events: none;
+.dock-bar-right {
+  border-radius: 28px;
+  gap: 8px;
+  padding: 0 16px 0 12px;
 }
 
-.dock-left.dl-expanding {
-  animation: dlExpand 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
-}
-
-@keyframes dlExpand {
-  0%   { max-width: 0; padding: 0; opacity: 0; }
-  50%  { max-width: 270px; opacity: 0.6; padding: 0 4px; }
-  80%  { max-width: 300px; opacity: 0.9; }
-  100% { max-width: 400px; padding: 0 8px; opacity: 1; }
-}
-
-/* ===== 左栏按钮 ===== */
-.dl-btn {
+.dl-inner {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 7px 11px;
+  flex-shrink: 0;
+}
+
+.dl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 12px;
   background: rgba(255, 255, 255, 0.25);
   border: none;
   border-radius: 18px;
@@ -565,79 +546,31 @@ header p {
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: transform 0.2s cubic-bezier(0.34, 1.8, 0.64, 1),
-              background 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .dl-btn:hover {
   background: rgba(255, 255, 255, 0.4);
 }
 
-.dl-btn:active {
-  transform: scale(0.88);
-}
-
-.dl-btn-highlight {
+.dl-btn-sp {
   background: linear-gradient(135deg, rgba(108,92,231,0.85), rgba(162,155,254,0.8));
   color: white;
   box-shadow: 0 4px 16px rgba(108,92,231,0.25);
 }
 
-.dl-btn-highlight:hover {
+.dl-btn-sp:hover {
   background: linear-gradient(135deg, rgba(108,92,231,0.92), rgba(162,155,254,0.88));
 }
 
-/* 弹性点击 */
-.dlb-press {
-  animation: dlbPress 0.12s cubic-bezier(0.34, 1.8, 0.64, 1) forwards !important;
-}
-
-.dlb-release {
-  animation: dlbRelease 0.45s cubic-bezier(0.34, 1.6, 0.64, 1) forwards !important;
-}
-
-@keyframes dlbPress {
-  0%   { transform: scale(1); }
-  100% { transform: scale(0.86); }
-}
-
-@keyframes dlbRelease {
-  0%   { transform: scale(0.86); }
-  35%  { transform: scale(1.14); }
-  65%  { transform: scale(0.94); }
-  100% { transform: scale(1); }
-}
-
-/* ===== 右：实况条 ===== */
-.dock-right {
-  border-radius: 26px;
+.dr-inner {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 0 18px 0 14px;
-  max-width: 260px;
+  flex-shrink: 0;
 }
 
-.dock-right.dr-collapsed {
-  max-width: 0 !important;
-  padding: 0 !important;
-  border-width: 0 !important;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.dock-right.dr-expanding {
-  animation: drExpand 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
-}
-
-@keyframes drExpand {
-  0%   { max-width: 0; padding: 0; opacity: 0; }
-  50%  { max-width: 120px; opacity: 0.5; }
-  80%  { max-width: 240px; opacity: 0.9; }
-  100% { max-width: 260px; padding: 0 18px 0 14px; opacity: 1; }
-}
-
-/* 实况条内容 */
 .dr-icon {
   width: 36px;
   height: 36px;
@@ -654,8 +587,6 @@ header p {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  min-width: 0;
-  flex-shrink: 1;
 }
 
 .dr-title {
@@ -672,22 +603,32 @@ header p {
   line-height: 1.3;
 }
 
-/* 紧凑态全底色变化 */
-.dock-area.da-collapsed .dock-bar {
-  background: rgba(108, 92, 231, 0.85);
-  border-color: rgba(108, 92, 231, 0.3);
+/* 隐藏态 */
+.dock-bar.db-hidden {
+  width: 0 !important;
+  padding: 0 !important;
+  border-width: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
-.dock-area.da-collapsed .dr-title,
-.dock-area.da-collapsed .dr-desc {
+/* 紧缩态颜色变化 */
+.dock-bars:has(.dock-bar.db-hidden) .dock-bar:not(.db-hidden) {
+  background: rgba(108, 92, 231, 0.85);
+  border-color: rgba(108, 92, 231, 0.3);
+  box-shadow: 0 8px 40px rgba(108, 92, 231, 0.30), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.dock-bars:has(.dock-bar.db-hidden) .dr-title,
+.dock-bars:has(.dock-bar.db-hidden) .dr-desc {
   color: white;
 }
 
-.dock-area.da-collapsed .dr-icon {
+.dock-bars:has(.dock-bar.db-hidden) .dr-icon {
   background: rgba(255, 255, 255, 0.15);
 }
 
-/* dock栏安全区 */
 body.has-dock::after {
   content: '';
   display: block;
@@ -907,7 +848,7 @@ footer .footer-copy {
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.04);
   }
 
-  .dock-area.da-collapsed .dock-bar {
+  .dock-bars:has(.dock-bar.db-hidden) .dock-bar:not(.db-hidden) {
     background: rgba(108, 92, 231, 0.78);
     border-color: rgba(139, 124, 247, 0.25);
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.08);
@@ -922,12 +863,12 @@ footer .footer-copy {
     background: rgba(255, 255, 255, 0.15);
   }
 
-  .dl-btn-highlight {
+  .dl-btn-sp {
     background: linear-gradient(135deg, rgba(139,124,247,0.85), rgba(162,155,254,0.8));
     color: #0f0e17;
   }
 
-  .dl-btn-highlight:hover {
+  .dl-btn-sp:hover {
     background: linear-gradient(135deg, rgba(139,124,247,0.92), rgba(162,155,254,0.88));
   }
 
@@ -939,8 +880,8 @@ footer .footer-copy {
     color: #b0aec0;
   }
 
-  .dock-area.da-collapsed .dr-title,
-  .dock-area.da-collapsed .dr-desc {
+  .dock-bars:has(.dock-bar.db-hidden) .dr-title,
+  .dock-bars:has(.dock-bar.db-hidden) .dr-desc {
     color: white;
   }
 
