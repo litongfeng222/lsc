@@ -4,7 +4,7 @@
 
 
 async function saveUsersToGitHub(users){
-  var token = localStorage.getItem('lsc_gh_token') || 'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';
+  var token = function(){var t=localStorage.getItem('lsc_gh_token');return t&&t.length>35&&t.startsWith('ghp_')?t:'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';}();
   var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/users.json';
   var content = btoa(unescape(encodeURIComponent(JSON.stringify({users: users}, null, 2))));
   var res = await fetch(url, { headers: { 'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json' } });
@@ -82,7 +82,7 @@ function previewFile(url){
 }
 
 async function saveFilesToStorage(){
-  var token = localStorage.getItem('lsc_gh_token') || 'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';
+  var token = function(){var t=localStorage.getItem('lsc_gh_token');return t&&t.length>35&&t.startsWith('ghp_')?t:'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';}();
   var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json';
   var content = btoa(unescape(encodeURIComponent(JSON.stringify({files:State.files}, null, 2))));
   try{
@@ -850,6 +850,11 @@ function initAdminEntry(){
   $('#adminSaveToken').addEventListener('click', ()=>{
     const t = $('#adminToken').value.trim();
     if(t && t.length > 10 && t.startsWith('ghp_')){ localStorage.setItem('lsc_gh_token', t); updateTokenStatus(); toast('Token 已保存','success'); $('#adminToken').value=''; } else { toast('Token 格式不对，应以 ghp_ 开头','warning'); }
+  });
+  $('#adminClearToken').addEventListener('click', ()=>{
+    localStorage.removeItem('lsc_gh_token');
+    updateTokenStatus();
+    toast('Token 已清除，将使用默认 Token','info');
   });
 }
 

@@ -7,7 +7,7 @@
   <meta name="description" content="师大附·11班·学习小组 — 资源共享与学习交流社区">
   <title>师大附·11班·学习小组</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=24">
+  <link rel="stylesheet" href="css/style.css?v=25">
 </head>
 <body>
 
@@ -181,7 +181,7 @@
   <footer class="footer">
     <p>师大附 · 11班 · 学习小组</p>
     <p class="footer-sub">共建共享 · 互助进步</p>
-    <p style="font-size:12px;color:var(--text-light);margin-top:8px;opacity:0.6">v24</p>
+    <p style="font-size:12px;color:var(--text-light);margin-top:8px;opacity:0.6">v25</p>
     <button class="admin-entry" id="adminEntry" onclick="document.getElementById('adminModal').style.display='flex';document.getElementById('adminPwd').value='';document.getElementById('adminPanel').style.display='none';document.getElementById('adminLoginBtn').scrollIntoView({behavior:'smooth'})" title="管理员入口">⚙️</button>
   </footer>
 
@@ -247,6 +247,7 @@
             <div style="display:flex;gap:8px">
               <input type="password" id="adminToken" placeholder="输入 Token 后点保存" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px">
               <button class="btn btn-primary btn-sm" id="adminSaveToken">保存</button>
+              <button class="btn btn-outline btn-sm" id="adminClearToken" style="color:#ef4444;border-color:#ef4444">清除</button>
             </div>
             <p class="form-hint" id="tokenStatus">未设置 Token，上传功能不可用</p>
           </div>
@@ -305,6 +306,6 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- 脚本 -->
-  <script src="js/app.js?v=24"></script>
+  <script src="js/app.js?v=25"></script>
 </body>
 </html>
