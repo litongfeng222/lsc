@@ -198,7 +198,12 @@ function renderResources(){
         </div>
         ${State.user ? `<div class="file-rate" data-path="${escHtml(f.path)}">
           <span class="rate-label">我的评分：</span>
-          ${[1,2,3,4,5].map(n => `<span class="rate-star" data-val="${n}" onclick="rateFile('${escHtml(f.path)}',${n})">★</span>`).join('')}
+          ${[1,2,3,4,5].map(n => {
+            const userRating = getUserRating(f.path);
+            const cls = userRating === n ? 'rate-star rated' : 'rate-star';
+            return `<span class="${cls}" data-val="${n}" onclick="rateFile('${escHtml(f.path)}',${n})">★</span>`;
+          }).join('')}
+          ${f.ratingCount ? `<span class="rate-count">${f.rating.toFixed(1)}分（${f.ratingCount}人）</span>` : ''}
         </div>` : `<div class="file-rate-hint" onclick="openAuthModal('login')">登录后可评分</div>`}
       </div>
       <div class="file-actions">
@@ -210,6 +215,14 @@ function renderResources(){
 }
 
 /* ---------- 评分系统 ---------- */
+function getUserRating(path){
+  if(!State.user) return 0;
+  try{
+    const ratings = JSON.parse(localStorage.getItem('lsc_ratings')||'{}');
+    return ratings[path]?.[State.user.phone] || 0;
+  }catch(e){ return 0; }
+}
+
 window.rateFile = async function(path, val){
   if(!State.user){ toast('请先登录','warning'); openAuthModal('login'); return; }
   
