@@ -887,19 +887,157 @@ function showUserSetup(){
   openAuthModal('register');
 }
 
-/* ---------- 管理员入口 ---------- */
+/* ---------- 管理员面板 ---------- */
+let adminUnlocked = false;
+
 function initAdminEntry(){
   $('#adminEntry').addEventListener('click', ()=>{
-    const pwd = prompt('请输入管理员密码：');
+    $('#adminModal').style.display='flex';
+    if(adminUnlocked) showAdminPanel();
+    else { $('#adminLogin').style.display=''; $('#adminPanel').style.display='none'; }
+    $('#adminPwd').value='';
+  });
+  $('#adminClose').addEventListener('click', ()=>{ $('#adminModal').style.display='none'; });
+  $('#adminModal').addEventListener('click', e=>{ if(e.target===$('#adminModal')) $('#adminModal').style.display='none'; });
+
+  // 密码验证
+  $('#adminLoginBtn').addEventListener('click', ()=>{
+    const pwd = $('#adminPwd').value;
     if(pwd === 'LSC2026'){
-      const token = prompt('请输入 GitHub Token（已设置则直接回车跳过）：');
-      if(token) localStorage.setItem('lsc_gh_token', token);
-      toast('管理员模式已激活', 'success');
-    } else if(pwd){
-      toast('密码错误', 'error');
+      adminUnlocked = true;
+      showAdminPanel();
+      toast('管理员验证成功','success');
+    } else {
+      toast('密码错误','error');
+    }
+  });
+  $('#adminPwd').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#adminLoginBtn').click(); });
+
+  // 保存 Token
+  $('#adminSaveToken').addEventListener('click', ()=>{
+    const token = $('#adminToken').value.trim();
+    if(token){
+      localStorage.setItem('lsc_gh_token', token);
+      updateTokenStatus();
+      toast('Token 已保存','success');
+      $('#adminToken').value='';
     }
   });
 }
+
+function updateTokenStatus(){
+  const has = !!localStorage.getItem('lsc_gh_token');
+  $('#tokenStatus').textContent = has ? '✅ 已设置' : '❌ 未设置';
+  $('#tokenStatus').style.color = has ? '#22c55e' : '#ef4444';
+}
+
+function showAdminPanel(){
+  $('#adminLogin').style.display='none';
+  $('#adminPanel').style.display='';
+  updateTokenStatus();
+  renderAdminFiles();
+  renderAdminUsers();
+  renderAdminPosts();
+}
+
+function renderAdminFiles(){
+  const list = $('#adminFileList');
+  if(!State.files.length){ list.innerHTML='<div class="admin-empty">暂无资料</div>'; return; }
+  list.innerHTML = State.files.map(f => {
+    const sub = State.subjects.find(s=>s.id===f.subject) || {name:'其他'};
+    return `<div class="admin-item">
+      <span class="admin-item-info">[${sub.name}] ${escHtml(f.name)}</span>
+      <button class="admin-item-btn delete" onclick="adminDeleteFile('${escHtml(f.path)}')">删除</button>
+    </div>`;
+  }).join('');
+}
+
+function renderAdminUsers(){
+  const list = $('#adminUserList');
+  // 从 localStorage 读取用户列表
+  fetch('data/users.json?t=' + Date.now())
+    .then(r=>r.json())
+    .then(data=>{
+      const users = data.users || [];
+      if(!users.length){ list.innerHTML='<div class="admin-empty">暂无注册用户</div>'; return; }
+      list.innerHTML = users.map(u => {
+        const date = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('zh-CN') : '';
+        return `<div class="admin-item">
+          <span class="admin-item-info">👤 ${escHtml(u.name)} · ${u.phone.slice(0,3)}****${u.phone.slice(-4)} · ${date}</span>
+        </div>`;
+      }).join('');
+    })
+    .catch(()=>{ list.innerHTML='<div class="admin-empty">加载失败</div>'; });
+}
+
+function renderAdminPosts(){
+  const list = $('#adminPostList');
+  if(!State.posts.length){ list.innerHTML='<div class="admin-empty">暂无帖子</div>'; return; }
+  const boardNames = {qa:'学科答疑',homework:'班级作业',other:'其他信息'};
+  list.innerHTML = State.posts.map(p => {
+    return `<div class="admin-item">
+      <span class="admin-item-info">[${boardNames[p.board]||'未知'}] ${escHtml(p.title)} - ${escHtml(p.author||'匿名')}</span>
+      <button class="admin-item-btn delete" onclick="adminDeletePost(${p.id})">删除</button>
+    </div>`;
+  }).join('');
+}
+
+window.adminDeleteFile = async function(path){
+  if(!confirm('确认删除这份资料？文件会从 GitHub 仓库移除。')) return;
+  const token = localStorage.getItem('lsc_gh_token');
+  if(!token){ toast('请先设置 GitHub Token','warning'); return; }
+
+  try{
+    // 从 path 提取 GitHub 中的文件路径
+    const match = path.match(/\/main\/(assets\/files\/.+)$/);
+    if(!match){ toast('无法解析文件路径','error'); return; }
+    const ghPath = match[1];
+
+    // 获取文件 sha
+    const res = await fetch(`https://api.github.com/repos/litongfeng222/lsc/contents/${ghPath}`, {
+      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json' }
+    });
+    if(!res.ok) throw new Error('文件不存在或无权访问');
+    const data = await res.json();
+
+    // 删除文件
+    await fetch(`https://api.github.com/repos/litongfeng222/lsc/contents/${ghPath}`, {
+      method: 'DELETE',
+      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+      body: JSON.stringify({ message:'删除资料: ' + path, sha: data.sha })
+    });
+
+    // 从 files.json 中移除
+    State.files = State.files.filter(f => f.path !== path);
+    const newContent = btoa(unescape(encodeURIComponent(JSON.stringify({files:State.files}, null, 2))));
+    const fRes = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
+      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json' }
+    });
+    const fData = await fRes.json();
+    await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
+      method: 'PUT',
+      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+      body: JSON.stringify({ message:'更新文件列表（删除资料）', content: newContent, sha: fData.sha })
+    });
+
+    toast('资料已删除','success');
+    renderAdminFiles();
+    renderResources();
+    updateHeroStats();
+  }catch(err){
+    toast('删除失败：' + err.message,'error', 4000);
+  }
+};
+
+window.adminDeletePost = function(id){
+  if(!confirm('确认删除这条帖子？')) return;
+  State.posts = State.posts.filter(p => p.id !== id);
+  savePosts();
+  renderAdminPosts();
+  renderForum();
+  updateHeroStats();
+  toast('帖子已删除','success');
+};
 
 /* ---------- 初始化 ---------- */
 async function init(){
