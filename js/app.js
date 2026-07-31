@@ -77,10 +77,6 @@ function downloadFile(url, name){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
-function previewFile(url){
-  window.open(url, '_blank', 'noopener noreferrer');
-}
-
 async function saveFilesToStorage(){
   var token = function(){var t=localStorage.getItem('lsc_gh_token');return t&&t.length>35&&t.startsWith('ghp_')?t:'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';}();
   var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json';
@@ -321,7 +317,7 @@ function renderResources(){
     const downloads = f.downloads || 0;
     const rating = f.rating || 0;
     const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5-Math.round(rating));
-    const previewable = ['pdf','png','jpg','jpeg','gif','webp','txt','docx','doc'].includes(ext);
+    const previewable = false;
     const desc = f.desc || '';
     const usage = f.usage || '';
     const delay = Math.min(i*60, 400);
@@ -436,31 +432,7 @@ window.downloadFile = function(path, name, btn){
   setTimeout(()=>{ if(btn) btn.textContent = '⬇ 下载'; }, 2000);
 };
 
-window.previewFile = function(path, name){
-  const modal = $('#previewModal');
-  const body = $('#previewBody');
-  const ext = getFileExt(path);
-  if(ext === 'pdf'){
-    body.innerHTML = `<iframe src="${path}"></iframe>`;
-  } else if(['png','jpg','jpeg','gif','webp'].includes(ext)){
-    body.innerHTML = `<img src="${path}" alt="${escHtml(name)}">`;
-  } else if(['docx','doc'].includes(ext)){
-    body.innerHTML = `<iframe src="https://docs.google.com/gview?url=${encodeURIComponent(path)}&embedded=true"></iframe>`;
-  } else if(ext === 'txt'){
-    fetch(path).then(r=>r.text()).then(t=>{
-      body.innerHTML = `<div class="preview-text">${escHtml(t)}</div>`;
-    }).catch(()=>{ body.innerHTML = `<p>无法预览此文件</p>`; });
-  } else {
-    body.innerHTML = `<p>不支持预览此格式，请下载后查看</p>`;
-  }
-  modal.style.display = 'flex';
-};
-
-/* ---------- 预览弹窗关闭 ---------- */
-function initModal(){
-  $('#previewClose').addEventListener('click', ()=>{ $('#previewModal').style.display='none'; });
-  $('#previewModal').addEventListener('click', e => { if(e.target.id==='previewModal') e.currentTarget.style.display='none'; });
-}
+/* 预览功能已移除 */
 
 /* ---------- 论坛 ---------- */
 function initForumTabs(){
@@ -944,7 +916,7 @@ async function init(){
   initFilterBar();
   initSortBar();
   initSearch();
-  initModal();
+  //initModal(); // 已移除预览功能
   initForumTabs();
   initRankingTabs();
   initAdminEntry();
