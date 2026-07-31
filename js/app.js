@@ -479,38 +479,183 @@ function renderRanking(){
   }).join('');
 }
 
-/* ---------- 用户身份 ---------- */
+/* ---------- 用户身份系统（真实登录/注册） ---------- */
+
+// SHA-256 加密
+async function sha256(text){
+  const buf = new TextEncoder().encode(text);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// 加载用户数据
+async function loadUsers(){
+  try{
+    const res = await fetch('data/users.json?t=' + Date.now());
+    const data = await res.json();
+    return data.users || [];
+  }catch(e){ return []; }
+}
+
+// 保存用户数据到 GitHub
+async function saveUsersToGitHub(users){
+  const token = localStorage.getItem('lsc_gh_token');
+  if(!token) throw new Error('未设置 GitHub Token');
+  
+  // 获取当前 files.json 的 sha
+  let sha;
+  try{
+    const res = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/users.json', {
+      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json' }
+    });
+    if(res.ok){ const d = await res.json(); sha = d.sha; }
+  }catch(e){}
+  
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify({users}, null, 2))));
+  const res = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/users.json', {
+    method: 'PUT',
+    headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+    body: JSON.stringify({ message:'用户数据更新', content, sha })
+  });
+  if(!res.ok) throw new Error('保存失败: ' + res.status);
+}
+
+// 初始化认证弹窗
+function initAuthModal(){
+  const modal = $('#authModal');
+  const closeBtn = $('#authClose');
+  const tabLogin = $('#tabLogin');
+  const tabRegister = $('#tabRegister');
+  const loginForm = $('#loginForm');
+  const registerForm = $('#registerForm');
+
+  // 关闭
+  closeBtn.addEventListener('click', ()=>{ modal.style.display='none'; });
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.style.display='none'; });
+
+  // Tab 切换
+  tabLogin.addEventListener('click', ()=>{
+    tabLogin.classList.add('active'); tabRegister.classList.remove('active');
+    loginForm.style.display=''; registerForm.style.display='none';
+  });
+  tabRegister.addEventListener('click', ()=>{
+    tabRegister.classList.add('active'); tabLogin.classList.remove('active');
+    registerForm.style.display=''; loginForm.style.display='none';
+  });
+
+  // 登录提交
+  loginForm.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const phone = $('#loginPhone').value.trim();
+    const pwd = $('#loginPassword').value;
+    if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的手机号','warning'); return; }
+    if(!pwd){ toast('请输入密码','warning'); return; }
+
+    const btn = loginForm.querySelector('button[type=submit]');
+    btn.textContent = '登录中…'; btn.disabled = true;
+
+    try{
+      const users = await loadUsers();
+      const hash = await sha256(pwd + phone.slice(-4));
+      const user = users.find(u => u.phone === phone && u.password === hash);
+      if(!user){ toast('手机号或密码错误','error'); return; }
+      
+      saveUser({ name:user.name, phone:user.phone, registeredAt:user.registeredAt });
+      updateUserUI();
+      updateHeroStats();
+      modal.style.display='none';
+      loginForm.reset();
+      toast('欢迎回来，' + user.name + '！','success');
+    }catch(err){
+      toast('登录失败：' + err.message,'error');
+    }finally{
+      btn.textContent = '登录'; btn.disabled = false;
+    }
+  });
+
+  // 注册提交
+  registerForm.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const name = $('#regName').value.trim();
+    const phone = $('#regPhone').value.trim();
+    const pwd = $('#regPassword').value;
+    const pwd2 = $('#regPassword2').value;
+    
+    if(!name){ toast('请输入昵称','warning'); return; }
+    if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的11位手机号','warning'); return; }
+    if(pwd.length < 6){ toast('密码至少6位','warning'); return; }
+    if(pwd !== pwd2){ toast('两次密码不一致','warning'); return; }
+
+    const btn = registerForm.querySelector('button[type=submit]');
+    btn.textContent = '注册中…'; btn.disabled = true;
+
+    try{
+      const users = await loadUsers();
+      if(users.find(u => u.phone === phone)){ toast('该手机号已注册','warning'); return; }
+      
+      const hash = await sha256(pwd + phone.slice(-4));
+      const newUser = {
+        name, phone,
+        password: hash,
+        registeredAt: Date.now()
+      };
+      users.push(newUser);
+      await saveUsersToGitHub(users);
+      
+      saveUser({ name, phone, registeredAt: newUser.registeredAt });
+      updateUserUI();
+      updateHeroStats();
+      modal.style.display='none';
+      registerForm.reset();
+      toast('注册成功，欢迎 ' + name + '！','success');
+    }catch(err){
+      toast('注册失败：' + err.message + '（可能需要管理员设置 Token）','error', 4000);
+    }finally{
+      btn.textContent = '注册'; btn.disabled = false;
+    }
+  });
+}
+
+// 打开认证弹窗
+function openAuthModal(mode='login'){
+  const modal = $('#authModal');
+  modal.style.display='flex';
+  if(mode === 'register'){
+    $('#tabRegister').click();
+  } else {
+    $('#tabLogin').click();
+  }
+}
+
 function initUserButton(){
   const btn = $('#userBtn');
   const dropdown = $('#userDropdown');
-  const nameEl = $('#userName');
-  const avatarEl = $('#userAvatar');
-  const headerEl = $('#dropdownHeader');
   const loginBtn = $('#dropdownLogin');
   const logoutBtn = $('#dropdownLogout');
 
-  // 点击切换下拉
   btn.addEventListener('click', (e)=>{
     e.stopPropagation();
-    dropdown.style.display = dropdown.style.display === 'none' ? '' : 'none';
+    if(State.user){
+      dropdown.style.display = dropdown.style.display === 'none' ? '' : 'none';
+    } else {
+      openAuthModal('login');
+    }
   });
-  document.addEventListener('click', ()=>{ dropdown.style.display = 'none'; });
+  document.addEventListener('click', ()=>{ dropdown.style.display='none'; });
   dropdown.addEventListener('click', e=>e.stopPropagation());
 
-  // 登录/注册
   loginBtn.addEventListener('click', ()=>{
-    dropdown.style.display = 'none';
-    showUserSetup();
+    dropdown.style.display='none';
+    openAuthModal('login');
   });
 
-  // 退出
   logoutBtn.addEventListener('click', ()=>{
     saveUser(null);
     State.user = null;
     updateUserUI();
     updateHeroStats();
     toast('已退出登录','info');
-    dropdown.style.display = 'none';
+    dropdown.style.display='none';
   });
 
   updateUserUI();
@@ -529,26 +674,20 @@ function updateUserUI(){
     avatarEl.textContent = State.user.name.charAt(0).toUpperCase();
     avatarEl.style.background = 'var(--primary)';
     headerEl.textContent = '👤 ' + State.user.name;
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = '';
+    loginBtn.style.display='none';
+    logoutBtn.style.display='';
   } else {
     nameEl.textContent = '登录';
     avatarEl.textContent = '👤';
     avatarEl.style.background = 'var(--bg)';
     headerEl.textContent = '请登录后使用完整功能';
-    loginBtn.style.display = '';
-    logoutBtn.style.display = 'none';
+    loginBtn.style.display='';
+    logoutBtn.style.display='none';
   }
 }
 
 function showUserSetup(){
-  const name = prompt('请输入你的昵称：');
-  if(!name) return;
-  const phone = prompt('请输入手机号（用于身份识别）：') || '';
-  saveUser({ name, phone, registeredAt: Date.now() });
-  updateUserUI();
-  toast('欢迎，' + name + '！', 'success');
-  updateHeroStats();
+  openAuthModal('register');
 }
 
 /* ---------- 管理员入口 ---------- */
@@ -583,6 +722,7 @@ async function init(){
   initRankingTabs();
   initAdminEntry();
   initUserButton();
+  initAuthModal();
 
   updateUserUI();
 
