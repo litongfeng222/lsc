@@ -315,7 +315,10 @@ function initForumTabs(){
       renderForum();
     });
   });
-  $('#newPostBtn').addEventListener('click', showPostForm);
+  $('#newPostBtn').addEventListener('click', ()=>{
+    if(!State.user){ toast('请先登录后再发帖','warning'); openAuthModal('login'); return; }
+    showPostForm();
+  });
 }
 
 function renderForum(){
@@ -362,6 +365,7 @@ window.toggleReply = function(id){
 };
 
 window.submitReply = function(id){
+  if(!State.user){ toast('请先登录后再回复','warning'); openAuthModal('login'); return; }
   const text = $('#replyText-'+id).value.trim();
   if(!text){ toast('请输入回复内容','warning'); return; }
   const post = State.posts.find(p=>p.id===id);
@@ -408,12 +412,32 @@ function initUploadSelect(){
     opt.value = s.id; opt.textContent = s.name;
     sel.appendChild(opt);
   });
+  // 检查登录状态
+  const formWrap = $('.upload-form-wrap');
+  if(!State.user){
+    formWrap.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><p>请先登录后再上传资料</p><button class="btn btn-primary" style="margin-top:12px" onclick="openAuthModal(\'login\')">去登录</button></div>';
+  } else {
+    // 如果之前被替换过，恢复表单
+    if(!$('#uploadForm')){
+      formWrap.innerHTML = `<form id="uploadForm" class="upload-form">
+        <div class="form-group"><label for="uploadName">资料名称 <span class="required">*</span></label><input type="text" id="uploadName" placeholder="例如：高一数学月考卷" required></div>
+        <div class="form-group"><label for="uploadSubject">所属科目 <span class="required">*</span></label><select id="uploadSubject" required><option value="">请选择科目</option></select></div>
+        <div class="form-group"><label for="uploadDesc">简介（选填）</label><textarea id="uploadDesc" rows="2" placeholder="一句话描述这份资料"></textarea></div>
+        <div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint">支持 PDF、DOCX、PPTX、XLSX、图片等格式</p></div>
+        <div class="form-group"><label for="uploaderName">你的昵称（选填）</label><input type="text" id="uploaderName" placeholder="留空则显示匿名同学"></div>
+        <button type="submit" class="btn btn-primary btn-block">上传资料</button>
+      </form>`;
+      initUploadSelect();
+      initUploadForm();
+    }
+  }
 }
 
 function initUploadForm(){
   const form = $('#uploadForm');
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    if(!State.user){ toast('请先登录后再上传资料','warning'); openAuthModal('login'); return; }
     const name = $('#uploadName').value.trim();
     const subject = $('#uploadSubject').value;
     const desc = $('#uploadDesc').value.trim();
