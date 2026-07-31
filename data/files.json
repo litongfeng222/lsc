@@ -1,6 +1,15 @@
 {
   "files": [
     {
+      "name": "图片",
+      "subject": "politics",
+      "tag": "政治",
+      "date": "2026-07-31",
+      "size": "1.8 MB",
+      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/%E6%94%BF%E6%B2%BB_li_IMG_20260731_182404.jpg",
+      "uploader": "li"
+    },
+    {
       "name": "占位图02.svg",
       "subject": "method",
       "path": "assets/files/placeholder_02.svg",
