@@ -15,6 +15,40 @@ async function saveUsersToGitHub(users){
     body: JSON.stringify({ message:'更新用户列表', content: content, sha: data.sha })
   });
 }
+function renderRanking(){
+  var el = document.getElementById('rankingContent');
+  if(!el) return;
+  var sorted = [].concat(State.files).sort(function(a,b){
+    var da = a.downloads || 0;
+    var db = b.downloads || 0;
+    return db - da;
+  });
+  if(sorted.length === 0){
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏆</div><p>暂无资料上榜</p></div>';
+    return;
+  }
+  el.innerHTML = sorted.slice(0, 20).map(function(f, i){
+    var sub = State.subjects.find(function(s){ return s.id === f.subject; });
+    var subName = sub ? sub.name : '未分类';
+    var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+    return '<div class="ranking-item">' +
+      '<span class="ranking-num">'+medal+'</span>' +
+      '<span class="ranking-name">'+escHtml(f.name)+'</span>' +
+      '<span class="ranking-subject" style="background:'+(sub?sub.color:'#999')+'">'+escHtml(subName)+'</span>' +
+      '<span class="ranking-downloads">⬇ '+(f.downloads||0)+'</span>' +
+    '</div>';
+  }).join('');
+}
+
+function initRankingTabs(){
+  var tabs = document.querySelectorAll('#rankingPage .subject-tab');
+  tabs.forEach(function(t){ t.addEventListener('click', function(){
+    tabs.forEach(function(x){x.classList.remove('active');});
+    this.classList.add('active');
+    renderRanking();
+  });});
+}
+
 
 async function loadUsers(){
   try{
@@ -71,12 +105,12 @@ async function adminDeleteFile(path){
   }catch(e){ toast(e.message,'error',4000); }
 }
 
-function rateFile(idx, rating){
+function rateFile(path, rating){
   if(!State.user){ toast('请先登录后评分','warning'); return; }
-  var f = State.files[idx];
+  var f = State.files.find(function(x){ return x.path === path; });
   if(!f) return;
-  State.files[idx].ratings = State.files[idx].ratings || {};
-  State.files[idx].ratings[State.user.phone] = rating;
+  f.ratings = f.ratings || {};
+  f.ratings[State.user.phone] = rating;
   saveFileRatings();
   renderResources();
 }
