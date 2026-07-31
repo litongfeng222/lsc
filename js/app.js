@@ -90,20 +90,6 @@ async function saveFilesToStorage(){
   }catch(e){ throw new Error('保存失败：'+e.message); }
 }
 
-async function adminDeleteFile(path){
-  if(!confirm('确认删除这份资料？\n'+path)) return;
-  var token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
-  var idx = State.files.findIndex(function(f){ return f.path === path; });
-  if(idx < 0){ toast('未找到该文件','error'); return; }
-  State.files.splice(idx, 1);
-  try{
-    await saveFilesToStorage();
-    toast('删除成功','success');
-    renderAdminFiles();
-    renderResources();
-    updateHeroStats();
-  }catch(e){ toast(e.message,'error',4000); }
-}
 
 function rateFile(path, rating){
   if(!State.user){ toast('请先登录后评分','warning'); return; }
@@ -905,49 +891,17 @@ function renderAdminPosts(){
 }
 
 window.adminDeleteFile = async function(path){
-  if(!confirm('确认删除这份资料？文件会从 GitHub 仓库移除。')) return;
-  const token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
-
+  if(!confirm('确认删除这份资料？')) return;
+  var idx = State.files.findIndex(function(f){ return f.path === path; });
+  if(idx < 0){ toast('未找到该文件','error'); return; }
+  State.files.splice(idx, 1);
   try{
-    // 从 path 提取 GitHub 中的文件路径
-    const match = path.match(/\/main\/(assets\/files\/.+)$/);
-    if(!match){ toast('无法解析文件路径','error'); return; }
-    const ghPath = match[1];
-
-    // 获取文件 sha
-    const res = await fetch(`https://api.github.com/repos/litongfeng222/lsc/contents/${ghPath}`, {
-      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json' }
-    });
-    if(!res.ok) throw new Error('文件不存在或无权访问');
-    const data = await res.json();
-
-    // 删除文件
-    await fetch(`https://api.github.com/repos/litongfeng222/lsc/contents/${ghPath}`, {
-      method: 'DELETE',
-      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
-      body: JSON.stringify({ message:'删除资料: ' + path, sha: data.sha })
-    });
-
-    // 从 files.json 中移除
-    State.files = State.files.filter(f => f.path !== path);
-    const newContent = btoa(unescape(encodeURIComponent(JSON.stringify({files:State.files}, null, 2))));
-    const fRes = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
-      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json' }
-    });
-    const fData = await fRes.json();
-    await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json', {
-      method: 'PUT',
-      headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
-      body: JSON.stringify({ message:'更新文件列表（删除资料）', content: newContent, sha: fData.sha })
-    });
-
-    toast('资料已删除','success');
+    await saveFilesToStorage();
+    toast('删除成功','success');
     renderAdminFiles();
     renderResources();
     updateHeroStats();
-  }catch(err){
-    toast('删除失败：' + err.message,'error', 4000);
-  }
+  }catch(e){ toast(e.message,'error',4000); }
 };
 
 window.adminDeletePost = function(id){
