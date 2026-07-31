@@ -5,6 +5,12 @@
       "phone": "15652249583",
       "password": "15fe67e68dae7be76c86e1de85349f53dd5ebca819616d3eec7ee241e602050d",
       "registeredAt": 1785496863913
+    },
+    {
+      "name": "测试",
+      "phone": "11111111111",
+      "password": "b84070c7e46d6d704a03ea0f3ca11aaea8ce6be669c05d65e459af844c00e2a9",
+      "registeredAt": 1785506450061
     }
   ]
 }
