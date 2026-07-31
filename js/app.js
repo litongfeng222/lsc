@@ -16,7 +16,7 @@ async function saveUsersToGitHub(users){
   });
 }
 function renderRanking(){
-  var el = document.getElementById('rankingContent');
+  var el = document.getElementById('rankingList');
   if(!el) return;
   var sorted = [].concat(State.files).sort(function(a,b){
     var da = a.downloads || 0;
@@ -41,7 +41,7 @@ function renderRanking(){
 }
 
 function initRankingTabs(){
-  var tabs = document.querySelectorAll('#rankingPage .subject-tab');
+  var tabs = document.querySelectorAll('#ranking .ranking-tab');
   tabs.forEach(function(t){ t.addEventListener('click', function(){
     tabs.forEach(function(x){x.classList.remove('active');});
     this.classList.add('active');
