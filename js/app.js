@@ -34,7 +34,9 @@ function toast(msg, type='info', ms=2600){
 /* ---------- 数据加载 ---------- */
 async function loadSubjects(){
   try{
-    const res = await fetch('data/subjects.json');
+    const ctrl = new AbortController();
+    setTimeout(()=>ctrl.abort(), 3000);
+    const res = await fetch('data/subjects.json', {signal:ctrl.signal});
     const data = await res.json();
     State.subjects = data.subjects || [];
   }catch(e){ console.error('加载科目失败',e); }
@@ -42,7 +44,9 @@ async function loadSubjects(){
 
 async function loadFiles(){
   try{
-    const res = await fetch('data/files.json');
+    const ctrl = new AbortController();
+    setTimeout(()=>ctrl.abort(), 3000);
+    const res = await fetch('data/files.json', {signal:ctrl.signal});
     const data = await res.json();
     State.files = data.files || [];
   }catch(e){ console.error('加载文件失败',e); }
@@ -554,99 +558,62 @@ window.uploadSubmit = async function(e){
   }catch(err){ toast('上传失败：'+err.message,'error',5000); }
   btn.textContent='上传资料';btn.disabled=false;
   return false;
-};function initAuthModal(){
-  const modal = $('#authModal');
-  const closeBtn = $('#authClose');
-  const tabLogin = $('#tabLogin');
-  const tabRegister = $('#tabRegister');
-  const loginForm = $('#loginForm');
-  const registerForm = $('#registerForm');
+};
 
-  // 关闭
-  closeBtn.addEventListener('click', ()=>{ modal.style.display='none'; });
-  modal.addEventListener('click', e=>{ if(e.target===modal) modal.style.display='none'; });
+window.loginSubmit = async function(e){
+  e && e.preventDefault();
+  var phone = document.getElementById('loginPhone').value.trim();
+  var pwd = document.getElementById('loginPassword').value;
+  if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的手机号','warning'); return false; }
+  if(!pwd){ toast('请输入密码','warning'); return false; }
+  var btn = document.getElementById('loginForm').querySelector('button[type=submit]');
+  btn.textContent='登录中…';btn.disabled=true;
+  try{
+    var users = await loadUsers();
+    var hash = await sha256(pwd + phone.slice(-4));
+    var user = users.find(function(u){return u.phone===phone && u.password===hash;});
+    if(!user){ toast('手机号或密码错误','error'); btn.textContent='登录';btn.disabled=false; return false; }
+    saveUser({name:user.name,phone:user.phone,registeredAt:user.registeredAt});
+    updateUserUI();updateHeroStats();
+    document.getElementById('authModal').style.display='none';
+    document.getElementById('loginForm').reset();
+    toast('欢迎回来，'+user.name+'！','success');
+  }catch(err){ toast('登录失败：'+err.message,'error'); }
+  btn.textContent='登录';btn.disabled=false;
+  return false;
+};
 
-  // Tab 切换
-  tabLogin.addEventListener('click', ()=>{
-    tabLogin.classList.add('active'); tabRegister.classList.remove('active');
-    loginForm.style.display=''; registerForm.style.display='none';
-  });
-  tabRegister.addEventListener('click', ()=>{
-    tabRegister.classList.add('active'); tabLogin.classList.remove('active');
-    registerForm.style.display=''; loginForm.style.display='none';
-  });
+window.registerSubmit = async function(e){
+  e && e.preventDefault();
+  var name = document.getElementById('regName').value.trim();
+  var phone = document.getElementById('regPhone').value.trim();
+  var pwd = document.getElementById('regPassword').value;
+  var pwd2 = document.getElementById('regPassword2').value;
+  if(!name){ toast('请输入昵称','warning');return false; }
+  if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的11位手机号','warning');return false; }
+  if(pwd.length<6){ toast('密码至少6位','warning');return false; }
+  if(pwd!==pwd2){ toast('两次密码不一致','warning');return false; }
+  var btn = document.getElementById('registerForm').querySelector('button[type=submit]');
+  btn.textContent='注册中…';btn.disabled=true;
+  try{
+    var users = await loadUsers();
+    if(users.find(function(u){return u.phone===phone;})){ toast('该手机号已注册','warning');btn.textContent='注册';btn.disabled=false;return false; }
+    var hash = await sha256(pwd+phone.slice(-4));
+    users.push({name:name,phone:phone,password:hash,registeredAt:Date.now()});
+    await saveUsersToGitHub(users);
+    saveUser({name:name,phone:phone,registeredAt:Date.now()});
+    updateUserUI();updateHeroStats();
+    document.getElementById('authModal').style.display='none';
+    document.getElementById('registerForm').reset();
+    toast('注册成功，欢迎 '+name+'！','success');
+  }catch(err){ toast('注册失败：'+err.message+(err.message.includes('Token')?'':'（需先在管理员面板设置Token）'),'error',4000); }
+  btn.textContent='注册';btn.disabled=false;
+  return false;
+};
 
-  // 登录提交
-  loginForm.addEventListener('submit', async e=>{
-    e.preventDefault();
-    const phone = $('#loginPhone').value.trim();
-    const pwd = $('#loginPassword').value;
-    if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的手机号','warning'); return; }
-    if(!pwd){ toast('请输入密码','warning'); return; }
-
-    const btn = loginForm.querySelector('button[type=submit]');
-    btn.textContent = '登录中…'; btn.disabled = true;
-
-    try{
-      const users = await loadUsers();
-      const hash = await sha256(pwd + phone.slice(-4));
-      const user = users.find(u => u.phone === phone && u.password === hash);
-      if(!user){ toast('手机号或密码错误','error'); return; }
-      
-      saveUser({ name:user.name, phone:user.phone, registeredAt:user.registeredAt });
-      updateUserUI();
-      updateHeroStats();
-      modal.style.display='none';
-      loginForm.reset();
-      toast('欢迎回来，' + user.name + '！','success');
-    }catch(err){
-      toast('登录失败：' + err.message,'error');
-    }finally{
-      btn.textContent = '登录'; btn.disabled = false;
-    }
-  });
-
-  // 注册提交
-  registerForm.addEventListener('submit', async e=>{
-    e.preventDefault();
-    const name = $('#regName').value.trim();
-    const phone = $('#regPhone').value.trim();
-    const pwd = $('#regPassword').value;
-    const pwd2 = $('#regPassword2').value;
-    
-    if(!name){ toast('请输入昵称','warning'); return; }
-    if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的11位手机号','warning'); return; }
-    if(pwd.length < 6){ toast('密码至少6位','warning'); return; }
-    if(pwd !== pwd2){ toast('两次密码不一致','warning'); return; }
-
-    const btn = registerForm.querySelector('button[type=submit]');
-    btn.textContent = '注册中…'; btn.disabled = true;
-
-    try{
-      const users = await loadUsers();
-      if(users.find(u => u.phone === phone)){ toast('该手机号已注册','warning'); return; }
-      
-      const hash = await sha256(pwd + phone.slice(-4));
-      const newUser = {
-        name, phone,
-        password: hash,
-        registeredAt: Date.now()
-      };
-      users.push(newUser);
-      await saveUsersToGitHub(users);
-      
-      saveUser({ name, phone, registeredAt: newUser.registeredAt });
-      updateUserUI();
-      updateHeroStats();
-      modal.style.display='none';
-      registerForm.reset();
-      toast('注册成功，欢迎 ' + name + '！','success');
-    }catch(err){
-      toast('注册失败：' + err.message + '（可能需要管理员设置 Token）','error', 4000);
-    }finally{
-      btn.textContent = '注册'; btn.disabled = false;
-    }
-  });
+function initAuthModal(){
+  // Tab切换和模态框关闭由 inline onclick 处理
+  // 登录和注册提交由 window.loginSubmit / window.registerSubmit 处理
 }
 
 // 打开认证弹窗
