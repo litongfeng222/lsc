@@ -52,7 +52,7 @@ function initRankingTabs(){
 
 async function loadUsers(){
   try{
-    var res = await fetch('data/users.json');
+    var res = await fetch('data/users.json?_t='+Date.now());
     if(res.ok) return await res.json();
   }catch(e){}
   return [];
@@ -173,7 +173,7 @@ async function loadSubjects(){
   try{
     const ctrl = new AbortController();
     setTimeout(()=>ctrl.abort(), 3000);
-    const res = await fetch('data/subjects.json', {signal:ctrl.signal});
+    const res = await fetch('data/subjects.json?_t='+Date.now(), {signal:ctrl.signal});
     const data = await res.json();
     State.subjects = data.subjects || [];
   }catch(e){ console.error('加载科目失败',e); }
@@ -183,7 +183,7 @@ async function loadFiles(){
   try{
     const ctrl = new AbortController();
     setTimeout(()=>ctrl.abort(), 3000);
-    const res = await fetch('data/files.json', {signal:ctrl.signal});
+    const res = await fetch('data/files.json?_t='+Date.now(), {signal:ctrl.signal});
     const data = await res.json();
     State.files = data.files || [];
   }catch(e){ console.error('加载文件失败',e); }
@@ -877,7 +877,7 @@ function renderAdminFiles(){
 function renderAdminUsers(){
   const list = $('#adminUserList');
   // 从 localStorage 读取用户列表
-  fetch('data/users.json?t=' + Date.now())
+  fetch('data/users.json?_t='+Date.now())
     .then(r=>r.json())
     .then(data=>{
       const users = data.users || [];
