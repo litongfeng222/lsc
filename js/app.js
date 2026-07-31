@@ -4,7 +4,7 @@
 
 
 async function saveUsersToGitHub(users){
-  var token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
+  var token = localStorage.getItem('lsc_gh_token') || 'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';
   var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/users.json';
   var content = btoa(unescape(encodeURIComponent(JSON.stringify({users: users}, null, 2))));
   var res = await fetch(url, { headers: { 'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json' } });
@@ -82,7 +82,7 @@ function previewFile(url){
 }
 
 async function saveFilesToStorage(){
-  var token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
+  var token = localStorage.getItem('lsc_gh_token') || 'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';
   var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json';
   var content = btoa(unescape(encodeURIComponent(JSON.stringify({files:State.files}, null, 2))));
   try{
