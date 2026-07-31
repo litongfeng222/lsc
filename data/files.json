@@ -8,9 +8,9 @@
       "desc": "update",
       "usage": "居于",
       "date": "2026-07-31",
-      "downloads": 0,
-      "rating": 5,
-      "ratingCount": 1
+      "downloads": 1,
+      "rating": 3.5,
+      "ratingCount": 2
     },
     {
       "name": "as",
@@ -20,9 +20,9 @@
       "desc": "",
       "usage": "",
       "date": "2026-07-31",
-      "downloads": 0,
-      "rating": 3,
-      "ratingCount": 1
+      "downloads": 1,
+      "rating": 4,
+      "ratingCount": 2
     },
     {
       "name": "YGY",
@@ -32,9 +32,19 @@
       "desc": "HFT",
       "usage": "TFYT",
       "date": "2026-07-31",
-      "downloads": 0,
-      "rating": 3,
-      "ratingCount": 1
+      "downloads": 1,
+      "rating": 3.5,
+      "ratingCount": 2
+    },
+    {
+      "name": "CESHI",
+      "subject": "method",
+      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/method_CESHI.docx",
+      "uploader": "李同丰",
+      "desc": "CESHI",
+      "usage": "CESHI",
+      "date": "2026-07-31",
+      "downloads": 0
     }
   ]
 }
