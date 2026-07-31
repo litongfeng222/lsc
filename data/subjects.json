@@ -38,7 +38,7 @@
     },
     {
       "id": "politics",
-      "name": "政治",
+      "name": "道法",
       "emoji": "",
       "color": "#f39c12"
     },
@@ -59,6 +59,12 @@
       "name": "学习方法",
       "emoji": "",
       "color": "#1abc9c"
+    },
+    {
+      "id": "other",
+      "name": "其他",
+      "emoji": "",
+      "color": "#95a5a6"
     }
   ],
   "extraTags": {}
