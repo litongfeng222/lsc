@@ -1,18 +1,6 @@
 {
   "files": [
     {
-      "name": "加油",
-      "subject": "chinese",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/chinese_%E5%8A%A0%E6%B2%B9.docx",
-      "uploader": "李同丰",
-      "desc": "update",
-      "usage": "居于",
-      "date": "2026-07-31",
-      "downloads": 1,
-      "rating": 3.5,
-      "ratingCount": 2
-    },
-    {
       "name": "as",
       "subject": "geography",
       "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/geography_as.docx",
@@ -44,7 +32,9 @@
       "desc": "CESHI",
       "usage": "CESHI",
       "date": "2026-07-31",
-      "downloads": 0
+      "downloads": 0,
+      "rating": 2,
+      "ratingCount": 1
     }
   ]
 }
