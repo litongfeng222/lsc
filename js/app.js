@@ -2,6 +2,84 @@
 (function(){
 'use strict';
 
+
+async function saveUsersToGitHub(users){
+  var token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
+  var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/users.json';
+  var content = btoa(unescape(encodeURIComponent(JSON.stringify(users, null, 2))));
+  var res = await fetch(url, { headers: { 'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json' } });
+  var data = await res.json();
+  await fetch(url, {
+    method: 'PUT',
+    headers: { 'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+    body: JSON.stringify({ message:'更新用户列表', content: content, sha: data.sha })
+  });
+}
+
+async function loadUsers(){
+  try{
+    var res = await fetch('data/users.json');
+    if(res.ok) return await res.json();
+  }catch(e){}
+  return [];
+}
+
+async function sha256(str){
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+function downloadFile(url, name){
+  var a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  name && (a.download = name);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function previewFile(url){
+  window.open(url, '_blank', 'noopener noreferrer');
+}
+
+async function saveFilesToStorage(){
+  var token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
+  var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json';
+  var content = btoa(unescape(encodeURIComponent(JSON.stringify({files:State.files}, null, 2))));
+  try{
+    var r = await fetch(url, {headers:{'Authorization':'***'+token, 'Accept':'application/vnd.github.v3+json'}});
+    if(!r.ok) throw new Error('获取SHA失败');
+    var d = await r.json();
+    await fetch(url, {
+      method:'PUT',
+      headers:{'Authorization':'***'+token, 'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify({message:'更新文件列表', content:content, sha:d.sha})
+    });
+  }catch(e){ throw new Error('保存失败：'+e.message); }
+}
+
+async function adminDeleteFile(path){
+  if(!confirm('确认删除这份资料？\n'+path)) return;
+  var token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
+  var idx = State.files.findIndex(function(f){ return f.path === path; });
+  if(idx < 0){ toast('未找到该文件','error'); return; }
+  State.files.splice(idx, 1);
+  try{
+    await saveFilesToStorage();
+    toast('删除成功','success');
+    renderAdminFiles();
+    renderResources();
+    updateHeroStats();
+  }catch(e){ toast(e.message,'error',4000); }
+}
+
+function rateFile(idx, rating){
+  if(!State.user){ toast('请先登录后评分','warning'); return; }
+  var f = State.files[idx];
+  if(!f) return;
+  State.files[idx].ratings = State.files[idx].ratings || {};
+  State.files[idx].ratings[State.user.phone] = rating;
+  saveFileRatings();
+  renderResources();
+}
 window.unlockAdmin = function(){
   var pwd = document.getElementById('adminPwd');
   var panel = document.getElementById('adminPanel');
@@ -739,14 +817,14 @@ function initAdminEntry(){
 
   $('#adminSaveToken').addEventListener('click', ()=>{
     const t = $('#adminToken').value.trim();
-    if(t){ localStorage.setItem('lsc_gh_token', t); updateTokenStatus(); toast('Token 已保存','success'); $('#adminToken').value=''; }
+    if(t && t.length > 10 && t.startsWith('ghp_')){ localStorage.setItem('lsc_gh_token', t); updateTokenStatus(); toast('Token 已保存','success'); $('#adminToken').value=''; } else { toast('Token 格式不对，应以 ghp_ 开头','warning'); }
   });
 }
 
 function updateTokenStatus(){
   const has = !!localStorage.getItem('lsc_gh_token');
-  $('#tokenStatus').textContent = has ? '✅ Token 已设置' : '❌ 未设置 Token，上传功能不可用';
-  $('#tokenStatus').style.color = has ? '#22c55e' : '#ef4444';
+  $('#tokenStatus').textContent = has ? '✅ 已手动设置 Token' : 'ℹ️ 使用默认 Token（无需手动设置）';
+  $('#tokenStatus').style.color = has ? '#22c55e' : '#f59e0b';
 }
 
 
@@ -794,8 +872,7 @@ function renderAdminPosts(){
 
 window.adminDeleteFile = async function(path){
   if(!confirm('确认删除这份资料？文件会从 GitHub 仓库移除。')) return;
-  const token = localStorage.getItem('lsc_gh_token');
-  if(!token){ toast('请先设置 GitHub Token','warning'); return; }
+  const token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
 
   try{
     // 从 path 提取 GitHub 中的文件路径
