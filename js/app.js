@@ -52,8 +52,15 @@ function initRankingTabs(){
 
 async function loadUsers(){
   try{
-    var res = await fetch('https://raw.githubusercontent.com/litongfeng222/lsc/main/data/users.json?_t='+Date.now());
-    if(res.ok){ var d = await res.json(); return d.users || []; }
+    var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/users.json';
+    var res = await fetch(url);
+    if(!res.ok) return [];
+    var d = await res.json();
+    if(d.content){
+      var str = decodeURIComponent(escape(atob(d.content)));
+      var data = JSON.parse(str);
+      return data.users || [];
+    }
   }catch(e){}
   return [];
 }
@@ -157,20 +164,25 @@ function toast(msg, type='info', ms=2600){
 /* ---------- 数据加载 ---------- */
 async function loadSubjects(){
   try{
-    const ctrl = new AbortController();
-    setTimeout(()=>ctrl.abort(), 3000);
-    const res = await fetch('https://raw.githubusercontent.com/litongfeng222/lsc/main/data/subjects.json?_t='+Date.now(), {signal:ctrl.signal});
-    const data = await res.json();
+    // 用GitHub API读数据，无缓存问题
+    var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/subjects.json';
+    var res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var d = await res.json();
+    var str = decodeURIComponent(escape(atob(d.content)));
+    var data = JSON.parse(str);
     State.subjects = data.subjects || [];
   }catch(e){ console.error('加载科目失败',e); }
 }
 
 async function loadFiles(){
   try{
-    const ctrl = new AbortController();
-    setTimeout(()=>ctrl.abort(), 3000);
-    const res = await fetch('https://raw.githubusercontent.com/litongfeng222/lsc/main/data/files.json?_t='+Date.now(), {signal:ctrl.signal});
-    const data = await res.json();
+    var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json';
+    var res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var d = await res.json();
+    var str = decodeURIComponent(escape(atob(d.content)));
+    var data = JSON.parse(str);
     State.files = data.files || [];
   }catch(e){ console.error('加载文件失败',e); }
 }
@@ -863,9 +875,12 @@ function renderAdminFiles(){
 function renderAdminUsers(){
   const list = $('#adminUserList');
   // 从 localStorage 读取用户列表
-  fetch('https://raw.githubusercontent.com/litongfeng222/lsc/main/data/users.json?_t='+Date.now())
-    .then(r=>r.json())
-    .then(data=>{
+  fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/users.json')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.content) return {users:[]};
+      var str = decodeURIComponent(escape(atob(d.content)));
+      try{ var data = JSON.parse(str); }catch(e){ data={users:[]}; }
       const users = data.users || [];
       if(!users.length){ list.innerHTML='<div class="admin-empty">暂无注册用户</div>'; return; }
       list.innerHTML = users.map(u => {
