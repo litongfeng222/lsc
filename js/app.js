@@ -480,11 +480,73 @@ function renderRanking(){
 }
 
 /* ---------- 用户身份 ---------- */
+function initUserButton(){
+  const btn = $('#userBtn');
+  const dropdown = $('#userDropdown');
+  const nameEl = $('#userName');
+  const avatarEl = $('#userAvatar');
+  const headerEl = $('#dropdownHeader');
+  const loginBtn = $('#dropdownLogin');
+  const logoutBtn = $('#dropdownLogout');
+
+  // 点击切换下拉
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    dropdown.style.display = dropdown.style.display === 'none' ? '' : 'none';
+  });
+  document.addEventListener('click', ()=>{ dropdown.style.display = 'none'; });
+  dropdown.addEventListener('click', e=>e.stopPropagation());
+
+  // 登录/注册
+  loginBtn.addEventListener('click', ()=>{
+    dropdown.style.display = 'none';
+    showUserSetup();
+  });
+
+  // 退出
+  logoutBtn.addEventListener('click', ()=>{
+    saveUser(null);
+    State.user = null;
+    updateUserUI();
+    updateHeroStats();
+    toast('已退出登录','info');
+    dropdown.style.display = 'none';
+  });
+
+  updateUserUI();
+}
+
+function updateUserUI(){
+  const nameEl = $('#userName');
+  const avatarEl = $('#userAvatar');
+  const headerEl = $('#dropdownHeader');
+  const loginBtn = $('#dropdownLogin');
+  const logoutBtn = $('#dropdownLogout');
+  if(!nameEl) return;
+
+  if(State.user){
+    nameEl.textContent = State.user.name;
+    avatarEl.textContent = State.user.name.charAt(0).toUpperCase();
+    avatarEl.style.background = 'var(--primary)';
+    headerEl.textContent = '👤 ' + State.user.name;
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = '';
+  } else {
+    nameEl.textContent = '登录';
+    avatarEl.textContent = '👤';
+    avatarEl.style.background = 'var(--bg)';
+    headerEl.textContent = '请登录后使用完整功能';
+    loginBtn.style.display = '';
+    logoutBtn.style.display = 'none';
+  }
+}
+
 function showUserSetup(){
   const name = prompt('请输入你的昵称：');
   if(!name) return;
   const phone = prompt('请输入手机号（用于身份识别）：') || '';
   saveUser({ name, phone, registeredAt: Date.now() });
+  updateUserUI();
   toast('欢迎，' + name + '！', 'success');
   updateHeroStats();
 }
@@ -520,6 +582,9 @@ async function init(){
   initUploadForm();
   initRankingTabs();
   initAdminEntry();
+  initUserButton();
+
+  updateUserUI();
 
   updateHeroStats();
   renderResources();
