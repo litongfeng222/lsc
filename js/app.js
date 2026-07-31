@@ -196,6 +196,10 @@ function renderResources(){
           <span>⬇ ${downloads}</span>
           ${rating > 0 ? `<span class="file-rating">${stars}</span>` : ''}
         </div>
+        ${State.user ? `<div class="file-rate" data-path="${escHtml(f.path)}">
+          <span class="rate-label">我的评分：</span>
+          ${[1,2,3,4,5].map(n => `<span class="rate-star" data-val="${n}" onclick="rateFile('${escHtml(f.path)}',${n})">★</span>`).join('')}
+        </div>` : `<div class="file-rate-hint" onclick="openAuthModal('login')">登录后可评分</div>`}
       </div>
       <div class="file-actions">
         ${previewable ? `<button class="file-icon-btn" onclick="previewFile('${escHtml(f.path)}','${escHtml(f.name)}')" title="预览">👁</button>` : ''}
@@ -203,6 +207,57 @@ function renderResources(){
       </div>
     </div>`;
   }).join('');
+}
+
+/* ---------- 评分系统 ---------- */
+window.rateFile = async function(path, val){
+  if(!State.user){ toast('请先登录','warning'); openAuthModal('login'); return; }
+  
+  // 读取已有评分
+  const ratings = JSON.parse(localStorage.getItem('lsc_ratings')||'{}');
+  const userKey = State.user.phone;
+  if(!ratings[path]) ratings[path] = {};
+  
+  // 已评过则修改
+  const oldVal = ratings[path][userKey];
+  ratings[path][userKey] = val;
+  localStorage.setItem('lsc_ratings', JSON.stringify(ratings));
+  
+  // 计算平均分
+  const allRatings = Object.values(ratings[path]);
+  const avg = allRatings.reduce((a,b)=>a+b,0) / allRatings.length;
+  
+  // 更新文件对象
+  const file = State.files.find(f => f.path === path);
+  if(file){
+    file.rating = Math.round(avg * 10) / 10;
+    file.ratingCount = allRatings.length;
+    saveFileRatings();
+  }
+  
+  toast(oldVal ? '评分已修改为 ' + val + ' 星' : '评分成功：' + val + ' 星', 'success');
+  renderResources();
+};
+
+function saveFileRatings(){
+  try{
+    const stats = State.files.map(f => ({path:f.path, rating:f.rating||0, ratingCount:f.ratingCount||0, downloads:f.downloads||0}));
+    localStorage.setItem('lsc_file_stats', JSON.stringify(stats));
+  }catch(e){}
+}
+
+function loadFileStats(){
+  try{
+    const stats = JSON.parse(localStorage.getItem('lsc_file_stats')||'[]');
+    stats.forEach(s => {
+      const f = State.files.find(x=>x.path===s.path);
+      if(f){
+        f.downloads = s.downloads;
+        f.rating = s.rating;
+        f.ratingCount = s.ratingCount;
+      }
+    });
+  }catch(e){}
 }
 
 /* ---------- 下载 & 预览 ---------- */
@@ -244,21 +299,6 @@ window.previewFile = function(path, name){
   }
   modal.style.display = 'flex';
 };
-
-function saveFilesToStorage(){
-  // 下载计数存 localStorage（本地有效，不影响服务端）
-  try{ localStorage.setItem('lsc_file_stats', JSON.stringify(State.files.map(f=>({path:f.path,downloads:f.downloads||0})))); }catch(e){}
-}
-
-function loadFileStats(){
-  try{
-    const stats = JSON.parse(localStorage.getItem('lsc_file_stats')||'[]');
-    stats.forEach(s => {
-      const f = State.files.find(x=>x.path===s.path);
-      if(f) f.downloads = s.downloads;
-    });
-  }catch(e){}
-}
 
 /* ---------- 预览弹窗关闭 ---------- */
 function initModal(){
@@ -325,8 +365,8 @@ window.submitReply = function(id){
 
 function showPostForm(){
   if(!State.user){
-    toast('请先设置昵称（页面右上角）','warning');
-    showUserSetup();
+    toast('请先登录后再发帖','warning');
+    openAuthModal('login');
     return;
   }
   const boardNames = {qa:'学科答疑',homework:'班级作业',other:'其他信息'};

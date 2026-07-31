@@ -102,6 +102,15 @@ img{max-width:100%;display:block}
 .file-download-btn{padding:6px 16px;border-radius:var(--radius-sm);font-size:.82rem;font-weight:600;background:var(--primary);color:#fff;transition:var(--transition)}
 .file-download-btn:hover{background:var(--primary-dark);transform:translateY(-1px)}
 
+/* ===== Rating Stars ===== */
+.file-rate{display:flex;align-items:center;gap:4px;margin-top:8px}
+.rate-label{font-size:.76rem;color:var(--text-light)}
+.rate-star{font-size:1.1rem;color:#d1d5db;cursor:pointer;transition:var(--transition);user-select:none}
+.rate-star:hover{color:#f5a623;transform:scale(1.2)}
+.rate-star.rated{color:#f5a623}
+.file-rate-hint{font-size:.76rem;color:var(--primary);margin-top:8px;cursor:pointer}
+.file-rate-hint:hover{text-decoration:underline}
+
 /* ===== Empty State ===== */
 .empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
 .empty-icon{font-size:3rem;margin-bottom:12px;opacity:.5}
