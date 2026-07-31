@@ -6,7 +6,7 @@
 async function saveUsersToGitHub(users){
   var token = localStorage.getItem('lsc_gh_token') || atob('Z2hwX1la4oCmbVBCQw==');
   var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/users.json';
-  var content = btoa(unescape(encodeURIComponent(JSON.stringify(users, null, 2))));
+  var content = btoa(unescape(encodeURIComponent(JSON.stringify({users: users}, null, 2))));
   var res = await fetch(url, { headers: { 'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json' } });
   var data = await res.json();
   await fetch(url, {
@@ -53,7 +53,7 @@ function initRankingTabs(){
 async function loadUsers(){
   try{
     var res = await fetch('data/users.json?_t='+Date.now());
-    if(res.ok) return await res.json();
+    if(res.ok){ var d = await res.json(); return d.users || []; }
   }catch(e){}
   return [];
 }
