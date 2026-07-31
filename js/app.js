@@ -645,8 +645,7 @@ function initUploadSelect(){
   State.subjects.forEach(s => { var o=document.createElement('option'); o.value=s.id; o.textContent=s.name; document.getElementById('uploadSubject').appendChild(o); });
   document.getElementById('uploaderName').value = State.user.name;
   var h=document.getElementById('uploadTokenHint');
-  h.style.display = localStorage.getItem('lsc_gh_token')?'none':'flex';
-  h.innerHTML = '<span>⚠️ 未设置 GitHub Token</span><button class="btn btn-primary btn-sm" onclick="document.getElementById(\'adminEntry\').click()">去设置</button>';
+  h.style.display = 'none';
   document.getElementById('uploadFile').onchange=function(){ var f=this.files[0]; if(!f)return; document.getElementById('uploadFileHint').textContent='已选择：'+f.name+'（'+(f.size/1024/1024).toFixed(1)+'MB）'; if(f.size>25*1024*1024)toast('文件超过25MB，GitHub可能上传失败','warning',4000); };
 }
 
