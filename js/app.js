@@ -183,19 +183,23 @@ function renderResources(){
     const rating = f.rating || 0;
     const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5-Math.round(rating));
     const previewable = ['pdf','png','jpg','jpeg','gif','webp','txt','docx','doc'].includes(ext);
+    const desc = f.desc || '';
+    const usage = f.usage || '';
     const delay = Math.min(i*60, 400);
     return `<div class="file-card" style="--card-color:${sub.color};--delay:${delay}ms;animation-delay:${delay}ms">
       <div class="file-info" data-idx="${i}">
         <div class="file-name">${escHtml(f.name)}</div>
+        ${desc ? `<div class="file-desc">${escHtml(desc)}</div>` : ''}
         <div class="file-meta">
           <span class="file-tag" style="background:${sub.color}">${escHtml(sub.name)}</span>
-          <span class="file-date">${formatDate(f.date)}</span>
+          <span class="file-date">📅 ${formatDate(f.date)}</span>
           ${f.uploader ? `<span class="file-uploader">👤 ${escHtml(f.uploader)}</span>` : ''}
         </div>
         <div class="file-stats">
-          <span>⬇ ${downloads}</span>
-          ${rating > 0 ? `<span class="file-rating">${stars}</span>` : ''}
+          <span>⬇ ${downloads} 次下载</span>
+          ${rating > 0 ? `<span class="file-rating">${stars} ${rating.toFixed(1)}</span>` : '<span class="file-no-rating">暂无评分</span>'}
         </div>
+        ${usage ? `<div class="file-usage"><span class="usage-label">📋 使用说明：</span>${escHtml(usage)}</div>` : ''}
         ${State.user ? `<div class="file-rate" data-path="${escHtml(f.path)}">
           <span class="rate-label">我的评分：</span>
           ${[1,2,3,4,5].map(n => {
@@ -454,6 +458,7 @@ function initUploadForm(){
     const name = $('#uploadName').value.trim();
     const subject = $('#uploadSubject').value;
     const desc = $('#uploadDesc').value.trim();
+    const usage = $('#uploadUsage') ? $('#uploadUsage').value.trim() : '';
     const fileInput = $('#uploadFile');
     const file = fileInput.files[0];
     const uploader = $('#uploaderName').value.trim() || '';
@@ -500,6 +505,8 @@ function initUploadForm(){
         const newFile = {
           name, subject, path: rawUrl,
           uploader: uploader || '',
+          desc: desc || '',
+          usage: usage || '',
           date: new Date().toISOString().slice(0,10),
           downloads: 0,
         };
