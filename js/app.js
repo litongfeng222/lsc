@@ -336,6 +336,7 @@ function renderForum(){
       ${imgHtml}
       <div class="post-actions" style="margin-top:10px;display:flex;gap:8px">
         <button class="file-icon-btn" onclick="toggleReply(${p.id})" title="回复">💬</button>
+        ${State.user && p.author === State.user.name ? `<button class="file-icon-btn" onclick="deletePost(${p.id})" title="删除" style="color:#ef4444">🗑</button>` : ''}
       </div>
       ${repliesHtml ? `<div class="post-replies">${repliesHtml}</div>` : ''}
       <div id="replyBox-${p.id}" style="display:none;margin-top:10px">
@@ -345,6 +346,15 @@ function renderForum(){
     </div>`;
   }).join('');
 }
+
+window.deletePost = function(id){
+  if(!confirm('确认删除这条帖子吗？')) return;
+  State.posts = State.posts.filter(p => p.id !== id);
+  savePosts();
+  renderForum();
+  updateHeroStats();
+  toast('帖子已删除','success');
+};
 
 window.toggleReply = function(id){
   const box = $('#replyBox-'+id);
