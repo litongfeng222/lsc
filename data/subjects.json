@@ -37,8 +37,14 @@
       "color": "#27ae60"
     },
     {
+      "id": "history",
+      "name": "历史",
+      "emoji": "",
+      "color": "#8e44ad"
+    },
+    {
       "id": "politics",
-      "name": "道法",
+      "name": "政治",
       "emoji": "",
       "color": "#f39c12"
     },
@@ -49,16 +55,16 @@
       "color": "#1abc9c"
     },
     {
-      "id": "history",
-      "name": "历史",
-      "emoji": "",
-      "color": "#8e44ad"
-    },
-    {
       "id": "method",
       "name": "学习方法",
       "emoji": "",
       "color": "#1abc9c"
+    },
+    {
+      "id": "exam",
+      "name": "考试技巧",
+      "emoji": "",
+      "color": "#e74c3c"
     },
     {
       "id": "other",
