@@ -348,7 +348,10 @@ function renderForum(){
   list.innerHTML = posts.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0)).map(p => {
     const time = p.createdAt ? new Date(p.createdAt).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
     const imgHtml = p.image ? `<img class="post-image" src="${escHtml(p.image)}" alt="图片">` : '';
-    const repliesHtml = (p.replies||[]).map(r => `<div class="reply-item"><strong>${escHtml(r.author||'匿名')}</strong>：${escHtml(r.content)}</div>`).join('');
+    const repliesHtml = (p.replies||[]).map(r => {
+      const replyImg = r.image ? `<div class="reply-image-preview"><img src="${escHtml(r.image)}" alt="图片"></div>` : '';
+      return `<div class="reply-item"><strong>${escHtml(r.author||'匿名')}</strong>：${escHtml(r.content)}${replyImg}</div>`;
+    }).join('');
     return `<div class="post-card">
       <div class="post-title">${escHtml(p.title)}</div>
       <div class="post-meta"><span>👤 ${escHtml(p.author||'匿名同学')}</span><span>📅 ${time}</span></div>
@@ -361,7 +364,13 @@ function renderForum(){
       ${repliesHtml ? `<div class="post-replies">${repliesHtml}</div>` : ''}
       <div id="replyBox-${p.id}" style="display:none;margin-top:10px">
         <textarea id="replyText-${p.id}" rows="2" placeholder="写回复…" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;resize:vertical"></textarea>
-        <button class="btn btn-primary btn-sm" style="margin-top:6px" onclick="submitReply(${p.id})">发送</button>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <label class="reply-image-btn">📎 图片
+            <input type="file" accept="image/*" style="display:none" onchange="handleReplyImage(${p.id},this)">
+          </label>
+          <div id="replyImgPreview-${p.id}" class="reply-image-preview" style="display:none"></div>
+          <button class="btn btn-primary btn-sm" onclick="submitReply(${p.id})">发送</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -381,6 +390,20 @@ window.toggleReply = function(id){
   box.style.display = box.style.display === 'none' ? '' : 'none';
 };
 
+window.handleReplyImage = function(postId, input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 2*1024*1024){ toast('图片不能超过2MB','warning'); input.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const preview = $('#replyImgPreview-'+postId);
+    preview.innerHTML = `<img src="${reader.result}" alt="预览">`;
+    preview.style.display='block';
+    preview.dataset.image = reader.result;
+  };
+  reader.readAsDataURL(file);
+};
+
 window.submitReply = function(id){
   if(!State.user){ toast('请先登录后再回复','warning'); openAuthModal('login'); return; }
   const text = $('#replyText-'+id).value.trim();
@@ -388,36 +411,79 @@ window.submitReply = function(id){
   const post = State.posts.find(p=>p.id===id);
   if(!post) return;
   if(!post.replies) post.replies = [];
-  post.replies.push({ author: State.user?.name || '', content: text });
+  const preview = $('#replyImgPreview-'+id);
+  const image = preview ? (preview.dataset.image || '') : '';
+  post.replies.push({ author: State.user.name, content: text, image });
   savePosts();
   renderForum();
   toast('回复成功','success');
 };
 
 function showPostForm(){
-  if(!State.user){
-    toast('请先登录后再发帖','warning');
-    openAuthModal('login');
-    return;
-  }
-  const boardNames = {qa:'学科答疑',homework:'班级作业',other:'其他信息'};
-  const title = prompt('帖子标题：');
-  if(!title) return;
-  const content = prompt('帖子内容：');
-  if(!content) return;
-  const post = {
-    id: Date.now(),
-    board: State.currentForumBoard,
-    title, content,
-    author: State.user.name,
-    createdAt: Date.now(),
-    replies: [],
-  };
-  State.posts.push(post);
-  savePosts();
-  renderForum();
-  updateHeroStats();
-  toast('发帖成功！','success');
+  if(!State.user){ toast('请先登录后再发帖','warning'); openAuthModal('login'); return; }
+  $('#postModal').style.display='flex';
+  $('#postTitle').value='';
+  $('#postContent').value='';
+  $('#postImage').value='';
+  $('#postImagePreview').style.display='none';
+  $('#postImagePreview').innerHTML='';
+}
+
+function initPostModal(){
+  const modal = $('#postModal');
+  $('#postClose').addEventListener('click', ()=>{ modal.style.display='none'; });
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.style.display='none'; });
+
+  $('#postImage').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 2*1024*1024){ toast('图片不能超过2MB','warning'); e.target.value=''; return; }
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const preview = $('#postImagePreview');
+      preview.innerHTML = `<img src="${reader.result}" alt="预览">`;
+      preview.style.display='block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  $('#postForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const title = $('#postTitle').value.trim();
+    const content = $('#postContent').value.trim();
+    if(!title || !content){ toast('请填写标题和内容','warning'); return; }
+
+    const btn = e.target.querySelector('button[type=submit]');
+    btn.textContent='发布中…'; btn.disabled=true;
+
+    let imageBase64 = '';
+    const imgFile = $('#postImage').files[0];
+    if(imgFile){
+      imageBase64 = await new Promise(resolve=>{
+        const r = new FileReader();
+        r.onload = ()=>resolve(r.result);
+        r.readAsDataURL(imgFile);
+      });
+    }
+
+    const post = {
+      id: Date.now(),
+      board: State.currentForumBoard,
+      title, content,
+      image: imageBase64,
+      author: State.user.name,
+      createdAt: Date.now(),
+      replies: [],
+    };
+    State.posts.push(post);
+    savePosts();
+    modal.style.display='none';
+    $('#postForm').reset();
+    renderForum();
+    updateHeroStats();
+    toast('发帖成功！','success');
+    btn.textContent='发布'; btn.disabled=false;
+  });
 }
 
 /* ---------- 上传 ---------- */
@@ -817,6 +883,7 @@ async function init(){
   initAdminEntry();
   initUserButton();
   initAuthModal();
+  initPostModal();
 
   updateUserUI();
 

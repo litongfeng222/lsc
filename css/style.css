@@ -206,6 +206,17 @@ img{max-width:100%;display:block}
 .dropdown-item{display:block;width:100%;text-align:left;padding:9px 14px;border-radius:6px;font-size:.85rem;color:var(--text);transition:var(--transition)}
 .dropdown-item:hover{background:rgba(91,110,232,.08);color:var(--primary)}
 
+/* ===== Post Modal ===== */
+.modal-post{max-width:500px;padding:0;overflow:hidden}
+.post-wrap{padding:28px}
+.post-modal-title{font-size:1.1rem;font-weight:700;margin-bottom:20px}
+.post-image-preview{margin-top:8px}
+.post-image-preview img{max-height:160px;border-radius:var(--radius-sm);object-fit:cover}
+.reply-image-btn{font-size:.76rem;color:var(--primary);cursor:pointer;padding:4px 8px;border-radius:6px;transition:var(--transition)}
+.reply-image-btn:hover{background:rgba(91,110,232,.08)}
+.reply-image-preview{margin-top:6px}
+.reply-image-preview img{max-height:100px;border-radius:6px;object-fit:cover}
+
 /* ===== Auth Modal ===== */
 .modal-auth{max-width:400px;padding:0;overflow:hidden}
 .auth-wrap{padding:28px}
