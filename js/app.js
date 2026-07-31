@@ -488,62 +488,94 @@ function initPostModal(){
 
 /* ---------- 上传 ---------- */
 function initUploadSelect(){
-  const sel = $('#uploadSubject');
-  if(sel.children.length > 1) return;
-  State.subjects.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id; opt.textContent = s.name;
-    sel.appendChild(opt);
-  });
-  // 检查登录状态
   const formWrap = $('.upload-form-wrap');
+  if(!formWrap) return;
+
+  // 未登录显示提示
   if(!State.user){
     formWrap.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><p>请先登录后再上传资料</p><button class="btn btn-primary" style="margin-top:12px" onclick="openAuthModal(\'login\')">去登录</button></div>';
-  } else {
-    // 如果之前被替换过，恢复表单
-    if(!$('#uploadForm')){
-      formWrap.innerHTML = `<form id="uploadForm" class="upload-form">
-        <div class="form-group"><label for="uploadName">资料名称 <span class="required">*</span></label><input type="text" id="uploadName" placeholder="例如：高一数学月考卷" required></div>
-        <div class="form-group"><label for="uploadSubject">所属科目 <span class="required">*</span></label><select id="uploadSubject" required><option value="">请选择科目</option></select></div>
-        <div class="form-group"><label for="uploadDesc">简介（选填）</label><textarea id="uploadDesc" rows="2" placeholder="一句话描述这份资料"></textarea></div>
-        <div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint">支持 PDF、DOCX、PPTX、XLSX、图片等格式</p></div>
-        <div class="form-group"><label for="uploaderName">你的昵称（选填）</label><input type="text" id="uploaderName" placeholder="留空则显示匿名同学"></div>
-        <button type="submit" class="btn btn-primary btn-block">上传资料</button>
-      </form>`;
-      initUploadSelect();
-      initUploadForm();
-    }
+    return;
+  }
+
+  // 已登录，确保表单存在
+  if(!$('#uploadForm')){
+    formWrap.innerHTML = `<form id="uploadForm" class="upload-form">
+      <div class="form-group"><label for="uploadName">资料名称 <span class="required">*</span></label><input type="text" id="uploadName" placeholder="例如：高一数学月考卷" required></div>
+      <div class="form-group"><label for="uploadSubject">所属科目 <span class="required">*</span></label><select id="uploadSubject" required><option value="">请选择科目</option></select></div>
+      <div class="form-group"><label for="uploadDesc">简介（选填）</label><textarea id="uploadDesc" rows="2" placeholder="一句话描述这份资料"></textarea></div>
+      <div class="form-group"><label for="uploadUsage">使用说明（选填）</label><textarea id="uploadUsage" rows="2" placeholder="例如：适合考前复习，重点看第3页"></textarea></div>
+      <div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint">支持 PDF、DOCX、PPTX、XLSX、图片等格式，文件不超过 25MB</p></div>
+      <div class="form-group"><label for="uploaderName">你的昵称（选填）</label><input type="text" id="uploaderName" placeholder="留空则显示匿名同学"></div>
+      <button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">上传资料</button>
+    </form>`;
+    initUploadForm();
+  }
+
+  // 填充科目下拉
+  const sel = $('#uploadSubject');
+  if(sel && sel.children.length <= 1){
+    State.subjects.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  // 自动填入登录用户昵称
+  if(State.user && $('#uploaderName')){
+    $('#uploaderName').value = State.user.name;
   }
 }
 
 function initUploadForm(){
   const form = $('#uploadForm');
+  if(!form) return;
+
+  // 文件选择时检查大小
+  $('#uploadFile').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 25*1024*1024){
+      toast('文件超过25MB，GitHub 可能上传失败','warning', 4000);
+    }
+    // 显示文件大小
+    const sizeMB = (file.size/1024/1024).toFixed(1);
+    const hint = form.querySelector('.form-hint');
+    if(hint) hint.textContent = `已选择：${file.name}（${sizeMB}MB）`;
+  });
+
   form.addEventListener('submit', async e => {
     e.preventDefault();
     if(!State.user){ toast('请先登录后再上传资料','warning'); openAuthModal('login'); return; }
+
     const name = $('#uploadName').value.trim();
     const subject = $('#uploadSubject').value;
     const desc = $('#uploadDesc').value.trim();
     const usage = $('#uploadUsage') ? $('#uploadUsage').value.trim() : '';
     const fileInput = $('#uploadFile');
     const file = fileInput.files[0];
-    const uploader = $('#uploaderName').value.trim() || '';
+    const uploader = $('#uploaderName').value.trim() || State.user.name || '';
 
-    if(!name || !subject || !file){ toast('请填写必填项','warning'); return; }
+    if(!name){ toast('请填写资料名称','warning'); return; }
+    if(!subject){ toast('请选择科目','warning'); return; }
+    if(!file){ toast('请选择文件','warning'); return; }
 
-    // 通过 GitHub API 上传
+    // 检查 Token
     const token = localStorage.getItem('lsc_gh_token');
     if(!token){
-      toast('需要先设置 GitHub Token（管理员入口中设置）','warning');
+      toast('未设置 GitHub Token，请点击底部 ⚙️ 管理员入口设置','warning', 4000);
       return;
     }
 
-    toast('正在上传…','info', 5000);
+    const btn = $('#uploadSubmitBtn');
+    btn.textContent = '上传中…'; btn.disabled = true;
+    toast('正在上传「' + name + '」…','info', 5000);
 
     const reader = new FileReader();
     reader.onload = async () => {
       const base64 = reader.result.split(',')[1];
-      const fileName = `${subject}_${name}.${file.name.split('.').pop()}`;
+      const ext = file.name.split('.').pop();
+      const fileName = `${subject}_${name}.${ext}`;
       const encodedName = encodeURIComponent(fileName);
       const path = `assets/files/${encodedName}`;
 
@@ -563,8 +595,10 @@ function initUploadForm(){
           headers: { 'Authorization':`token ${token}`, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
           body: JSON.stringify({ message:`上传: ${name}`, content: base64, sha })
         });
-        if(!upRes.ok) throw new Error('上传失败');
-        const upData = await upRes.json();
+        if(!upRes.ok){
+          const errData = await upRes.json().catch(()=>({}));
+          throw new Error(errData.message || '上传失败 (' + upRes.status + ')');
+        }
 
         // 更新 files.json
         const rawUrl = `https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/${encodedName}`;
@@ -592,10 +626,13 @@ function initUploadForm(){
 
         toast('上传成功！','success');
         form.reset();
+        if(State.user && $('#uploaderName')) $('#uploaderName').value = State.user.name;
         updateHeroStats();
         renderResources();
       }catch(err){
-        toast('上传失败：'+err.message, 'error', 4000);
+        toast('上传失败：' + err.message, 'error', 5000);
+      }finally{
+        btn.textContent = '上传资料'; btn.disabled = false;
       }
     };
     reader.readAsDataURL(file);
