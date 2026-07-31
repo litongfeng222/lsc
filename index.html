@@ -7,7 +7,7 @@
   <meta name="description" content="师大附·11班·学习小组 — 资源共享与学习交流社区">
   <title>师大附·11班·学习小组</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
 
@@ -48,7 +48,7 @@
       <p class="hero-subtitle">资源共享 · 互助进步 · 共同成长</p>
       <div class="hero-actions">
         <a href="#resources" class="btn btn-primary">浏览资源</a>
-        <a href="#upload" class="btn btn-ghost">分享资料</a>
+        <a href="#upload" class="btn btn-ghost" onclick="event.preventDefault();document.querySelectorAll('.nav-link')[2].click()">分享资料</a>
       </div>
     </div>
     <div class="hero-stats" id="heroStats">
@@ -119,6 +119,10 @@
         <p class="section-desc">上传学习资料，帮助同学</p>
       </div>
       <div class="upload-form-wrap">
+        <div id="uploadTokenHint" class="upload-token-hint" style="display:none">
+          <span>⚠️ 未设置 GitHub Token，上传功能需要 Token</span>
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('adminEntry').click()">去设置</button>
+        </div>
         <form id="uploadForm" class="upload-form">
           <div class="form-group">
             <label for="uploadName">资料名称 <span class="required">*</span></label>
@@ -308,6 +312,6 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- 脚本 -->
-  <script src="js/app.js?v=9"></script>
+  <script src="js/app.js?v=10"></script>
 </body>
 </html>

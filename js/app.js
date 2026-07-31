@@ -525,6 +525,12 @@ function initUploadSelect(){
   if(State.user && $('#uploaderName')){
     $('#uploaderName').value = State.user.name;
   }
+
+  // Token 状态提示
+  const hint = $('#uploadTokenHint');
+  if(hint){
+    hint.style.display = localStorage.getItem('lsc_gh_token') ? 'none' : 'flex';
+  }
 }
 
 function initUploadForm(){
