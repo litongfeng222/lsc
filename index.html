@@ -235,36 +235,28 @@
       <button class="modal-close" id="adminClose">✕</button>
       <div class="admin-wrap">
         <h3 class="admin-title">⚙️ 管理员面板</h3>
-        <!-- 密码验证区 -->
-        <div id="adminLogin" class="admin-login">
-          <div class="form-group">
-            <label>管理员密码</label>
-            <input type="password" id="adminPwd" placeholder="请输入管理员密码">
-          </div>
-          <button class="btn btn-primary btn-block" id="adminLoginBtn">进入管理面板</button>
+        <div class="form-group">
+          <label>管理员密码</label>
+          <input type="password" id="adminPwd" placeholder="输入密码后显示管理功能">
+          <button class="btn btn-primary btn-block" id="adminLoginBtn" style="margin-top:8px">解锁管理面板</button>
         </div>
-        <!-- 管理面板内容 -->
         <div id="adminPanel" style="display:none">
-          <!-- Token 设置 -->
           <div class="admin-section">
-            <h4 class="admin-section-title">GitHub Token</h4>
+            <h4 class="admin-section-title">🔑 GitHub Token（上传资料需要）</h4>
             <div style="display:flex;gap:8px">
-              <input type="password" id="adminToken" placeholder="输入 Token" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px">
+              <input type="password" id="adminToken" placeholder="输入 Token 后点保存" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px">
               <button class="btn btn-primary btn-sm" id="adminSaveToken">保存</button>
             </div>
-            <p class="form-hint" id="tokenStatus">未设置</p>
+            <p class="form-hint" id="tokenStatus">未设置 Token，上传功能不可用</p>
           </div>
-          <!-- 资料管理 -->
           <div class="admin-section">
             <h4 class="admin-section-title">资料管理（点击删除）</h4>
             <div id="adminFileList" class="admin-list"></div>
           </div>
-          <!-- 用户管理 -->
           <div class="admin-section">
             <h4 class="admin-section-title">注册用户</h4>
             <div id="adminUserList" class="admin-list"></div>
           </div>
-          <!-- 帖子管理 -->
           <div class="admin-section">
             <h4 class="admin-section-title">帖子管理（点击删除）</h4>
             <div id="adminPostList" class="admin-list"></div>

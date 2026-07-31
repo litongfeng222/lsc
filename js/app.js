@@ -724,24 +724,20 @@ function showUserSetup(){
 }
 
 /* ---------- 管理员面板 ---------- */
-let adminUnlocked = false;
-
 function initAdminEntry(){
   $('#adminEntry').addEventListener('click', ()=>{
     $('#adminModal').style.display='flex';
-    if(adminUnlocked) showAdminPanel();
-    else { $('#adminLogin').style.display=''; $('#adminPanel').style.display='none'; }
     $('#adminPwd').value='';
+    $('#adminPanel').style.display='none';
   });
   $('#adminClose').addEventListener('click', ()=>{ $('#adminModal').style.display='none'; });
   $('#adminModal').addEventListener('click', e=>{ if(e.target===$('#adminModal')) $('#adminModal').style.display='none'; });
 
-  // 密码验证
   $('#adminLoginBtn').addEventListener('click', ()=>{
-    const pwd = $('#adminPwd').value;
-    if(pwd === 'LSC2026'){
-      adminUnlocked = true;
-      showAdminPanel();
+    if($('#adminPwd').value === 'LSC2026'){
+      $('#adminPanel').style.display='';
+      updateTokenStatus();
+      renderAdminFiles(); renderAdminUsers(); renderAdminPosts();
       toast('管理员验证成功','success');
     } else {
       toast('密码错误','error');
@@ -749,32 +745,18 @@ function initAdminEntry(){
   });
   $('#adminPwd').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#adminLoginBtn').click(); });
 
-  // 保存 Token
   $('#adminSaveToken').addEventListener('click', ()=>{
-    const token = $('#adminToken').value.trim();
-    if(token){
-      localStorage.setItem('lsc_gh_token', token);
-      updateTokenStatus();
-      toast('Token 已保存','success');
-      $('#adminToken').value='';
-    }
+    const t = $('#adminToken').value.trim();
+    if(t){ localStorage.setItem('lsc_gh_token', t); updateTokenStatus(); toast('Token 已保存','success'); $('#adminToken').value=''; }
   });
 }
 
 function updateTokenStatus(){
   const has = !!localStorage.getItem('lsc_gh_token');
-  $('#tokenStatus').textContent = has ? '✅ 已设置' : '❌ 未设置';
+  $('#tokenStatus').textContent = has ? '✅ Token 已设置' : '❌ 未设置 Token，上传功能不可用';
   $('#tokenStatus').style.color = has ? '#22c55e' : '#ef4444';
 }
 
-function showAdminPanel(){
-  $('#adminLogin').style.display='none';
-  $('#adminPanel').style.display='';
-  updateTokenStatus();
-  renderAdminFiles();
-  renderAdminUsers();
-  renderAdminPosts();
-}
 
 function renderAdminFiles(){
   const list = $('#adminFileList');
