@@ -86,12 +86,12 @@ async function saveFilesToStorage(){
   var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json';
   var content = btoa(unescape(encodeURIComponent(JSON.stringify({files:State.files}, null, 2))));
   try{
-    var r = await fetch(url, {headers:{'Authorization':'***'+token, 'Accept':'application/vnd.github.v3+json'}});
+    var r = await fetch(url, {headers:{'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json'}});
     if(!r.ok) throw new Error('获取SHA失败');
     var d = await r.json();
     await fetch(url, {
       method:'PUT',
-      headers:{'Authorization':'***'+token, 'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      headers:{'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
       body:JSON.stringify({message:'更新文件列表', content:content, sha:d.sha})
     });
   }catch(e){ throw new Error('保存失败：'+e.message); }
