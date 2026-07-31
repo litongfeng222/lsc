@@ -7,7 +7,7 @@
   <meta name="description" content="师大附·11班·学习小组 — 资源共享与学习交流社区">
   <title>师大附·11班·学习小组</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=13">
+  <link rel="stylesheet" href="css/style.css?v=14">
 </head>
 <body>
 
@@ -238,7 +238,7 @@
         <div class="form-group">
           <label>管理员密码</label>
           <input type="password" id="adminPwd" placeholder="输入密码后显示管理功能">
-          <button class="btn btn-primary btn-block" id="adminLoginBtn" style="margin-top:8px">解锁管理面板</button>
+          <button class="btn btn-primary btn-block" id="adminLoginBtn" style="margin-top:8px" onclick="window.unlockAdmin()">解锁管理面板</button>
         </div>
         <div id="adminPanel" style="display:none">
           <div class="admin-section">
@@ -304,6 +304,6 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- 脚本 -->
-  <script src="js/app.js?v=13"></script>
+  <script src="js/app.js?v=14"></script>
 </body>
 </html>

@@ -2,6 +2,31 @@
 (function(){
 'use strict';
 
+window.unlockAdmin = function(){
+  var pwd = document.getElementById('adminPwd');
+  var panel = document.getElementById('adminPanel');
+  var btn = document.getElementById('adminLoginBtn');
+  if(pwd && pwd.value === 'LSC2026'){
+    if(btn) btn.style.display = 'none';
+    pwd.style.display = 'none';
+    if(panel) panel.style.display = '';
+    window.loadAdminData && window.loadAdminData();
+    // Try toast - might not be defined yet when init hasn't run
+    try{ toast('管理员验证成功','success'); }catch(e){}
+  } else {
+    try{ toast('密码错误','error'); }catch(e){ alert('密码错误'); }
+  }
+};
+
+window.loadAdminData = function(){
+  try{
+    typeof updateTokenStatus === 'function' && updateTokenStatus();
+    typeof renderAdminFiles === 'function' && renderAdminFiles();
+    typeof renderAdminUsers === 'function' && renderAdminUsers();
+    typeof renderAdminPosts === 'function' && renderAdminPosts();
+  }catch(e){ console.error('loadAdminData error', e); }
+};
+
 /* ---------- 全局状态 ---------- */
 const State = {
   subjects: [],
