@@ -1,26 +1,3 @@
 {
-  "files": [
-    {
-      "name": "台风天发音",
-      "subject": "english",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/english_%E5%8F%B0%E9%A3%8E%E5%A4%A9%E5%8F%91%E9%9F%B3.docx",
-      "uploader": "李同丰",
-      "desc": "",
-      "usage": "",
-      "expireAt": 1785589140000,
-      "date": "2026-08-01",
-      "downloads": 4
-    },
-    {
-      "name": "挺丰富",
-      "subject": "english",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/english_%E6%8C%BA%E4%B8%B0%E5%AF%8C.docx",
-      "uploader": "李同丰",
-      "desc": "",
-      "usage": "",
-      "expireAt": 1785589140000,
-      "date": "2026-08-01",
-      "downloads": 1
-    }
-  ]
+  "files": []
 }
