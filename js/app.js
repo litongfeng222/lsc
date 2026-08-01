@@ -672,7 +672,7 @@ window.loginSubmit = async function(e){
   e && e.preventDefault();
   var phone = document.getElementById('loginPhone').value.trim();
   var pwd = document.getElementById('loginPassword').value;
-  if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的手机号','warning'); return false; }
+  if(!/^1[3-9]\d{9}$/.test(phone)){ toast('请输入正确的手机号（11位，以1开头，第二位3-9）','warning'); return false; }
   if(!pwd){ toast('请输入密码','warning'); return false; }
   var btn = document.getElementById('loginForm').querySelector('button[type=submit]');
   btn.textContent='登录中…';btn.disabled=true;
@@ -698,7 +698,7 @@ window.registerSubmit = async function(e){
   var pwd = document.getElementById('regPassword').value;
   var pwd2 = document.getElementById('regPassword2').value;
   if(!name){ toast('请输入昵称','warning');return false; }
-  if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的11位手机号','warning');return false; }
+  if(!/^1[3-9]\d{9}$/.test(phone)){ toast('请输入正确的11位手机号（第二位3-9）','warning');return false; }
   if(pwd.length<6){ toast('密码至少6位','warning');return false; }
   if(pwd!==pwd2){ toast('两次密码不一致','warning');return false; }
   var btn = document.getElementById('registerForm').querySelector('button[type=submit]');
