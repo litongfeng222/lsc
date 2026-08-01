@@ -1257,12 +1257,62 @@ function initColControl(){
   }
 }
 
+/* ---------- 每日作业贴 ---------- */
+function checkDailyPost(){
+  var now = new Date();
+  var day = now.getDay();
+  if(day === 0 || day === 6) return;
+  var hour = now.getHours();
+  if(hour < 6) return;
+  var today = now.toISOString().slice(0,10);
+  var existing = State.posts.find(function(p){ return p._dailyPost && p._dailyDate === today; });
+  if(existing) return;
+  State.posts = State.posts.filter(function(p){ return !p._dailyPost; });
+  var dayNames = ['周日','周一','周二','周三','周四','周五','周六'];
+  var dayText = (day === 5) ? '周末' : dayNames[day];
+  var post = {
+    id: Date.now(),
+    board: 'homework',
+    title: '作业贴',
+    content: '今天' + dayText + '的作业是啥，有没有大神贡献一下～',
+    image: '',
+    author: '学习搭子',
+    createdAt: Date.now(),
+    replies: [],
+    _dailyPost: true,
+    _dailyDate: today
+  };
+  State.posts.push(post);
+  savePosts();
+  renderForum();
+  toast('📝 今日作业贴已自动发布','info',3000);
+}
+
+/* ---------- 图片点击放大 ---------- */
+function initLightbox(){
+  document.addEventListener('click', function(e){
+    var img = e.target.closest('.post-image, .reply-image-preview img, .post-image-preview img');
+    if(!img || !img.src) return;
+    if(img.closest('.lightbox-overlay')) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:lightboxIn .25s ease';
+    var clone = document.createElement('img');
+    clone.src = img.src;
+    clone.style.cssText = 'max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.4)';
+    overlay.appendChild(clone);
+    overlay.addEventListener('click', function(){ overlay.remove(); });
+    document.body.appendChild(overlay);
+  });
+}
+
 /* ---------- 初始化 ---------- */
 async function init(){
   await loadSubjects();
   await loadFiles();
   cleanupExpiredFiles();
   await loadPosts();
+  checkDailyPost();
   loadUser();
   loadFileStats();
   loadTheme();
@@ -1281,6 +1331,8 @@ async function init(){
   initUserButton();
   initAuthModal();
   initPostModal();
+  initColControl();
+  initLightbox();
 
   updateUserUI();
 
