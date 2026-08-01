@@ -1284,7 +1284,7 @@ function initPinchColumns(){
   var cols = parseInt(localStorage.getItem('lsc_pinch_cols')||'3');
   
   function applyCols(n){
-    cols = Math.max(去打, Math.min(5, n));
+    cols = Math.max(2, Math.min(5, n));
     var grids = document.querySelectorAll('#resourceGrid, #postList');
     grids.forEach(function(g){
       g.style.gridTemplateColumns = 'repeat('+cols+',1fr)';
