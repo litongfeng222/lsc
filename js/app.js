@@ -25,17 +25,80 @@ function renderRanking(){
   });
   if(sorted.length === 0){
     el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏆</div><p>暂无资料上榜</p></div>';
+    document.getElementById('rankingPodium').innerHTML = '';
+    document.getElementById('chartContainer').innerHTML = '';
     return;
   }
-  el.innerHTML = sorted.slice(0, 20).map(function(f, i){
+  var top = sorted.slice(0, 20);
+  var maxDl = top[0].downloads || 1;
+  // 绘制柱状图
+  renderChart(top.slice(0, 10), maxDl);
+  // 绘制 podium（前三）
+  renderPodium(top.slice(0, 3), maxDl);
+  // 绘制排名列表
+  el.innerHTML = top.map(function(f, i){
     var sub = State.subjects.find(function(s){ return s.id === f.subject; });
     var subName = sub ? sub.name : '未分类';
-    var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
-    return '<div class="ranking-item">' +
-      '<span class="ranking-num">'+medal+'</span>' +
-      '<span class="ranking-name">'+escHtml(f.name)+'</span>' +
-      '<span class="ranking-subject" style="background:'+(sub?sub.color:'#999')+'">'+escHtml(subName)+'</span>' +
-      '<span class="ranking-downloads">⬇ '+(f.downloads||0)+'</span>' +
+    var dl = f.downloads || 0;
+    var pct = maxDl > 0 ? Math.round(dl / maxDl * 100) : 0;
+    var topClass = i === 0 ? 'top-1' : i === 1 ? 'top-2' : i === 2 ? 'top-3' : '';
+    var numClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
+    var numText = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+    return '<div class="rank-item '+topClass+'">' +
+      '<div class="rank-bar-bg" style="width:'+pct+'%"></div>' +
+      '<span class="rank-num '+numClass+'">'+numText+'</span>' +
+      '<div class="rank-info">' +
+        '<div class="rank-name">'+escHtml(f.name)+'</div>' +
+        '<div class="rank-meta">' +
+          '<span class="rank-sub" style="background:'+(sub?sub.color:'#999')+'">'+escHtml(subName)+'</span>' +
+        '</div>' +
+      '</div>' +
+      '<span class="rank-downloads"><span class="dl-icon">📥</span> '+dl+'</span>' +
+    '</div>';
+  }).join('');
+}
+
+function renderChart(items, maxDl){
+  var container = document.getElementById('chartContainer');
+  if(!container) return;
+  var colors = ['chart-bar-1','chart-bar-2','chart-bar-3','chart-bar-4','chart-bar-5',
+    'chart-bar-6','chart-bar-7','chart-bar-8','chart-bar-9','chart-bar-10'];
+  container.innerHTML = items.map(function(f, i){
+    var dl = f.downloads || 0;
+    var h = maxDl > 0 ? Math.max(8, Math.round(dl / maxDl * 100)) : 8;
+    var shortName = f.name.length > 6 ? f.name.substring(0,5)+'…' : f.name;
+    var isTop3 = i < 3;
+    return '<div class="chart-bar-wrapper" title="'+escHtml(f.name)+'：'+dl+' 次下载">' +
+      '<div class="chart-bar '+(isTop3 ? 'chart-bar-top3' : 'chart-bar-other')+' '+colors[i]+'" style="height:'+h+'%"></div>' +
+      '<div class="chart-value">'+dl+'</div>' +
+      '<div class="chart-label">'+escHtml(shortName)+'</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderPodium(top3, maxDl){
+  var podium = document.getElementById('rankingPodium');
+  if(!podium) return;
+  if(top3.length < 3){
+    podium.innerHTML = '';
+    return;
+  }
+  var order = [1, 0, 2]; // 第二、第一、第三的视觉顺序
+  var medals = ['🥇','🥈','🥉'];
+  var classes = ['gold','silver','bronze'];
+  var ranks = ['🥇 冠军','🥈 亚军','🥉 季军'];
+  podium.innerHTML = order.map(function(idx){
+    var f = top3[idx];
+    if(!f) return '';
+    var sub = State.subjects.find(function(s){ return s.id === f.subject; });
+    var subName = sub ? sub.name : '未分类';
+    var dl = f.downloads || 0;
+    return '<div class="podium-card '+classes[idx]+'">' +
+      '<span class="podium-medal">'+medals[idx]+'</span>' +
+      '<div class="podium-rank">'+ranks[idx]+'</div>' +
+      '<div class="podium-name" title="'+escHtml(f.name)+'">'+escHtml(f.name)+'</div>' +
+      '<span class="podium-sub" style="background:'+(sub?sub.color:'#999')+'">'+escHtml(subName)+'</span>' +
+      '<div class="podium-dl">📥 '+dl+' <small>次下载</small></div>' +
     '</div>';
   }).join('');
 }

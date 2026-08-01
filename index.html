@@ -157,12 +157,22 @@
     <!-- 排行榜 -->
     <section id="ranking" class="page-section" style="display:none">
       <div class="section-header">
-        <h2 class="section-title">排行榜</h2>
+        <h2 class="section-title">🏆 排行榜</h2>
         <p class="section-desc">下载量最高 · 评分最高</p>
       </div>
+      <!-- 柱状图可视化 -->
+      <div class="ranking-chart" id="rankingChart">
+        <div class="chart-container" id="chartContainer">
+          <!-- JS 动态生成柱状图 -->
+        </div>
+      </div>
       <div class="ranking-tabs">
-        <button class="ranking-tab active" data-type="downloads">下载榜</button>
-        <button class="ranking-tab" data-type="rating">评分榜</button>
+        <button class="ranking-tab active" data-type="downloads">📥 下载榜</button>
+        <button class="ranking-tab" data-type="rating">⭐ 评分榜</button>
+      </div>
+      <!-- 前三名 podium -->
+      <div class="ranking-podium" id="rankingPodium">
+        <!-- JS 动态生成 podium -->
       </div>
       <div class="ranking-list" id="rankingList">
         <!-- 排行榜由 JS 动态生成 -->

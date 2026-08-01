@@ -153,20 +153,76 @@ img{max-width:100%;display:block}
 
 /* ===== Ranking ===== */
 .ranking-tabs{display:flex;gap:8px;margin-bottom:20px;justify-content:center}
-.ranking-tab{padding:8px 20px;border-radius:20px;font-size:.88rem;font-weight:500;background:var(--bg-card);border:1.5px solid var(--border);color:var(--text-secondary);transition:var(--transition)}
+.ranking-tab{padding:8px 20px;border-radius:20px;font-size:.88rem;font-weight:500;background:var(--bg-card);border:1.5px solid var(--border);color:var(--text-secondary);transition:var(--transition);cursor:pointer}
 .ranking-tab:hover{border-color:var(--primary-light)}
 .ranking-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
-.ranking-list{display:flex;flex-direction:column;gap:10px}
-.rank-item{display:flex;align-items:center;gap:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;transition:var(--transition)}
-.rank-item:hover{box-shadow:var(--shadow)}
-.rank-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0;background:var(--bg);color:var(--text-secondary)}
-.rank-item:nth-child(1) .rank-num{background:#ffd700;color:#fff}
-.rank-item:nth-child(2) .rank-num{background:#c0c0c0;color:#fff}
-.rank-item:nth-child(3) .rank-num{background:#cd7f32;color:#fff}
+
+/* ===== Ranking Chart (柱状图) ===== */
+.ranking-chart{margin-bottom:24px;background:var(--bg-card);border-radius:var(--radius-md);padding:20px 10px 10px;border:1px solid var(--border);overflow:hidden}
+.chart-title{font-size:.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:16px;text-align:center}
+.chart-container{display:flex;align-items:flex-end;gap:8px;height:180px;padding:0 4px}
+.chart-bar-wrapper{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;cursor:pointer;transition:var(--transition)}
+.chart-bar-wrapper:hover{filter:brightness(1.1)}
+.chart-bar{width:100%;max-width:48px;border-radius:6px 6px 2px 2px;transition:height .4s cubic-bezier(.4,0,.2,1);position:relative;min-height:4px}
+.chart-bar-top3{box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.chart-bar-other{opacity:.75}
+.chart-label{font-size:.64rem;color:var(--text-light);margin-top:6px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.chart-value{font-size:.68rem;font-weight:700;color:var(--primary);margin-top:orto:2px}
+.chart-bar-1{background:linear-gradient(180deg,#ffd700,#ffb800)}
+.chart-bar-2{background:linear-gradient(180deg,#c0c0c0,#a0a0a0)}
+.chart-bar-3{background:linear-gradient(180deg,#cd7f32,#b8702a)}
+.chart-bar-4{background:linear-gradient(180deg,#9b59b6,#7d3c98)}
+.chart-bar-5{background:linear-gradient(180deg,#3498db,#2980b9)}
+.chart-bar-6{background:linear-gradient(180deg,#1abc9c,#16a085)}
+.chart-bar-7{background:linear-gradient(180deg,#e67e22,#d35400)}
+.chart-bar-8{background:linear-gradient(180deg,#e74c3c,#c0392b)}
+.chart-bar-9{background:linear-gradient(180deg,#2ecc71,#27ae60)}
+.chart-bar-10{background:linear-gradient(180deg,#5b6ee8,#4a5bd4)}
+
+/* ===== Ranking Podium (前三名) ===== */
+.ranking-podium{display:flex;gap:12px;margin-bottom:20px;justify-content:center;align-items:flex-end}
+.podium-card{flex:1;max-width:220px;background:var(--bg-card);border-radius:var(--radius-md);padding:0 0 16px;text-align:center;border:1px solid var(--border);transition:var(--transition);overflow:hidden;position:relative}
+.podium-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.podium-card.gold{border-top:4px solid #ffd700;background:linear-gradient(180deg,#fffef5,#fff8e1)}
+.podium-card.silver{border-top:4px solid #c0c0c0;background:linear-gradient(180deg,#fdfdfd,#f5f5f5)}
+.podium-card.bronze{border-top:4px solid #cd7f32;background:linear-gradient(180deg,#fef9f5,#fdf2e9)}
+.podium-medal{font-size:2.2rem;margin:10px 0 4px;display:block}
+.podium-rank{font-size:.76rem;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px}
+.podium-name{font-size:.88rem;font-weight:700;margin:6px 8px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.podium-sub{font-size:.72rem;padding:2px 10px;border-radius:10px;display:inline-block;color:#fff;margin:4px 0}
+.podium-dl{font-size:1.2rem;font-weight:700;color:var(--primary)}
+.podium-dl small{font-size:.7rem;font-weight:400;color:var(--text-light)}
+
+/* ===== Ranking List (带进度条) ===== */
+.ranking-list{display:flex;flex-direction:column;gap:8px}
+.rank-item{display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;transition:var(--transition);position:relative;overflow:hidden}
+.rank-item:hover{box-shadow:var(--shadow);border-color:var(--primary-light)}
+.rank-item .rank-bar-bg{position:absolute;left:0;top:0;height:100%;border-radius:var(--radius-sm) 0 0 var(--radius-sm);opacity:.08;transition:width .5s cubic-bezier(.4,0,.2,1);z-index:0}
+.rank-item.top-1 .rank-bar-bg{background:#ffd700;opacity:.12}
+.rank-item.top-2 .rank-bar-bg{background:#c0c0c0;opacity:.12}
+.rank-item.top-3 .rank-bar-bg{background:#cd7f32;opacity:.12}
+.rank-item>*:not(.rank-bar-bg){position:relative;z-index:1}
+.rank-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0;color:#fff}
+.rank-num.gold{background:linear-gradient(135deg,#ffd700,#ffb800)}
+.rank-num.silver{background:linear-gradient(135deg,#c0c0c0,#a8a8a8)}
+.rank-num.bronze{background:linear-gradient(135deg,#cd7f32,#b8702a)}
+.rank-num.normal{background:#e0e0e0;color:var(--text-secondary)}
 .rank-info{flex:1;min-width:0}
-.rank-name{font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rank-sub{font-size:.76rem;color:var(--text-light)}
-.rank-value{font-size:1.1rem;font-weight:700;color:var(--primary);white-space:nowrap}
+.rank-name{font-size:.88rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-meta{display:flex;align-items:center;gap:8px;margin-top:2px}
+.rank-sub{padding:2px 8px;border-radius:8px;font-size:.7rem;color:#fff}
+.rank-downloads{display:flex;align-items:center;gap:4px;font-size:.9rem;font-weight:700;color:var(--primary);white-space:nowrap;margin-left:auto}
+.rank-downloads .dl-icon{font-size:.85rem}
+
+/* ===== Empty State for Ranking ===== */
+.ranking-list .empty-state{grid-column:1/-1}
+
+@media (max-width:640px){
+  .ranking-podium{flex-direction:column;align-items:center}
+  .podium-card{max-width:100%;width:100%}
+  .chart-container{height:120px;gap:4px}
+  .chart-label{font-size:.58rem}
+}
 
 /* ===== Footer ===== */
 .footer{text-align:center;padding:32px 20px 40px;color:var(--text-light);font-size:.82rem;position:relative}
