@@ -735,6 +735,7 @@ function openAuthModal(mode='login'){
     $('#tabLogin').click();
   }
 }
+window.openAuthModal = openAuthModal;
 
 function initUserButton(){
   const btn = $('#userBtn');
