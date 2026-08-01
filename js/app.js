@@ -134,6 +134,7 @@ const State = {
   subjects: [],
   files: [],
   posts: [],
+  registeredUsers: [],
   currentSort: 'date',
   currentFilter: 'all',
   searchQuery: '',
@@ -244,8 +245,8 @@ window.switchPage = switchPage;
 function updateHeroStats(){
   $('#statFiles').textContent = State.files.length;
   $('#statSubjects').textContent = State.subjects.length;
-  const users = new Set(State.posts.map(p=>p.author).filter(Boolean)).size;
-  $('#statUsers').textContent = users || '—';
+  var count = State.registeredUsers.length;
+  $('#statUsers').textContent = count || '—';
 }
 
 /* ---------- 资源中心 ---------- */
@@ -709,6 +710,7 @@ window.registerSubmit = async function(e){
     if(users.find(function(u){return u.phone===phone;})){ toast('该手机号已注册','warning');btn.textContent='注册';btn.disabled=false;return false; }
     var hash = await sha256(pwd+phone.slice(-4));
     users.push({name:name,phone:phone,password:hash,registeredAt:Date.now()});
+    State.registeredUsers = users;
     await saveUsersToGitHub(users);
     saveUser({name:name,phone:phone,registeredAt:Date.now()});
     updateUserUI();updateHeroStats();
@@ -1127,6 +1129,7 @@ async function init(){
   loadUser();
   loadFileStats();
   loadTheme();
+  State.registeredUsers = await loadUsers();
 
   initNavbar();
   initFilterBar();
