@@ -328,6 +328,14 @@
         <h3 class="post-modal-title">发帖</h3>
         <form id="postForm" class="auth-form">
           <div class="form-group">
+            <label>类别 <span class="required">*</span></label>
+            <select id="postBoard">
+              <option value="qa">学科答疑</option>
+              <option value="homework">班级作业</option>
+              <option value="other">其他信息</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label>标题 <span class="required">*</span></label>
             <input type="text" id="postTitle" placeholder="帖子标题" required>
           </div>

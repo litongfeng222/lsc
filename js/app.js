@@ -584,7 +584,7 @@ function initPostModal(){
 
     const post = {
       id: Date.now(),
-      board: State.currentForumBoard,
+      board: $('#postBoard').value,
       title, content,
       image: imageBase64,
       author: State.user.name,
