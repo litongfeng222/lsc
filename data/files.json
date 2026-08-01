@@ -1,17 +1,6 @@
 {
   "files": [
     {
-      "name": "烦人",
-      "subject": "method",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/method_%E7%83%A6%E4%BA%BA.jpg",
-      "uploader": "李同丰",
-      "desc": "必然",
-      "usage": "",
-      "expireAt": 1785588300000,
-      "date": "2026-08-01",
-      "downloads": 0
-    },
-    {
       "name": "4哈好",
       "subject": "english",
       "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/english_4%E5%93%88%E5%A5%BD.docx",
@@ -20,7 +9,9 @@
       "usage": "",
       "expireAt": 1785588180000,
       "date": "2026-08-01",
-      "downloads": 0
+      "downloads": 0,
+      "rating": 5,
+      "ratingCount": 1
     }
   ]
 }
