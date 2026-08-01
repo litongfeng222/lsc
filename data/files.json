@@ -1,3 +1,15 @@
 {
-  "files": []
+  "files": [
+    {
+      "name": "好听话",
+      "subject": "math",
+      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/math_%E5%A5%BD%E5%90%AC%E8%AF%9D.docx",
+      "uploader": "李同丰",
+      "desc": "挺尴尬",
+      "usage": "天",
+      "expireAt": 1785575820000,
+      "date": "2026-08-01",
+      "downloads": 0
+    }
+  ]
 }
