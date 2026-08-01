@@ -108,7 +108,7 @@ window.unlockAdmin = function(){
   var panel = document.getElementById('adminPanel');
   var btn = document.getElementById('adminLoginBtn');
   // 直接通过密码 或 已登录为李同丰时自动解锁
-  var isLi = State.user && State.user.name === '李同丰';
+  var isLi = State.user && State.user.phone === '15652249583';
   if(pwd && (pwd.value === 'LSC2026' || isLi)){
     if(btn) btn.style.display = 'none';
     pwd.style.display = 'none';
@@ -807,7 +807,7 @@ function initAdminEntry(){
   $('#adminModal').addEventListener('click', e=>{ if(e.target===$('#adminModal')) $('#adminModal').style.display='none'; });
 
   $('#adminLoginBtn').addEventListener('click', ()=>{
-    var isLi = State.user && State.user.name === '李同丰';
+    var isLi = State.user && State.user.phone === '15652249583';
     if($('#adminPwd').value === 'LSC2026' || isLi){
       $('#adminPanel').style.display='';
       updateTokenStatus();
