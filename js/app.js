@@ -107,13 +107,14 @@ window.unlockAdmin = function(){
   var pwd = document.getElementById('adminPwd');
   var panel = document.getElementById('adminPanel');
   var btn = document.getElementById('adminLoginBtn');
-  if(pwd && pwd.value === 'LSC2026'){
+  // 直接通过密码 或 已登录为李同丰时自动解锁
+  var isLi = State.user && State.user.name === '李同丰';
+  if(pwd && (pwd.value === 'LSC2026' || isLi)){
     if(btn) btn.style.display = 'none';
     pwd.style.display = 'none';
     if(panel) panel.style.display = '';
     window.loadAdminData && window.loadAdminData();
-    // Try toast - might not be defined yet when init hasn't run
-    try{ toast('管理员验证成功','success'); }catch(e){}
+    try{ toast(isLi ? '👋 管理员李同丰，欢迎回来' : '管理员验证成功','success'); }catch(e){}
   } else {
     try{ toast('密码错误','error'); }catch(e){ alert('密码错误'); }
   }
@@ -806,11 +807,12 @@ function initAdminEntry(){
   $('#adminModal').addEventListener('click', e=>{ if(e.target===$('#adminModal')) $('#adminModal').style.display='none'; });
 
   $('#adminLoginBtn').addEventListener('click', ()=>{
-    if($('#adminPwd').value === 'LSC2026'){
+    var isLi = State.user && State.user.name === '李同丰';
+    if($('#adminPwd').value === 'LSC2026' || isLi){
       $('#adminPanel').style.display='';
       updateTokenStatus();
       renderAdminFiles(); renderAdminUsers(); renderAdminPosts();
-      toast('管理员验证成功','success');
+      toast(isLi ? '👋 管理员李同丰，欢迎回来' : '管理员验证成功','success');
     } else {
       toast('密码错误','error');
     }
