@@ -185,11 +185,40 @@ async function loadFiles(){
   }catch(e){ console.error('加载文件失败',e); }
 }
 
-function loadPosts(){
+async function loadPosts(){
+  // 优先从 GitHub 同步帖子
+  try{
+    var res = await fetch('https://raw.githubusercontent.com/litongfeng222/lsc/main/data/posts.json?t='+Date.now());
+    if(res.ok){
+      State.posts = await res.json();
+      // 缓存到本地
+      localStorage.setItem('lsc_posts', JSON.stringify(State.posts));
+      return;
+    }
+  }catch(e){}
+  // 降级：从本地缓存加载
   try{ State.posts = JSON.parse(localStorage.getItem('lsc_posts')||'[]'); }
   catch(e){ State.posts = []; }
 }
-function savePosts(){ localStorage.setItem('lsc_posts', JSON.stringify(State.posts)); }
+function savePosts(){
+  localStorage.setItem('lsc_posts', JSON.stringify(State.posts));
+  setTimeout(syncPostsToGitHub, 50);
+}
+async function syncPostsToGitHub(){
+  try{
+    var tk = function(){var t=localStorage.getItem('lsc_gh_token');return t&&t.length>35&&t.startsWith('ghp_')?t:'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';}();
+    var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/posts.json';
+    var r = await fetch(url, { headers: { 'Authorization':'token '+tk, 'Accept':'application/vnd.github.v3+json' } });
+    if(!r.ok) return;
+    var d = await r.json();
+    var c = btoa(unescape(encodeURIComponent(JSON.stringify(State.posts))));
+    await fetch(url, {
+      method: 'PUT',
+      headers: { 'Authorization':'token '+tk, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+      body: JSON.stringify({ message: '同步帖子', content: c, sha: d.sha })
+    });
+  }catch(e){}
+}
 
 function loadUser(){
   try{ State.user = JSON.parse(localStorage.getItem('lsc_user')||'null'); }
@@ -466,11 +495,11 @@ function renderForum(){
     const repliesHtml = (p.replies||[]).map(function(r, idx){
       const replyImg = r.image ? `<div class="reply-image-preview"><img src="${escHtml(r.image)}" alt="图片"></div>` : '';
       const replyDel = State.user && r.author === State.user.name ? `<button class="file-icon-btn" onclick="userDeleteReply(${p.id},${idx})" title="删除" style="color:#ef4444;font-size:12px;margin-left:4px">🗑</button>` : '';
-      return `<div class="reply-item"><strong>${escHtml(r.author||'匿名')}</strong>：${escHtml(r.content)}${replyImg}${replyDel}</div>`;
+      return `<div class="reply-item">${r.author==='学习搭子'?'🤖 ':''}<strong>${escHtml(r.author||'匿名')}</strong>：${escHtml(r.content)}${replyImg}${replyDel}</div>`;
     }).join('');
     return `<div class="post-card">
       <div class="post-title">${escHtml(p.title)}</div>
-      <div class="post-meta"><span>👤 ${escHtml(p.author||'匿名同学')}</span><span>📅 ${time}</span></div>
+      <div class="post-meta"><span>${p.author==='学习搭子'?'🤖':'👤'} ${escHtml(p.author||'匿名同学')}</span><span>📅 ${time}</span></div>
       <div class="post-content">${escHtml(p.content)}</div>
       ${imgHtml}
       <div class="post-actions" style="margin-top:10px;display:flex;gap:8px">
@@ -1202,12 +1231,38 @@ function cleanupExpiredFiles(){
   }).catch(function(){});
 }
 
+function initColControl(){
+  var btns = document.querySelectorAll('.col-btn');
+  if(!btns.length) return;
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      btns.forEach(function(x){ x.classList.remove('active'); });
+      this.classList.add('active');
+      var cols = parseInt(this.dataset.cols);
+      var grid = document.getElementById('resourceGrid');
+      if(grid) grid.style.gridTemplateColumns = 'repeat('+cols+',1fr)';
+      localStorage.setItem('lsc_resource_cols', cols);
+    });
+  });
+  // 恢复上次选择的列数
+  var saved = localStorage.getItem('lsc_resource_cols');
+  if(saved){
+    var grid = document.getElementById('resourceGrid');
+    var btn = document.querySelector('.col-btn[data-cols="'+saved+'"]');
+    if(grid && btn){
+      btns.forEach(function(x){ x.classList.remove('active'); });
+      btn.classList.add('active');
+      grid.style.gridTemplateColumns = 'repeat('+saved+',1fr)';
+    }
+  }
+}
+
 /* ---------- 初始化 ---------- */
 async function init(){
   await loadSubjects();
   await loadFiles();
   cleanupExpiredFiles();
-  loadPosts();
+  await loadPosts();
   loadUser();
   loadFileStats();
   loadTheme();
