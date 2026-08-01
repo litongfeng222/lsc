@@ -238,6 +238,7 @@ function switchPage(page){
   if(page === 'ranking') renderRanking();
   if(page === 'upload') initUploadSelect();
 }
+window.switchPage = switchPage;
 
 /* ---------- Hero 统计 ---------- */
 function updateHeroStats(){
