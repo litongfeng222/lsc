@@ -640,8 +640,7 @@ window.uploadSubmit = async function(e){
   var expireVal = document.getElementById('uploadExpire')?document.getElementById('uploadExpire').value:'';
   var expireAt = expireVal ? new Date(expireVal).getTime() : 0;
   if(!expireAt){ toast('请选择保留时间','warning');return false; }
-  // datetime-local精度到分钟，给60秒宽容
-  if(expireAt < Date.now() - 60000){ toast('保留时间不能是过去的时间','warning');return false; }
+  if(expireAt < Date.now()){ toast('保留时间不能是过去或当前时间','warning');return false; }
   if(!name){ toast('请填写资料名称','warning');return false; }
   if(!subject){ toast('请选择科目','warning');return false; }
   if(!file){ toast('请选择文件','warning');return false; }
