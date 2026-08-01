@@ -1,15 +1,3 @@
 {
-  "files": [
-    {
-      "name": "高一数学月考卷",
-      "subject": "math",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/math_%E9%AB%98%E4%B8%80%E6%95%B0%E5%AD%A6%E6%9C%88%E8%80%83%E5%8D%B7.docx",
-      "uploader": "李同丰",
-      "desc": "示例",
-      "usage": "适合考前复习，重点看第3页",
-      "expireAt": 1785566460000,
-      "date": "2026-08-01",
-      "downloads": 0
-    }
-  ]
+  "files": []
 }
