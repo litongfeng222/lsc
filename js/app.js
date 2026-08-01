@@ -726,13 +726,20 @@ function calcPwdStrength(pwd){
   if(!pwd) return {level:'',label:'',width:0};
   var score = 0;
   if(pwd.length >= 6) score += 1;
-  if(pwd.length >= 8) score += 1;
   if(pwd.length >= 10) score += 1;
-  if(/\d/.test(pwd)) score += 1;
-  if(/[a-zA-Z]/.test(pwd)) score += 1;
-  if(/[\W_]/.test(pwd)) score += 1;
+  if(pwd.length >= 14) score += 1;
+  var hasDigit = /\d/.test(pwd);
+  var hasLetter = /[a-zA-Z]/.test(pwd);
+  var hasUpper = /[A-Z]/.test(pwd);
+  var hasSpecial = /[\W_]/.test(pwd);
+  var types = [hasDigit, hasLetter, hasUpper, hasSpecial].filter(Boolean).length;
+  if(types >= 2) score += 1;
+  if(types >= 3) score += 1;
+  if(types >= 4) score += 1;
+  // 惩罚纯重复（如111111, aaaaaa）
+  if(/(.)\1{5,}/.test(pwd)) score = Math.max(0, score - 1);
   if(score <= 1) return {level:'weak',label:'弱',width:25};
-  if(score <= 3) return {level:'medium',label:'中等',width:50};
+  if(score <= 2) return {level:'medium',label:'中等',width:50};
   if(score <= 4) return {level:'strong',label:'强',width:75};
   return {level:'very-strong',label:'非常强',width:100};
 }
