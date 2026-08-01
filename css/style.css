@@ -170,6 +170,8 @@ img{max-width:100%;display:block}
 .footer-sub{font-size:.76rem;margin-top:4px;opacity:.7}
 .admin-entry{position:absolute;bottom:16px;right:20px;font-size:1.1rem;opacity:.3;transition:var(--transition);padding:6px}
 .admin-entry:hover{opacity:.8}
+.refresh-btn{position:absolute;bottom:16px;left:20px;font-size:1.1rem;opacity:.3;transition:var(--transition);padding:6px}
+.refresh-btn:hover{opacity:.8}
 
 /* ===== Modal ===== */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px}
