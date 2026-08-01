@@ -1272,7 +1272,7 @@ function checkDailyPost(){
   var dayText = (day === 5) ? '周末' : dayNames[day];
   var post = {
     id: Date.now(),
-    board: 'homework',
+    board: 'qa',
     title: '作业贴',
     content: '今天' + dayText + '的作业是啥，有没有大神贡献一下～',
     image: '',
@@ -1303,6 +1303,42 @@ function initLightbox(){
     overlay.appendChild(clone);
     overlay.addEventListener('click', function(){ overlay.remove(); });
     document.body.appendChild(overlay);
+  });
+}
+
+function initCardZoom(){
+  var scale = 1;
+  var root = document.documentElement;
+  // Ctrl+滚轮缩放
+  document.addEventListener('wheel', function(e){
+    if(!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    scale += e.deltaY > 0 ? -0.05 : 0.05;
+    scale = Math.max(0.4, Math.min(2, scale));
+    root.style.setProperty('--card-scale', scale);
+  }, { passive: false });
+  // 双指缩放
+  var initialDist = 0;
+  var initialScale = 1;
+  document.addEventListener('touchstart', function(e){
+    if(e.touches.length === 2){
+      initialDist = Math.hypot(e.touches[0].pageX-e.touches[1].pageX, e.touches[0].pageY-e.touches[1].pageY);
+      initialScale = scale;
+    }
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e){
+    if(e.touches.length === 2 && initialDist > 0){
+      var newDist = Math.hypot(e.touches[0].pageX-e.touches[1].pageX, e.touches[0].pageY-e.touches[1].pageY);
+      scale = Math.max(0.4, Math.min(2, initialScale * (newDist / initialDist)));
+      root.style.setProperty('--card-scale', scale);
+    }
+  }, { passive: true });
+  // 双击重置
+  document.addEventListener('dblclick', function(e){
+    var card = e.target.closest('.file-card, .post-card');
+    if(!card) return;
+    scale = 1;
+    root.style.setProperty('--card-scale', '1');
   });
 }
 
