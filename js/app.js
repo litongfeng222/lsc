@@ -802,9 +802,9 @@ function showUserSetup(){
 const THEMES = [
   {name:'默认紫', primary:'#5b6ee8', primaryDark:'#4754c4', primaryLight:'#7d8ff5'},
   {name:'天空蓝', primary:'#3b82f6', primaryDark:'#2563eb', primaryLight:'#60a5fa'},
-  {name:'薄荷绿', primary:'#10b981', primaryDark:'#059669', primaryLight:'#34d399'},
-  {name:'珊瑚橙', primary:'#f59e0b', primaryDark:'#d97706', primaryLight:'#fbbf24'},
-  {name:'樱花粉', primary:'#ec4899', primaryDark:'#db2777', primaryLight:'#f472b6'},
+  {name:'薄荷青', primary:'#14b8a6', primaryDark:'#0d9488', primaryLight:'#2dd4bf'},
+  {name:'暖阳橙', primary:'#f59e0b', primaryDark:'#d97706', primaryLight:'#fbbf24'},
+  {name:'樱花粉', primary:'#d4839e', primaryDark:'#c4728a', primaryLight:'#e8b0c4'},
   {name:'石墨黑', primary:'#1e293b', primaryDark:'#0f172a', primaryLight:'#334155'}
 ];
 
