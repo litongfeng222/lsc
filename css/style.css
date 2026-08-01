@@ -152,6 +152,12 @@ img{max-width:100%;display:block}
 .form-hint{font-size:.76rem;color:var(--text-light)}
 
 /* ===== Ranking ===== */
+.ranking-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-card);border-radius:10px;border:1px solid var(--border);transition:var(--transition)}
+.ranking-item:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.ranking-num{font-size:.88rem;font-weight:700;color:var(--text-light);min-width:28px;text-align:center}
+.ranking-name{flex:1;font-size:.9rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.ranking-subject{font-size:.72rem;padding:2px 8px;border-radius:8px;color:#fff;font-weight:500}
+.ranking-downloads{font-size:.85rem;font-weight:700;color:var(--primary)}
 .ranking-tabs{display:flex;gap:8px;margin-bottom:20px;justify-content:center}
 .ranking-tab{padding:8px 20px;border-radius:20px;font-size:.88rem;font-weight:500;background:var(--bg-card);border:1.5px solid var(--border);color:var(--text-secondary);transition:var(--transition);cursor:pointer}
 .ranking-tab:hover{border-color:var(--primary-light)}

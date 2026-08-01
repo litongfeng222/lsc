@@ -19,6 +19,11 @@ function renderRanking(){
   var el = document.getElementById('rankingList');
   if(!el) return;
   var sorted = [].concat(State.files).sort(function(a,b){
+    if(State.currentRankingType === 'rating'){
+      var ra = a.rating || 0;
+      var rb = b.rating || 0;
+      if(rb !== ra) return rb - ra;
+    }
     var da = a.downloads || 0;
     var db = b.downloads || 0;
     return db - da;
@@ -108,6 +113,7 @@ function initRankingTabs(){
   tabs.forEach(function(t){ t.addEventListener('click', function(){
     tabs.forEach(function(x){x.classList.remove('active');});
     this.classList.add('active');
+    State.currentRankingType = this.dataset.type;
     renderRanking();
   });});
 }
