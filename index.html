@@ -181,8 +181,8 @@
   <footer class="footer">
     <p>师大附 · 11班 · 学习小组</p>
     <p class="footer-sub">共建共享 · 互助进步</p>
-    <p style="font-size:12px;color:var(--text-light);margin-top:8px;opacity:0.6">v30</p>
-    <button class="admin-entry" id="adminEntry" onclick="document.getElementById('adminModal').style.display='flex';document.getElementById('adminPwd').value='';document.getElementById('adminPanel').style.display='none';document.getElementById('adminLoginBtn').scrollIntoView({behavior:'smooth'})" title="管理员入口">⚙️</button>
+    <p style="font-size:12px;color:var(--text-light);margin-top:8px;opacity:0.6">v31</p>
+    <button class="admin-entry" id="adminEntry" title="设置">⚙️</button>
   </footer>
 
   <!-- 登录/注册弹窗 -->
@@ -268,6 +268,36 @@
     </div>
   </div>
 
+  <!-- 个人设置弹窗 -->
+  <div class="modal-overlay" id="userSettingsModal" style="display:none">
+    <div class="modal-content modal-settings">
+      <button class="modal-close" id="userSettingsClose">✕</button>
+      <div class="settings-wrap">
+        <h3 class="settings-title">⚙️ 个人设置</h3>
+
+        <div class="settings-section">
+          <h4 class="settings-section-title">🎨 设置主题色</h4>
+          <div class="theme-picker" id="themePicker"></div>
+        </div>
+
+        <div class="settings-section">
+          <h4 class="settings-section-title">📄 我上传的资料</h4>
+          <div id="settingsMyFiles" class="settings-list"></div>
+        </div>
+
+        <div class="settings-section">
+          <h4 class="settings-section-title">💬 我的帖子</h4>
+          <div id="settingsMyPosts" class="settings-list"></div>
+        </div>
+
+        <div class="settings-section">
+          <h4 class="settings-section-title">✏️ 我的评论</h4>
+          <div id="settingsMyReplies" class="settings-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 发帖弹窗 -->
   <div class="modal-overlay" id="postModal" style="display:none">
     <div class="modal-content modal-post">
@@ -300,6 +330,6 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- 脚本 -->
-  <script src="js/app.js?v=30"></script>
+  <script src="js/app.js?v=31"></script>
 </body>
 </html>

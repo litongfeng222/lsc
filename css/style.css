@@ -236,6 +236,22 @@ img{max-width:100%;display:block}
 .reply-image-preview{margin-top:6px}
 .reply-image-preview img{max-height:100px;border-radius:6px;object-fit:cover}
 
+/* ===== User Settings Modal ===== */
+.modal-settings{max-width:520px;padding:0;overflow:hidden}
+.settings-wrap{padding:24px 28px}
+.settings-title{font-size:1.15rem;font-weight:700;margin-bottom:20px;color:var(--text)}
+.settings-section{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.settings-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.settings-section-title{font-size:.95rem;font-weight:600;margin-bottom:10px;color:var(--text)}
+.settings-list{max-height:200px;overflow-y:auto}
+.settings-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:.84rem;border-bottom:1px dashed var(--border)}
+.settings-item:last-child{border-bottom:none}
+.settings-empty{font-size:.82rem;color:var(--text-light);padding:8px 0}
+.theme-picker{display:flex;flex-wrap:wrap;gap:8px}
+.theme-btn{width:72px;height:56px;border-radius:10px;font-size:.72rem;font-weight:600;border:2px solid transparent;cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
+.theme-btn.active{border-color:var(--text);box-shadow:0 0 0 3px rgba(0,0,0,.08);transform:scale(1.05)}
+.theme-btn:hover{opacity:.85;transform:translateY(-2px)}
+
 /* ===== Auth Modal ===== */
 .modal-auth{max-width:400px;padding:0;overflow:hidden}
 .auth-wrap{padding:28px}

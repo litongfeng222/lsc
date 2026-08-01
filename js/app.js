@@ -349,6 +349,7 @@ function renderResources(){
       <div class="file-actions">
         ${previewable ? `<button class="file-icon-btn" onclick="previewFile('${escHtml(f.path)}','${escHtml(f.name)}')" title="预览">👁</button>` : ''}
         <button class="file-download-btn" onclick="downloadFile('${escHtml(f.path)}','${escHtml(f.name)}',this)">⬇ 下载</button>
+        ${State.user && f.uploader && f.uploader === State.user.name ? `<button class="file-icon-btn" onclick="userDeleteFile('${escHtml(f.path)}')" title="删除" style="color:#ef4444">🗑</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -460,9 +461,10 @@ function renderForum(){
   list.innerHTML = posts.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0)).map(p => {
     const time = p.createdAt ? new Date(p.createdAt).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
     const imgHtml = p.image ? `<img class="post-image" src="${escHtml(p.image)}" alt="图片">` : '';
-    const repliesHtml = (p.replies||[]).map(r => {
+    const repliesHtml = (p.replies||[]).map(function(r, idx){
       const replyImg = r.image ? `<div class="reply-image-preview"><img src="${escHtml(r.image)}" alt="图片"></div>` : '';
-      return `<div class="reply-item"><strong>${escHtml(r.author||'匿名')}</strong>：${escHtml(r.content)}${replyImg}</div>`;
+      const replyDel = State.user && r.author === State.user.name ? `<button class="file-icon-btn" onclick="userDeleteReply(${p.id},${idx})" title="删除" style="color:#ef4444;font-size:12px;margin-left:4px">🗑</button>` : '';
+      return `<div class="reply-item"><strong>${escHtml(r.author||'匿名')}</strong>：${escHtml(r.content)}${replyImg}${replyDel}</div>`;
     }).join('');
     return `<div class="post-card">
       <div class="post-title">${escHtml(p.title)}</div>
@@ -796,12 +798,162 @@ function showUserSetup(){
   openAuthModal('register');
 }
 
+/* ---------- 主题色系统 ---------- */
+const THEMES = [
+  {name:'默认紫', primary:'#5b6ee8', primaryDark:'#4754c4', primaryLight:'#7d8ff5'},
+  {name:'天空蓝', primary:'#3b82f6', primaryDark:'#2563eb', primaryLight:'#60a5fa'},
+  {name:'薄荷绿', primary:'#10b981', primaryDark:'#059669', primaryLight:'#34d399'},
+  {name:'珊瑚橙', primary:'#f59e0b', primaryDark:'#d97706', primaryLight:'#fbbf24'},
+  {name:'樱花粉', primary:'#ec4899', primaryDark:'#db2777', primaryLight:'#f472b6'},
+  {name:'石墨黑', primary:'#1e293b', primaryDark:'#0f172a', primaryLight:'#334155'}
+];
+
+function applyTheme(primary, primaryDark, primaryLight){
+  var r = document.documentElement;
+  r.style.setProperty('--primary', primary);
+  r.style.setProperty('--primary-dark', primaryDark);
+  r.style.setProperty('--primary-light', primaryLight);
+}
+
+function loadTheme(){
+  if(!State.user) return;
+  var saved = localStorage.getItem('lsc_theme_'+State.user.phone);
+  if(saved){
+    try{ var t = JSON.parse(saved); applyTheme(t.primary, t.primaryDark, t.primaryLight); }catch(e){}
+  }
+}
+
+function saveTheme(theme){
+  if(!State.user) return;
+  localStorage.setItem('lsc_theme_'+State.user.phone, JSON.stringify(theme));
+  applyTheme(theme.primary, theme.primaryDark, theme.primaryLight);
+  toast('🎨 主题已切换','success');
+}
+
+/* ---------- 个人设置面板 ---------- */
+function openUserSettings(){
+  $('#userSettingsModal').style.display='flex';
+  renderThemePicker();
+  renderMyFiles();
+  renderMyPosts();
+  renderMyReplies();
+}
+
+function renderThemePicker(){
+  var picker = $('#themePicker');
+  if(!picker) return;
+  var current = JSON.parse(localStorage.getItem('lsc_theme_'+State.user.phone)||'{}');
+  var defaultPrimary = current.primary || '#5b6ee8';
+  picker.innerHTML = THEMES.map(function(t){
+    var active = t.primary === defaultPrimary ? ' active' : '';
+    return '<button class="theme-btn'+active+'" onclick="selectTheme(\''+t.primary+'\',\''+t.primaryDark+'\',\''+t.primaryLight+'\',this)" style="background:'+t.primary+';color:#fff">'+t.name+'</button>';
+  }).join('');
+}
+
+window.selectTheme = function(primary, primaryDark, primaryLight, btn){
+  $$('.theme-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  saveTheme({primary:primary, primaryDark:primaryDark, primaryLight:primaryLight});
+};
+
+function renderMyFiles(){
+  var list = $('#settingsMyFiles');
+  if(!list) return;
+  var myFiles = State.files.filter(function(f){ return f.uploader && f.uploader === State.user.name; });
+  if(!myFiles.length){ list.innerHTML='<div class="settings-empty">你还没有上传过资料</div>'; return; }
+  list.innerHTML = myFiles.map(function(f){
+    var sub = State.subjects.find(function(s){return s.id===f.subject;})||{name:'其他'};
+    return '<div class="settings-item"><span>['+sub.name+'] '+escHtml(f.name)+'</span><button class="admin-item-btn delete" onclick="userDeleteFile('+JSON.stringify(f.path)+')">删除</button></div>';
+  }).join('');
+}
+
+function renderMyPosts(){
+  var list = $('#settingsMyPosts');
+  if(!list) return;
+  var boardNames = {qa:'学科答疑',homework:'班级作业',other:'其他信息'};
+  var myPosts = State.posts.filter(function(p){ return p.author === State.user.name; });
+  if(!myPosts.length){ list.innerHTML='<div class="settings-empty">你还没有发过帖子</div>'; return; }
+  list.innerHTML = myPosts.map(function(p){
+    return '<div class="settings-item"><span>'+(boardNames[p.board]||'未知')+'] '+escHtml(p.title)+'</span><button class="admin-item-btn delete" onclick="userDeletePost('+p.id+')">删除</button></div>';
+  }).join('');
+}
+
+function renderMyReplies(){
+  var list = $('#settingsMyReplies');
+  if(!list) return;
+  var myReplies = [];
+  State.posts.forEach(function(p){
+    (p.replies||[]).forEach(function(r, idx){
+      if(r.author === State.user.name){
+        myReplies.push({postTitle:p.title, postId:p.id, replyIdx:idx, content:r.content});
+      }
+    });
+  });
+  if(!myReplies.length){ list.innerHTML='<div class="settings-empty">你还没有发过评论</div>'; return; }
+  list.innerHTML = myReplies.map(function(r){
+    var snippet = r.content.slice(0,30);
+    var ellipsis = r.content.length > 30 ? '…' : '';
+    return '<div class="settings-item"><span>💬 '+escHtml(r.postTitle)+'：'+escHtml(snippet)+ellipsis+'</span><button class="admin-item-btn delete" onclick="userDeleteReply('+r.postId+','+r.replyIdx+')">删除</button></div>';
+  }).join('');
+}
+
+window.userDeleteFile = async function(path){
+  if(!confirm('确认删除这份资料？')) return;
+  var idx = State.files.findIndex(function(f){ return f.path === path && f.uploader === State.user.name; });
+  if(idx < 0){ toast('无权限删除该文件','error'); return; }
+  State.files.splice(idx, 1);
+  try{
+    await saveFilesToStorage();
+    toast('资料已删除','success');
+    renderMyFiles();
+    renderResources();
+    updateHeroStats();
+  }catch(e){ toast(e.message,'error',4000); }
+};
+
+window.userDeletePost = function(id){
+  if(!confirm('确认删除这条帖子？')) return;
+  var post = State.posts.find(function(p){ return p.id === id; });
+  if(!post || post.author !== State.user.name){ toast('无权限删除','error'); return; }
+  State.posts = State.posts.filter(function(p){ return p.id !== id; });
+  savePosts();
+  renderMyPosts();
+  renderForum();
+  updateHeroStats();
+  toast('帖子已删除','success');
+};
+
+window.userDeleteReply = function(postId, replyIdx){
+  if(!confirm('确认删除这条评论？')) return;
+  var post = State.posts.find(function(p){ return p.id === postId; });
+  if(!post || !post.replies || !post.replies[replyIdx]) return;
+  if(post.replies[replyIdx].author !== State.user.name){ toast('无权限删除该评论','error'); return; }
+  post.replies.splice(replyIdx, 1);
+  savePosts();
+  renderMyReplies();
+  renderForum();
+  toast('评论已删除','success');
+};
+
 /* ---------- 管理员面板 ---------- */
 function initAdminEntry(){
   $('#adminEntry').addEventListener('click', ()=>{
-    $('#adminModal').style.display='flex';
-    $('#adminPwd').value='';
-    $('#adminPanel').style.display='none';
+    if(!State.user){
+      toast('请先登录后使用','warning');
+      openAuthModal('login');
+      return;
+    }
+    if(State.user.phone === '15652249583'){
+      // 管理员，显示管理员面板
+      $('#adminModal').style.display='flex';
+      $('#adminPwd').value='';
+      $('#adminPanel').style.display='none';
+      $('#adminLoginBtn').textContent='解锁管理面板';
+      $('#adminPwd').style.display='';
+    } else {
+      // 普通用户，显示个人设置
+      openUserSettings();
+    }
   });
   $('#adminClose').addEventListener('click', ()=>{ $('#adminModal').style.display='none'; });
   $('#adminModal').addEventListener('click', e=>{ if(e.target===$('#adminModal')) $('#adminModal').style.display='none'; });
@@ -913,6 +1065,7 @@ async function init(){
   loadPosts();
   loadUser();
   loadFileStats();
+  loadTheme();
 
   initNavbar();
   initFilterBar();
@@ -922,6 +1075,7 @@ async function init(){
   initForumTabs();
   initRankingTabs();
   initAdminEntry();
+  initUserSettingsModal();
   initUserButton();
   initAuthModal();
   initPostModal();
