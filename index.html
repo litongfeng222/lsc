@@ -14,6 +14,17 @@
   <!-- 磨砂玻璃导航栏 -->
   <nav id="navbar" class="navbar">
     <div class="nav-inner">
+      <div class="nav-user" id="navUser">
+        <button class="user-btn" id="userBtn" title="登录/注册">
+          <span class="user-avatar" id="userAvatar">👤</span>
+          <span class="user-name" id="userName">登录</span>
+        </button>
+        <div class="user-dropdown" id="userDropdown" style="display:none">
+          <div class="dropdown-header" id="dropdownHeader">请登录后使用完整功能</div>
+          <button class="dropdown-item" id="dropdownLogin">登录 / 注册</button>
+          <button class="dropdown-item" id="dropdownLogout" style="display:none">退出登录</button>
+        </div>
+      </div>
       <a class="nav-logo" href="#home">
         <span class="nav-logo-icon">📚</span>
         <span class="nav-logo-text">11班·学习小组</span>
@@ -27,17 +38,6 @@
         <li><a href="#upload" class="nav-link" data-page="upload">分享资料</a></li>
         <li><a href="#ranking" class="nav-link" data-page="ranking">排行榜</a></li>
       </ul>
-      <div class="nav-user" id="navUser">
-        <button class="user-btn" id="userBtn" title="登录/注册">
-          <span class="user-avatar" id="userAvatar">👤</span>
-          <span class="user-name" id="userName">登录</span>
-        </button>
-        <div class="user-dropdown" id="userDropdown" style="display:none">
-          <div class="dropdown-header" id="dropdownHeader">请登录后使用完整功能</div>
-          <button class="dropdown-item" id="dropdownLogin">登录 / 注册</button>
-          <button class="dropdown-item" id="dropdownLogout" style="display:none">退出登录</button>
-        </div>
-      </div>
     </div>
   </nav>
 
