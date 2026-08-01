@@ -595,6 +595,10 @@ function initPostModal(){
     savePosts();
     modal.style.display='none';
     $('#postForm').reset();
+    // 发帖后自动切换到所选版块
+    State.currentForumBoard = $('#postBoard').value;
+    // 切换论坛tab高亮
+    $$('.forum-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.board === State.currentForumBoard); });
     renderForum();
     updateHeroStats();
     toast('发帖成功！','success');
