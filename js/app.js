@@ -964,6 +964,7 @@ function initAdminEntry(){
       $('#adminPanel').style.display='';
       updateTokenStatus();
       renderAdminFiles(); renderAdminUsers(); renderAdminPosts();
+      renderAdminThemePicker(); renderAdminMyFiles(); renderAdminMyPosts(); renderAdminMyReplies();
       toast(isLi ? '👋 管理员李同丰，欢迎回来' : '管理员验证成功','success');
     } else {
       toast('密码错误','error');
@@ -1057,6 +1058,57 @@ window.adminDeletePost = function(id){
   updateHeroStats();
   toast('帖子已删除','success');
 };
+
+/* ---------- 管理员面板个人设置 ---------- */
+function renderAdminThemePicker(){
+  var picker = $('#adminThemePicker');
+  if(!picker) return;
+  var current = JSON.parse(localStorage.getItem('lsc_theme_'+State.user.phone)||'{}');
+  var defaultPrimary = current.primary || '#5b6ee8';
+  picker.innerHTML = THEMES.map(function(t){
+    var active = t.primary === defaultPrimary ? ' active' : '';
+    return '<button class="theme-btn'+active+'" onclick="selectTheme(\''+t.primary+'\',\''+t.primaryDark+'\',\''+t.primaryLight+'\',this)" style="background:'+t.primary+';color:#fff">'+t.name+'</button>';
+  }).join('');
+}
+
+function renderAdminMyFiles(){
+  var list = $('#adminMyFiles');
+  if(!list) return;
+  var myFiles = State.files.filter(function(f){ return f.uploader && f.uploader === State.user.name; });
+  if(!myFiles.length){ list.innerHTML='<div style="font-size:.8rem;color:var(--text-light);padding:4px 0">暂无</div>'; return; }
+  list.innerHTML = myFiles.map(function(f){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:.8rem"><span>'+escHtml(f.name)+'</span><button class="admin-item-btn delete" onclick="userDeleteFile('+JSON.stringify(f.path)+')" style="font-size:.72rem;padding:2px 8px">删除</button></div>';
+  }).join('');
+}
+
+function renderAdminMyPosts(){
+  var list = $('#adminMyPosts');
+  if(!list) return;
+  var myPosts = State.posts.filter(function(p){ return p.author === State.user.name; });
+  if(!myPosts.length){ list.innerHTML='<div style="font-size:.8rem;color:var(--text-light);padding:4px 0">暂无</div>'; return; }
+  list.innerHTML = myPosts.map(function(p){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:.8rem"><span>'+escHtml(p.title)+'</span><button class="admin-item-btn delete" onclick="userDeletePost('+p.id+');setTimeout(renderAdminMyPosts,100)" style="font-size:.72rem;padding:2px 8px">删除</button></div>';
+  }).join('');
+}
+
+function renderAdminMyReplies(){
+  var list = $('#adminMyReplies');
+  if(!list) return;
+  var myReplies = [];
+  State.posts.forEach(function(p){
+    (p.replies||[]).forEach(function(r, idx){
+      if(r.author === State.user.name){
+        myReplies.push({postTitle:p.title, postId:p.id, replyIdx:idx, content:r.content});
+      }
+    });
+  });
+  if(!myReplies.length){ list.innerHTML='<div style="font-size:.8rem;color:var(--text-light);padding:4px 0">暂无</div>'; return; }
+  list.innerHTML = myReplies.map(function(r){
+    var snippet = r.content.slice(0,20);
+    var ellipsis = r.content.length > 20 ? '…' : '';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:.8rem"><span>'+escHtml(r.postTitle)+'：'+escHtml(snippet)+ellipsis+'</span><button class="admin-item-btn delete" onclick="userDeleteReply('+r.postId+','+r.replyIdx+');setTimeout(renderAdminMyReplies,100)" style="font-size:.72rem;padding:2px 8px">删除</button></div>';
+  }).join('');
+}
 
 /* ---------- 初始化 ---------- */
 async function init(){
