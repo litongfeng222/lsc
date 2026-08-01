@@ -1403,21 +1403,10 @@ function initPinchColumns(){
 
 /* ---------- 初始化 ---------- */
 async function init(){
-  await loadSubjects();
-  await loadFiles();
-  cleanupExpiredFiles();
-  await loadPosts();
-  checkDailyPost();
-  loadUser();
-  loadFileStats();
-  loadTheme();
-  State.registeredUsers = await loadUsers();
-
+  // ===== 第1阶段：立即渲染 UI 框架（不依赖任何数据） =====
   initNavbar();
-  initFilterBar();
   initSortBar();
   initSearch();
-  //initModal(); // 已移除预览功能
   initForumTabs();
   initRankingTabs();
   initAdminEntry();
@@ -1427,14 +1416,36 @@ async function init(){
   initAuthModal();
   initPostModal();
   initLightbox();
-
+  loadTheme();
+  loadUser();
   updateUserUI();
 
+  // 默认显示资源中心（即使数据还没到，空状态也有 UI）
+  switchPage('resources');
+
+  // ===== 第2阶段：后台异步加载数据 =====
+  var subjectsPromise = loadSubjects();
+  var filesPromise = loadFiles();
+  var usersPromise = loadUsers();
+
+  await subjectsPromise;
+  // 科目到了 → 填充筛选栏
+  initFilterBar();
+
+  await filesPromise;
+  cleanupExpiredFiles();
+
+  // 帖子、统计等不阻塞主流程
+  loadPosts().then(function(){
+    checkDailyPost();
+  }).catch(function(){});
+
+  State.registeredUsers = await usersPromise;
+  loadFileStats();
+
+  // ===== 第3阶段：数据到达后刷新内容 =====
   updateHeroStats();
   renderResources();
-
-  // 默认显示资源中心
-  switchPage('resources');
 }
 
 document.addEventListener('DOMContentLoaded', init);
