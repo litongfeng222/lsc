@@ -1231,32 +1231,6 @@ function cleanupExpiredFiles(){
   }).catch(function(){});
 }
 
-function initColControl(){
-  var btns = document.querySelectorAll('.col-btn');
-  if(!btns.length) return;
-  btns.forEach(function(b){
-    b.addEventListener('click', function(){
-      btns.forEach(function(x){ x.classList.remove('active'); });
-      this.classList.add('active');
-      var cols = parseInt(this.dataset.cols);
-      var grid = document.getElementById('resourceGrid');
-      if(grid) grid.style.gridTemplateColumns = 'repeat('+cols+',1fr)';
-      localStorage.setItem('lsc_resource_cols', cols);
-    });
-  });
-  // 恢复上次选择的列数
-  var saved = localStorage.getItem('lsc_resource_cols');
-  if(saved){
-    var grid = document.getElementById('resourceGrid');
-    var btn = document.querySelector('.col-btn[data-cols="'+saved+'"]');
-    if(grid && btn){
-      btns.forEach(function(x){ x.classList.remove('active'); });
-      btn.classList.add('active');
-      grid.style.gridTemplateColumns = 'repeat('+saved+',1fr)';
-    }
-  }
-}
-
 /* ---------- 每日作业贴 ---------- */
 function checkDailyPost(){
   var now = new Date();
@@ -1306,40 +1280,56 @@ function initLightbox(){
   });
 }
 
-function initCardZoom(){
-  var scale = 1;
-  var root = document.documentElement;
-  // Ctrl+滚轮缩放
+function initPinchColumns(){
+  var cols = parseInt(localStorage.getItem('lsc_pinch_cols')||'3');
+  
+  function applyCols(n){
+    cols = Math.max(去打, Math.min(5, n));
+    var grids = document.querySelectorAll('#resourceGrid, #postList');
+    grids.forEach(function(g){
+      g.style.gridTemplateColumns = 'repeat('+cols+',1fr)';
+    });
+    localStorage.setItem('lsc_pinch_cols', cols);
+  }
+  
+  // 初始应用列数
+  applyCols(cols);
+  
+  var lastDist = 0;
+  var accumulatedZoom = 0;
+  
+  // Ctrl+滚轮
   document.addEventListener('wheel', function(e){
     if(!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
-    scale += e.deltaY > 0 ? -0.05 : 0.05;
-    scale = Math.max(0.4, Math.min(2, scale));
-    root.style.setProperty('--card-scale', scale);
+    accumulatedZoom += e.deltaY > 0 ? -1 : 1;
+    if(Math.abs(accumulatedZoom) >= 100){
+      if(accumulatedZoom > 0) applyCols(cols - 1);
+      else applyCols(cols + 1);
+      accumulatedZoom = 0;
+    }
   }, { passive: false });
-  // 双指缩放
+  
+  // 双指缩放列数
   var initialDist = 0;
-  var initialScale = 1;
+  var scaleDiff = 0;
+  
   document.addEventListener('touchstart', function(e){
     if(e.touches.length === 2){
       initialDist = Math.hypot(e.touches[0].pageX-e.touches[1].pageX, e.touches[0].pageY-e.touches[1].pageY);
-      initialScale = scale;
+      scaleDiff = 0;
     }
   }, { passive: true });
+  
   document.addEventListener('touchmove', function(e){
     if(e.touches.length === 2 && initialDist > 0){
       var newDist = Math.hypot(e.touches[0].pageX-e.touches[1].pageX, e.touches[0].pageY-e.touches[1].pageY);
-      scale = Math.max(0.4, Math.min(2, initialScale * (newDist / initialDist)));
-      root.style.setProperty('--card-scale', scale);
+      var ratio = newDist / initialDist;
+      scaleDiff += (ratio > 1.08 ? 1 : (ratio < 0.92 ? -1 : 0));
+      if(scaleDiff >= 2){ applyCols(cols + 1); scaleDiff = 0; initialDist = newDist; }
+      if(scaleDiff <= -2){ applyCols(cols - 1); scaleDiff = 0; initialDist = newDist; }
     }
   }, { passive: true });
-  // 双击重置
-  document.addEventListener('dblclick', function(e){
-    var card = e.target.closest('.file-card, .post-card');
-    if(!card) return;
-    scale = 1;
-    root.style.setProperty('--card-scale', '1');
-  });
 }
 
 /* ---------- 初始化 ---------- */
@@ -1367,7 +1357,6 @@ async function init(){
   initUserButton();
   initAuthModal();
   initPostModal();
-  initColControl();
   initLightbox();
 
   updateUserUI();
