@@ -1,3 +1,15 @@
 {
-  "files": []
+  "files": [
+    {
+      "name": "一天就一节",
+      "subject": "method",
+      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/method_%E4%B8%80%E5%A4%A9%E5%B0%B1%E4%B8%80%E8%8A%82.docx",
+      "uploader": "李同丰",
+      "desc": "会",
+      "usage": "",
+      "expireAt": 1785588840000,
+      "date": "2026-08-01",
+      "downloads": 0
+    }
+  ]
 }
