@@ -1164,6 +1164,17 @@ function initUserSettingsModal(){
   modal.addEventListener('click', function(e){ if(e.target===modal) modal.style.display='none'; });
 }
 
+function initRefreshBtn(){
+  var btn = document.getElementById('refreshBtn');
+  if(!btn) return;
+  btn.addEventListener('click', function(){
+    toast('正在刷新...','info');
+    setTimeout(function(){
+      window.location.href = window.location.href.split('?')[0].split('#')[0] + '?t=' + Date.now();
+    }, 300);
+  });
+}
+
 /* ---------- 过期文件清理 ---------- */
 window.showExpireInfo = function(){
   var el = document.getElementById('expireInfoBtn');
@@ -1206,6 +1217,7 @@ async function init(){
   initRankingTabs();
   initAdminEntry();
   initUserSettingsModal();
+  initRefreshBtn();
   initUserButton();
   initAuthModal();
   initPostModal();
