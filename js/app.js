@@ -18,8 +18,9 @@ async function saveUsersToGitHub(users){
 function renderRanking(){
   var el = document.getElementById('rankingList');
   if(!el) return;
+  var isRating = State.currentRankingType === 'rating';
   var sorted = [].concat(State.files).sort(function(a,b){
-    if(State.currentRankingType === 'rating'){
+    if(isRating){
       var ra = a.rating || 0;
       var rb = b.rating || 0;
       if(rb !== ra) return rb - ra;
@@ -35,20 +36,26 @@ function renderRanking(){
     return;
   }
   var top = sorted.slice(0, 20);
-  var maxDl = top[0].downloads || 1;
+  // 获取最大值（评分模式用5分制）
+  var getValue = function(f){ return isRating ? (f.rating||0) : (f.downloads||0); };
+  var maxVal = Math.max(1, getValue(top[0]));
+  if(isRating) maxVal = 5; // 评分满分为5
   // 绘制柱状图
-  renderChart(top.slice(0, 10), maxDl);
+  renderChart(top.slice(0, 10), maxVal, isRating);
   // 绘制 podium（前三）
-  renderPodium(top.slice(0, 3), maxDl);
+  renderPodium(top.slice(0, 3), isRating);
   // 绘制排名列表
   el.innerHTML = top.map(function(f, i){
     var sub = State.subjects.find(function(s){ return s.id === f.subject; });
     var subName = sub ? sub.name : '未分类';
-    var dl = f.downloads || 0;
-    var pct = maxDl > 0 ? Math.round(dl / maxDl * 100) : 0;
+    var val = getValue(f);
+    var pct = maxVal > 0 ? Math.round(val / maxVal * 100) : 0;
     var topClass = i === 0 ? 'top-1' : i === 1 ? 'top-2' : i === 2 ? 'top-3' : '';
     var numClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
     var numText = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+    var valHtml = isRating
+      ? '<span class="rank-stars">'+renderStars(val)+'</span><span class="rank-score">'+val.toFixed(1)+'</span>'
+      : '<span class="dl-icon">📥</span> '+val;
     return '<div class="rank-item '+topClass+'">' +
       '<div class="rank-bar-bg" style="width:'+pct+'%"></div>' +
       '<span class="rank-num '+numClass+'">'+numText+'</span>' +
@@ -58,37 +65,48 @@ function renderRanking(){
           '<span class="rank-sub" style="background:'+(sub?sub.color:'#999')+'">'+escHtml(subName)+'</span>' +
         '</div>' +
       '</div>' +
-      '<span class="rank-downloads"><span class="dl-icon">📥</span> '+dl+'</span>' +
+      '<span class="rank-downloads">'+valHtml+'</span>' +
     '</div>';
   }).join('');
 }
 
-function renderChart(items, maxDl){
+function renderStars(r){
+  var stars = '';
+  for(var i = 1; i <= 5; i++){
+    if(r >= i) stars += '★';
+    else if(r >= i - 0.5) stars += '⯪';
+    else stars += '☆';
+  }
+  return stars;
+}
+
+function renderChart(items, maxVal, isRating){
   var container = document.getElementById('chartContainer');
   if(!container) return;
   var colors = ['chart-bar-1','chart-bar-2','chart-bar-3','chart-bar-4','chart-bar-5',
     'chart-bar-6','chart-bar-7','chart-bar-8','chart-bar-9','chart-bar-10'];
   container.innerHTML = items.map(function(f, i){
-    var dl = f.downloads || 0;
-    var h = maxDl > 0 ? Math.max(8, Math.round(dl / maxDl * 100)) : 8;
+    var val = isRating ? (f.rating||0) : (f.downloads||0);
+    var h = maxVal > 0 ? Math.max(8, Math.round(val / maxVal * 100)) : 8;
     var shortName = f.name.length > 6 ? f.name.substring(0,5)+'…' : f.name;
     var isTop3 = i < 3;
-    return '<div class="chart-bar-wrapper" title="'+escHtml(f.name)+'：'+dl+' 次下载">' +
+    var label = isRating ? val.toFixed(1)+'分' : val+'次';
+    return '<div class="chart-bar-wrapper" title="'+escHtml(f.name)+'：'+label+'">' +
       '<div class="chart-bar '+(isTop3 ? 'chart-bar-top3' : 'chart-bar-other')+' '+colors[i]+'" style="height:'+h+'%"></div>' +
-      '<div class="chart-value">'+dl+'</div>' +
+      '<div class="chart-value">'+(isRating ? '⭐'+val.toFixed(1) : val)+'</div>' +
       '<div class="chart-label">'+escHtml(shortName)+'</div>' +
     '</div>';
   }).join('');
 }
 
-function renderPodium(top3, maxDl){
+function renderPodium(top3, isRating){
   var podium = document.getElementById('rankingPodium');
   if(!podium) return;
   if(top3.length < 3){
     podium.innerHTML = '';
     return;
   }
-  var order = [1, 0, 2]; // 第二、第一、第三的视觉顺序
+  var order = [1, 0, 2];
   var medals = ['🥇','🥈','🥉'];
   var classes = ['gold','silver','bronze'];
   var ranks = ['🥇 冠军','🥈 亚军','🥉 季军'];
@@ -97,13 +115,16 @@ function renderPodium(top3, maxDl){
     if(!f) return '';
     var sub = State.subjects.find(function(s){ return s.id === f.subject; });
     var subName = sub ? sub.name : '未分类';
-    var dl = f.downloads || 0;
+    var val = isRating ? (f.rating||0).toFixed(1) : (f.downloads||0);
+    var valHtml = isRating
+      ? '⭐ '+val+' <small>分</small>'
+      : '📥 '+val+' <small>次下载</small>';
     return '<div class="podium-card '+classes[idx]+'">' +
       '<span class="podium-medal">'+medals[idx]+'</span>' +
       '<div class="podium-rank">'+ranks[idx]+'</div>' +
       '<div class="podium-name" title="'+escHtml(f.name)+'">'+escHtml(f.name)+'</div>' +
       '<span class="podium-sub" style="background:'+(sub?sub.color:'#999')+'">'+escHtml(subName)+'</span>' +
-      '<div class="podium-dl">📥 '+dl+' <small>次下载</small></div>' +
+      '<div class="podium-dl">'+valHtml+'</div>' +
     '</div>';
   }).join('');
 }

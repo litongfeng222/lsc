@@ -219,6 +219,8 @@ img{max-width:100%;display:block}
 .rank-sub{padding:2px 8px;border-radius:8px;font-size:.7rem;color:#fff}
 .rank-downloads{display:flex;align-items:center;gap:4px;font-size:.9rem;font-weight:700;color:var(--primary);white-space:nowrap;margin-left:auto}
 .rank-downloads .dl-icon{font-size:.85rem}
+.rank-stars{color:#f5a623;letter-spacing:1px;font-size:.85rem}
+.rank-score{font-size:.9rem;font-weight:700;color:var(--primary);margin-left:4px}
 
 /* ===== Empty State for Ranking ===== */
 .ranking-list .empty-state{grid-column:1/-1}
