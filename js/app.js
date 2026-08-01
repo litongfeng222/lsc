@@ -616,6 +616,7 @@ function initUploadSelect(){
     '<div class="form-group"><label for="uploadSubject">所属科目 <span class="required">*</span></label><select id="uploadSubject" required><option value="">请选择科目</option></select></div>'+
     '<div class="form-group"><label for="uploadDesc">简介（选填）</label><textarea id="uploadDesc" rows="2" placeholder="一句话描述"></textarea></div>'+
     '<div class="form-group"><label for="uploadUsage">使用说明（选填）</label><textarea id="uploadUsage" rows="2" placeholder="例如：适合考前复习，重点看第3页"></textarea></div>'+
+    '<div class="form-group"><label><span class="info-icon" id="expireInfoBtn" onclick="showExpireInfo()" title="了解详情">\u24d8</span> 保留时间（选填）</label><input type="datetime-local" id="uploadExpire"></div>'+
     '<div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint" id="uploadFileHint">支持 PDF/DOCX/PPTX/XLSX/图片等，不超过25MB</p></div>'+
     '<div class="form-group"><label for="uploaderName">你的昵称（选填）</label><input type="text" id="uploaderName" placeholder="留空则使用登录昵称"></div>'+
     '<button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">上传资料</button></form>';
@@ -636,6 +637,9 @@ window.uploadSubmit = async function(e){
   var uploader = document.getElementById('uploaderName').value.trim() || State.user.name;
   var desc = document.getElementById('uploadDesc').value.trim();
   var usage = document.getElementById('uploadUsage')?document.getElementById('uploadUsage').value.trim():'';
+  var expireVal = document.getElementById('uploadExpire')?document.getElementById('uploadExpire').value:'';
+  var expireAt = expireVal ? new Date(expireVal).getTime() : 0;
+  if(expireAt && expireAt <= Date.now()){ toast('保留时间不能是过去的时间','warning');return false; }
   if(!name){ toast('请填写资料名称','warning');return false; }
   if(!subject){ toast('请选择科目','warning');return false; }
   if(!file){ toast('请选择文件','warning');return false; }
@@ -654,7 +658,7 @@ window.uploadSubmit = async function(e){
     try{ var c=await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/'+ghPath,{headers}); if(c.ok) sha=(await c.json()).sha; }catch(ee){}
     var upRes = await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/'+ghPath,{method:'PUT',headers,body:JSON.stringify({message:'上传: '+name,content:base64,sha})});
     if(!upRes.ok){ var ed;try{ed=(await upRes.json()).message}catch(ee){ed='上传失败('+upRes.status+')'};throw Error(ed); }
-    State.files.push({name,subject,path:rawUrl,uploader,desc,usage,date:new Date().toISOString().slice(0,10),downloads:0});
+    State.files.push({name,subject,path:rawUrl,uploader,desc,usage,expireAt,date:new Date().toISOString().slice(0,10),downloads:0});
     var fRes=await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json',{headers});
     var fData=await fRes.json();
     var newContent=btoa(unescape(encodeURIComponent(JSON.stringify({files:State.files},null,2))));
@@ -1160,10 +1164,33 @@ function initUserSettingsModal(){
   modal.addEventListener('click', function(e){ if(e.target===modal) modal.style.display='none'; });
 }
 
+/* ---------- 过期文件清理 ---------- */
+window.showExpireInfo = function(){
+  var el = document.getElementById('expireInfoBtn');
+  if(!el) return;
+  var toastId = 'expire_toast_' + Date.now();
+  toast('\u23f0 资料过期后会在同学们访问网站时自动删除，无需手动操作。请谨慎选择保留时间。','info',5000);
+};
+
+function cleanupExpiredFiles(){
+  var now = Date.now();
+  var expired = State.files.filter(function(f){ return f.expireAt && f.expireAt > 0 && f.expireAt <= now; });
+  if(!expired.length) return;
+  expired.forEach(function(f){
+    var idx = State.files.indexOf(f);
+    if(idx > -1){ State.files.splice(idx, 1); }
+  });
+  saveFilesToStorage().then(function(){
+    renderResources();
+    updateHeroStats();
+  }).catch(function(){});
+}
+
 /* ---------- 初始化 ---------- */
 async function init(){
   await loadSubjects();
   await loadFiles();
+  cleanupExpiredFiles();
   loadPosts();
   loadUser();
   loadFileStats();
