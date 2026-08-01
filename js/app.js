@@ -722,9 +722,49 @@ window.registerSubmit = async function(e){
   return false;
 };
 
+function calcPwdStrength(pwd){
+  if(!pwd) return {level:'',label:'',width:0};
+  var score = 0;
+  if(pwd.length >= 6) score += 1;
+  if(pwd.length >= 8) score += 1;
+  if(pwd.length >= 10) score += 1;
+  if(/\d/.test(pwd)) score += 1;
+  if(/[a-zA-Z]/.test(pwd)) score += 1;
+  if(/[\W_]/.test(pwd)) score += 1;
+  if(score <= 1) return {level:'weak',label:'弱',width:25};
+  if(score <= 3) return {level:'medium',label:'中等',width:50};
+  if(score <= 4) return {level:'strong',label:'强',width:75};
+  return {level:'very-strong',label:'非常强',width:100};
+}
+
 function initAuthModal(){
-  // Tab切换和模态框关闭由 inline onclick 处理
-  // 登录和注册提交由 window.loginSubmit / window.registerSubmit 处理
+  // 密码强度实时检测
+  var pwdInput = $('#regPassword');
+  if(pwdInput){
+    pwdInput.addEventListener('input', function(){
+      var bar = $('#pwdStrengthBar');
+      var text = $('#pwdStrengthText');
+      if(!bar || !text) return;
+      var result = calcPwdStrength(this.value);
+      bar.className = 'pwd-strength-bar ' + result.level;
+      text.textContent = this.value ? '密码强度：' + result.label : '';
+      text.style.color = result.level === 'weak' ? '#ef4444' : result.level === 'medium' ? '#f59e0b' : '#22c55e';
+    });
+  }
+  // 手机号实时校验
+  var phoneInput = $('#regPhone');
+  if(phoneInput){
+    phoneInput.addEventListener('input', function(){
+      var hint = $('#regPhoneHint');
+      if(!hint) return;
+      var v = this.value;
+      if(v.length === 0){ hint.textContent = ''; return; }
+      if(!/^1\d{0,10}$/.test(v)){ hint.textContent = '❌ 手机号格式不对'; hint.style.color = '#ef4444'; return; }
+      if(v.length < 11){ hint.textContent = '⏳ 已输入 ' + v.length + '/11 位'; hint.style.color = 'var(--text-light)'; return; }
+      if(/^1[3-9]\d{9}$/.test(v)){ hint.textContent = '✅ 手机号格式正确'; hint.style.color = '#22c55e'; }
+      else { hint.textContent = '❌ 手机号号段不对'; hint.style.color = '#ef4444'; }
+    });
+  }
 }
 
 // 打开认证弹窗
