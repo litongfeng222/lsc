@@ -1110,6 +1110,13 @@ function renderAdminMyReplies(){
   }).join('');
 }
 
+function initUserSettingsModal(){
+  var modal = $('#userSettingsModal');
+  if(!modal) return;
+  $('#userSettingsClose').addEventListener('click', function(){ modal.style.display='none'; });
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.style.display='none'; });
+}
+
 /* ---------- 初始化 ---------- */
 async function init(){
   await loadSubjects();
