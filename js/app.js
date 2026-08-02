@@ -730,7 +730,7 @@ function initUploadSelect(){
   const formWrap = $('.upload-form-wrap');
   if(!formWrap) return;
   if(!State.user){
-    formWrap.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><p>请先登录后再上传资料</p><button class="btn btn-primary" style="margin-top:12px" onclick="openAuthModal(\'login\')">去登录</button></div>';
+    formWrap.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><p>请先登录后再上传资料</p><button class="btn btn-primary" style="margin-top:12px" onclick="openAuthModal(\'login\')">去登录</button></div><div class="back-home-wrap"><button class="btn btn-back-home" onclick="switchPage(\'home\')">🏠 返回首页</button></div>';
     return;
   }
   formWrap.innerHTML = '<div id="uploadTokenHint" class="upload-token-hint"></div>'+
@@ -742,7 +742,8 @@ function initUploadSelect(){
     '<div class="form-group"><label><span class="info-icon" id="expireInfoBtn" onclick="showExpireInfo()" title="了解详情">\u24d8</span> 保留时间 <span class="required">*</span></label><input type="datetime-local" id="uploadExpire" required></div>'+
     '<div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint" id="uploadFileHint">支持 PDF/DOCX/PPTX/XLSX/图片等，不超过25MB</p></div>'+
     '<div class="form-group"><label for="uploaderName">你的昵称（选填）</label><input type="text" id="uploaderName" placeholder="留空则使用登录昵称"></div>'+
-    '<button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">上传资料</button></form>';
+    '<button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">上传资料</button></form>'+
+    '<div class="back-home-wrap"><button class="btn btn-back-home" onclick="switchPage(\'home\')">🏠 返回首页</button></div>';
   State.subjects.forEach(s => { var o=document.createElement('option'); o.value=s.id; o.textContent=s.name; document.getElementById('uploadSubject').appendChild(o); });
   document.getElementById('uploaderName').value = State.user.name;
   var h=document.getElementById('uploadTokenHint');
