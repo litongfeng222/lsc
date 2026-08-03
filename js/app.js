@@ -231,6 +231,10 @@ const State = {
   currentForumBoard: 'qa',
   currentRankingType: 'downloads',
   user: null,
+  postSyncTimer: null,
+  postSyncLock: false,
+  lastSyncTime: 0,
+  pendingPosts: []
 };
 
 /* ---------- 工具函数 ---------- */
@@ -280,9 +284,17 @@ async function loadPosts(){
   try{
     var res = await fetch('https://raw.githubusercontent.com/litongfeng222/lsc/main/data/posts.json?t='+Date.now());
     if(res.ok){
-      State.posts = await res.json();
-      // 缓存到本地
+      var remote = await res.json();
+      // 如果本地有待发布但未同步的帖子，合并进去
+      var localPending = JSON.parse(localStorage.getItem('lsc_pending_posts')||'[]');
+      if(localPending.length){
+        var remoteIds = new Set(remote.map(function(p){return p.id;}));
+        localPending.forEach(function(p){ if(!remoteIds.has(p.id)) remote.push(p); });
+        localStorage.removeItem('lsc_pending_posts');
+      }
+      State.posts = remote;
       localStorage.setItem('lsc_posts', JSON.stringify(State.posts));
+      State.lastSyncTime = Date.now();
       return;
     }
   }catch(e){}
@@ -293,6 +305,51 @@ async function loadPosts(){
 function savePosts(){
   localStorage.setItem('lsc_posts', JSON.stringify(State.posts));
   setTimeout(syncPostsToGitHub, 50);
+}
+
+/* ---------- 帖子实时同步 ---------- */
+async function pullPostsFromServer(){
+  if(State.postSyncLock) return;
+  State.postSyncLock = true;
+  try{
+    var res = await fetch('https://raw.githubusercontent.com/litongfeng222/lsc/main/data/posts.json?t='+Date.now());
+    if(!res.ok){ State.postSyncLock=false; return; }
+    var remote = await res.json();
+    if(!Array.isArray(remote)){ State.postSyncLock=false; return; }
+    // 合并：以远程为准，但保留本地独有的未同步帖子
+    var localIds = new Set(State.posts.map(function(p){return p.id;}));
+    var remoteIds = new Set(remote.map(function(p){return p.id;}));
+    // 本地有但远程没有的（刚发还没同步完），保留
+    var localOnly = State.posts.filter(function(p){return !remoteIds.has(p.id);});
+    // 远程有但本地没有的，加入
+    var merged = remote.concat(localOnly);
+    var changed = merged.length !== State.posts.length;
+    if(changed){
+      State.posts = merged;
+      localStorage.setItem('lsc_posts', JSON.stringify(State.posts));
+      renderForum();
+    }
+    State.lastSyncTime = Date.now();
+  }catch(e){}
+  State.postSyncLock = false;
+}
+
+function startPostSyncLoop(){
+  // 每15秒从服务器拉取一次
+  pullPostsFromServer();
+  State.postSyncTimer = setInterval(pullPostsFromServer, 15000);
+}
+
+function waitForSync(timeoutMs){
+  return new Promise(function(resolve){
+    var start = Date.now();
+    var check = setInterval(function(){
+      if(!State.postSyncLock || Date.now() - start > timeoutMs){
+        clearInterval(check);
+        resolve();
+      }
+    }, 200);
+  });
 }
 async function syncPostsToGitHub(){
   try{
@@ -651,12 +708,13 @@ function renderForum(){
   }).join('');
 }
 
-window.deletePost = function(id){
+window.deletePost = async function(id){
   if(!confirm('确认删除这条帖子吗？')) return;
   State.posts = State.posts.filter(p => p.id !== id);
   savePosts();
   renderForum();
   updateHeroStats();
+  await waitForSync(8000);
   toast('帖子已删除','success');
 };
 
@@ -679,7 +737,7 @@ window.handleReplyImage = function(postId, input){
   reader.readAsDataURL(file);
 };
 
-window.submitReply = function(id){
+window.submitReply = async function(id){
   if(!State.user){ toast('请先登录后再回复','warning'); openAuthModal('login'); return; }
   const text = $('#replyText-'+id).value.trim();
   if(!text){ toast('请输入回复内容','warning'); return; }
@@ -688,10 +746,16 @@ window.submitReply = function(id){
   if(!post.replies) post.replies = [];
   const preview = $('#replyImgPreview-'+id);
   const image = preview ? (preview.dataset.image || '') : '';
+  // 显示加载状态
+  const btn = $('#postList').querySelector('.btn-primary');
+  if(btn){ btn.textContent='发送中…'; btn.disabled=true; }
   post.replies.push({ author: State.user.name, content: text, image });
   savePosts();
   renderForum();
-  toast('回复成功','success');
+  // 等待同步完成
+  await waitForSync(8000);
+  if(btn){ btn.textContent='发送'; btn.disabled=false; }
+  toast('回复已发布','success');
 };
 
 function showPostForm(){
@@ -752,14 +816,16 @@ function initPostModal(){
     };
     State.posts.push(post);
     savePosts();
-    modal.style.display='none';
-    $('#postForm').reset();
     // 发帖后自动切换到所选版块
     State.currentForumBoard = $('#postBoard').value;
     // 切换论坛tab高亮
     $$('.forum-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.board === State.currentForumBoard); });
     renderForum();
     updateHeroStats();
+    // 等待同步完成
+    await waitForSync(10000);
+    modal.style.display='none';
+    $('#postForm').reset();
     toast('发帖成功！','success');
     btn.textContent='发布'; btn.disabled=false;
   });
@@ -1135,7 +1201,7 @@ window.userDeletePost = function(id){
   toast('帖子已删除','success');
 };
 
-window.userDeleteReply = function(postId, replyIdx){
+window.userDeleteReply = async function(postId, replyIdx){
   if(!confirm('确认删除这条评论？')) return;
   var post = State.posts.find(function(p){ return p.id === postId; });
   if(!post || !post.replies || !post.replies[replyIdx]) return;
@@ -1144,6 +1210,7 @@ window.userDeleteReply = function(postId, replyIdx){
   savePosts();
   renderMyReplies();
   renderForum();
+  await waitForSync(8000);
   toast('评论已删除','success');
 };
 
@@ -1477,6 +1544,7 @@ async function init(){
   initUserButton();
   initAuthModal();
   initPostModal();
+  startPostSyncLoop();
   initLightbox();
   loadTheme();
   loadUser();
