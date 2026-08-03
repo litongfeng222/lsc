@@ -285,25 +285,46 @@ async function loadPosts(){
     var res = await fetch('https://raw.githubusercontent.com/litongfeng222/lsc/main/data/posts.json?t='+Date.now());
     if(res.ok){
       var remote = await res.json();
-      // 如果本地有待发布但未同步的帖子，合并进去
-      var localPending = JSON.parse(localStorage.getItem('lsc_pending_posts')||'[]');
-      if(localPending.length){
-        var remoteIds = new Set(remote.map(function(p){return p.id;}));
-        localPending.forEach(function(p){ if(!remoteIds.has(p.id)) remote.push(p); });
-        localStorage.removeItem('lsc_pending_posts');
+      // 如果本地有未同步的帖子，合并进去
+      var pending = localStorage.getItem('lsc_pending_sync');
+      if(pending){
+        try{
+          var parsed = JSON.parse(pending);
+          if(parsed.posts && parsed.posts.length){
+            var remoteIds = new Set(remote.map(function(p){return p.id;}));
+            parsed.posts.forEach(function(p){ if(!remoteIds.has(p.id)) remote.push(p); });
+          }
+        }catch(e){}
       }
       State.posts = remote;
       localStorage.setItem('lsc_posts', JSON.stringify(State.posts));
       State.lastSyncTime = Date.now();
+      // 如果本地有未同步的，重新触发一次同步
+      if(pending) setTimeout(function(){ syncPostsToGitHub(0); }, 3000);
       return;
     }
   }catch(e){}
   // 降级：从本地缓存加载
   try{ State.posts = JSON.parse(localStorage.getItem('lsc_posts')||'[]'); }
   catch(e){ State.posts = []; }
+  // 如果本地有未同步的备份，恢复并尝试同步
+  var pending2 = localStorage.getItem('lsc_pending_sync');
+  if(pending2){
+    try{
+      var parsed2 = JSON.parse(pending2);
+      if(parsed2.posts && parsed2.posts.length){
+        var ids = new Set(State.posts.map(function(p){return p.id;}));
+        parsed2.posts.forEach(function(p){ if(!ids.has(p.id)) State.posts.push(p); });
+        localStorage.setItem('lsc_posts', JSON.stringify(State.posts));
+        setTimeout(function(){ syncPostsToGitHub(0); }, 3000);
+      }
+    }catch(e){}
+  }
 }
 function savePosts(){
   localStorage.setItem('lsc_posts', JSON.stringify(State.posts));
+  // 同时保存一份待同步备份，防止刷新丢失
+  localStorage.setItem('lsc_pending_sync', JSON.stringify({posts: State.posts, ts: Date.now()}));
   setTimeout(syncPostsToGitHub, 50);
 }
 
@@ -351,20 +372,31 @@ function waitForSync(timeoutMs){
     }, 200);
   });
 }
-async function syncPostsToGitHub(){
+async function syncPostsToGitHub(retries){
+  retries = retries || 0;
   try{
     var tk = function(){var t=localStorage.getItem('lsc_gh_token');return t&&t.length>35&&t.startsWith('ghp_')?t:'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';}();
     var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/data/posts.json';
     var r = await fetch(url, { headers: { 'Authorization':'token '+tk, 'Accept':'application/vnd.github.v3+json' } });
-    if(!r.ok) return;
+    if(!r.ok) throw new Error('获取SHA失败: '+r.status);
     var d = await r.json();
     var c = btoa(unescape(encodeURIComponent(JSON.stringify(State.posts))));
-    await fetch(url, {
+    var upRes = await fetch(url, {
       method: 'PUT',
       headers: { 'Authorization':'token '+tk, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' },
       body: JSON.stringify({ message: '同步帖子', content: c, sha: d.sha })
     });
-  }catch(e){}
+    if(!upRes.ok) throw new Error('上传失败: '+upRes.status);
+    // 同步成功后清除待同步备份
+    localStorage.removeItem('lsc_pending_sync');
+  }catch(e){
+    console.error('同步帖子失败 (第'+(retries+1)+'次):', e.message);
+    if(retries < 5){
+      // 指数退避重试: 1s, 2s, 4s, 8s, 16s
+      var delay = Math.pow(2, retries) * 1000;
+      setTimeout(function(){ syncPostsToGitHub(retries+1); }, delay);
+    }
+  }
 }
 
 function loadUser(){
