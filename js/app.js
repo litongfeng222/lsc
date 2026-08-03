@@ -225,7 +225,7 @@ const State = {
   files: [],
   posts: [],
   registeredUsers: [],
-  currentSort: 'date',
+  currentSort: 'downloads',
   currentFilter: 'all',
   searchQuery: '',
   currentForumBoard: 'qa',
@@ -370,14 +370,17 @@ function updateHeroStats(){
 
 /* ---------- 资源中心 ---------- */
 function initFilterBar(){
-  const bar = $('#filterBar');
-  bar.innerHTML = '';
+  // 筛选弹窗中的科目标签
+  const popupTags = $('#filterPopupTags');
+  if(!popupTags) return;
+  popupTags.innerHTML = '';
+  
   const allTag = document.createElement('button');
   allTag.className = 'filter-tag active';
   allTag.textContent = '全部';
   allTag.dataset.subject = 'all';
   allTag.addEventListener('click', ()=>{ State.currentFilter='all'; updateFilterUI(); renderResources(); });
-  bar.appendChild(allTag);
+  popupTags.appendChild(allTag);
 
   State.subjects.forEach(sub => {
     const tag = document.createElement('button');
@@ -386,21 +389,58 @@ function initFilterBar(){
     tag.dataset.subject = sub.id;
     tag.style.setProperty('--card-color', sub.color);
     tag.addEventListener('click', ()=>{ State.currentFilter=sub.id; updateFilterUI(); renderResources(); });
-    bar.appendChild(tag);
+    popupTags.appendChild(tag);
+  });
+
+  // 筛选按钮点击切换弹窗
+  const toggleBtn = $('#filterToggleBtn');
+  const popup = $('#filterPopup');
+  if(toggleBtn && popup){
+    toggleBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      var isOpen = popup.style.display !== 'none';
+      popup.style.display = isOpen ? 'none' : '';
+      toggleBtn.classList.toggle('active', !isOpen);
+    });
+    // 点击外部关闭弹窗
+    document.addEventListener('click', (e)=>{
+      if(!popup.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)){
+        popup.style.display = 'none';
+        toggleBtn.classList.remove('active');
+      }
+    });
+  }
+
+  // 排序按钮（在弹窗内）
+  var sortBtns = $$('#filterPopupSort .sort-btn');
+  sortBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      State.currentSort = this.dataset.sort;
+      sortBtns.forEach(function(b){ b.classList.toggle('active', b === btn); });
+      renderResources();
+    });
   });
 }
 
 function updateFilterUI(){
-  $$('.filter-tag').forEach(t => t.classList.toggle('active', t.dataset.subject === State.currentFilter));
+  $$('#filterPopupTags .filter-tag').forEach(t => t.classList.toggle('active', t.dataset.subject === State.currentFilter));
+  // 更新筛选按钮文字
+  var btn = $('#filterToggleBtn');
+  if(btn){
+    var sub = State.subjects.find(function(s){ return s.id === State.currentFilter; });
+    if(State.currentFilter === 'all'){
+      btn.querySelector('span:last-child').textContent = '筛选';
+    } else if(sub){
+      btn.querySelector('span:last-child').textContent = sub.name;
+    }
+  }
 }
 
 function initSortBar(){
-  $$('.sort-btn').forEach(btn => {
-    btn.addEventListener('click', ()=>{
-      State.currentSort = btn.dataset.sort;
-      $$('.sort-btn').forEach(b => b.classList.toggle('active', b === btn));
-      renderResources();
-    });
+  // 初始设置弹窗中的排序按钮状态
+  var sortBtns = $$('#filterPopupSort .sort-btn');
+  sortBtns.forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.sort === State.currentSort);
   });
 }
 

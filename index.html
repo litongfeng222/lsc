@@ -7,7 +7,7 @@
   <meta name="description" content="师大附·11班·学习小组 — 资源共享与学习交流社区">
   <title>师大附·11班·学习小组</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="css/style.css?v=28">
+  <link rel="stylesheet" href="css/style.css?v=34">
 </head>
 <body>
 
@@ -45,14 +45,16 @@
     <div class="hero-content">
       <h1 class="hero-title">学习资源站</h1>
       <p class="hero-subtitle">资源共享 · 互助进步 · 共同成长</p>
-      <div class="hero-actions">
-        <a href="#upload" class="btn btn-ghost hero-upload-btn" onclick="event.preventDefault();switchPage('upload')">分享资料</a>
+      <div class="hero-bottom">
+        <div class="hero-actions">
+          <a href="#upload" class="btn btn-ghost hero-upload-btn" onclick="event.preventDefault();switchPage('upload')">分享资料</a>
+        </div>
+        <div class="hero-stats" id="heroStats">
+          <div class="stat-item"><span class="stat-num" id="statFiles">0</span><span class="stat-label">份资料</span></div>
+          <div class="stat-item"><span class="stat-num" id="statSubjects">12</span><span class="stat-label">个科目</span></div>
+          <div class="stat-item"><span class="stat-num" id="statUsers">—</span><span class="stat-label">用户数</span></div>
+        </div>
       </div>
-    </div>
-    <div class="hero-stats" id="heroStats">
-      <div class="stat-item"><span class="stat-num" id="statFiles">0</span><span class="stat-label">份资料</span></div>
-      <div class="stat-item"><span class="stat-num" id="statSubjects">12</span><span class="stat-label">个科目</span></div>
-      <div class="stat-item"><span class="stat-num" id="statUsers">—</span><span class="stat-label">用户数</span></div>
     </div>
   </header>
 
@@ -66,18 +68,31 @@
         <p class="section-desc">浏览、搜索、下载学习资料</p>
       </div>
       <div class="toolbar">
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="搜索资料名称…" autocomplete="off">
+        <div class="toolbar-row">
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜索资料名称…" autocomplete="off">
+          </div>
+          <button class="filter-toggle-btn" id="filterToggleBtn" title="筛选">
+            <span class="filter-icon">☰</span>
+            <span>筛选</span>
+          </button>
         </div>
-        <div class="filter-bar" id="filterBar">
-          <!-- 科目筛选标签由 JS 动态生成 -->
+        <!-- 筛选弹出面板 -->
+        <div class="filter-popup" id="filterPopup" style="display:none">
+          <div class="filter-popup-section">
+            <div class="filter-popup-label">科目</div>
+            <div class="filter-popup-tags" id="filterPopupTags">
+              <!-- 科目标签由 JS 动态生成 -->
+            </div>
+          </div>
+          <div class="filter-popup-section">
+            <div class="filter-popup-label">排序</div>
+            <div class="filter-popup-sort" id="filterPopupSort">
+              <button class="sort-btn active" data-sort="downloads">按下载量</button>
+              <button class="sort-btn" data-sort="rating">按评分</button>
+            </div>
+          </div>
         </div>
-        <div class="sort-bar">
-          <button class="sort-btn active" data-sort="date">最新</button>
-          <button class="sort-btn" data-sort="downloads">下载量</button>
-          <button class="sort-btn" data-sort="rating">评分</button>
-        </div>
-
       </div>
       <div class="resource-grid" id="resourceGrid">
         <!-- 资源卡片由 JS 动态生成 -->
@@ -374,6 +389,6 @@
   <!-- 密码强度检测库 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js" defer></script>
   <!-- 脚本 -->
-  <script src="js/app.js?v=32" defer></script>
+  <script src="js/app.js?v=34" defer></script>
 </body>
 </html>
