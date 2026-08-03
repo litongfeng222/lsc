@@ -5,6 +5,12 @@
       "phone": "15652249583",
       "password": "06a39762ecfa1fd74ec2b70438fe645c51979c862496b92dd17edf0dd9abe282",
       "registeredAt": 1785741358025
+    },
+    {
+      "name": "学习搭子",
+      "phone": "18888888888",
+      "password": "0d169ef631cd81d5816a2c85d1239d58307cca4a948bdde4d0e39d4abe2f0028",
+      "registeredAt": 1785747810940
     }
   ]
 }
