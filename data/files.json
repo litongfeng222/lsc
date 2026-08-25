@@ -1,15 +1,3 @@
 {
-  "files": [
-    {
-      "name": "选修课介绍",
-      "subject": "other",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/other_%E9%80%89%E4%BF%AE%E8%AF%BE%E4%BB%8B%E7%BB%8D.pdf",
-      "uploader": "学习搭子",
-      "desc": "",
-      "usage": "",
-      "expireAt": 1787553120000,
-      "date": "2026-08-24",
-      "downloads": 2
-    }
-  ]
+  "files": []
 }
