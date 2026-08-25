@@ -11,6 +11,12 @@
       "phone": "18888888888",
       "password": "0d169ef631cd81d5816a2c85d1239d58307cca4a948bdde4d0e39d4abe2f0028",
       "registeredAt": 1786019833190
+    },
+    {
+      "name": "测试",
+      "phone": "16666666666",
+      "password": "d5af5b6d4fa94d7d2766b326a67a013bdc85c261e9851e1f5cbbcbe80f1d494f",
+      "registeredAt": 1787640318201
     }
   ]
 }
