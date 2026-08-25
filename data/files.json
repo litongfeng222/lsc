@@ -1,17 +1,3 @@
 {
-  "files": [
-    {
-      "name": "zhsh",
-      "subject": "biology",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/biology_zhsh.jpg",
-      "uploader": "学习搭子",
-      "desc": "",
-      "usage": "",
-      "expireAt": 1787621820000,
-      "date": "2026-08-25",
-      "downloads": 1,
-      "rating": 3,
-      "ratingCount": 1
-    }
-  ]
+  "files": []
 }
