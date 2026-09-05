@@ -1,3 +1,15 @@
 {
-  "files": []
+  "files": [
+    {
+      "name": "bb",
+      "subject": "politics",
+      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/politics_bb.jpg",
+      "uploader": "测试",
+      "desc": "",
+      "usage": "",
+      "expireAt": 1788599820000,
+      "date": "2026-09-05",
+      "downloads": 0
+    }
+  ]
 }
