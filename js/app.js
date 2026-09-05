@@ -70,13 +70,18 @@ function stopUploadProgress(){
   if(upProg.timer){clearInterval(upProg.timer);upProg.timer=null;}
   var el=document.getElementById('uploadProgress');if(el)el.style.display='none';
 }
-/* 事件委托：对可点元素在按压瞬间给短震动，保持触感一致 */
-document.addEventListener('pointerdown', function(e){
-  var t = e.target && e.target.closest ? e.target.closest('button, a[href], .hero-upload-btn, .nav-link, .post-card, .file-card, .file-info, .theme-btn, .forum-tab, .ranking-tab, .chart-bar-wrapper, .filter-tag, .sort-btn, .rank-item, .filter-toggle-btn, .btn-back-home, .admin-entry, .refresh-btn') : null;
-  if(!t) return;
-  /* “分享资料”这类主操作用强震，其余保持常规力度 */
-  haptic(t.closest('.hero-upload-btn') ? 80 : 45);
-}, {passive:true});
+/* 事件委托：对可点元素震动。pointerdown 提供按压即时感，click 兜底保证首次点击也震（个别内核首次 pointerdown 尚无 user activation） */
+var HAPTIC_SEL='button, a[href], .hero-upload-btn, .nav-link, .post-card, .file-card, .file-info, .theme-btn, .forum-tab, .ranking-tab, .chart-bar-wrapper, .filter-tag, .sort-btn, .rank-item, .filter-toggle-btn, .btn-back-home, .admin-entry, .refresh-btn';
+var lastVibe={el:null,t:0};
+function hapticEl(t){ if(!t) return; haptic(t.closest('.hero-upload-btn') ? 80 : 45); }
+function vibeDedup(t){
+  var now=Date.now();
+  if(lastVibe.el===t && now-lastVibe.t<600) return;
+  lastVibe={el:t,t:now};
+  hapticEl(t);
+}
+document.addEventListener('pointerdown', function(e){ var t=e.target&&e.target.closest?e.target.closest(HAPTIC_SEL):null; if(t) vibeDedup(t); }, {passive:true});
+document.addEventListener('click', function(e){ var t=e.target&&e.target.closest?e.target.closest(HAPTIC_SEL):null; if(t) vibeDedup(t); }, false);
 
 async function saveUsersToGitHub(users){
   var token = function(){var t=localStorage.getItem('lsc_gh_token');return t&&t.length>35&&t.startsWith('ghp_')?t:'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';}();
