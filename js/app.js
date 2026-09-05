@@ -31,6 +31,45 @@ function stopUploadVibe(){
   if(uploadVibe.timer){clearTimeout(uploadVibe.timer);uploadVibe.timer=null;}
   try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
 }
+/* 上传进度条（视觉模拟、磨砂玻璃、带流光，非真实进度） */
+var upProg={timer:null,pct:0};
+function ensureUpProg(){
+  var el=document.getElementById('uploadProgress');
+  if(el) return el;
+  el=document.createElement('div');el.id='uploadProgress';el.className='upload-progress';el.style.display='none';
+  el.innerHTML='<div class="upload-progress-bar"><div class="upload-progress-fill" id="upProgFill"></div></div>'+
+    '<div class="upload-progress-label"><span id="upProgText">正在上传文件…</span><span class="upload-progress-pct" id="upProgPct">0%</span></div>';
+  var btn=document.getElementById('uploadSubmitBtn');
+  (btn&&btn.parentNode?btn.parentNode:document.body).appendChild(el);
+  return el;
+}
+function renderUpProg(){
+  var f=document.getElementById('upProgFill'),p=document.getElementById('upProgPct');
+  if(f) f.style.width=upProg.pct+'%';
+  if(p) p.textContent=upProg.pct+'%';
+}
+function startUploadProgress(){
+  stopUploadProgress();
+  var el=ensureUpProg(); el.style.display='block';
+  upProg.pct=Math.floor(Math.random()*6)+3;
+  renderUpProg();
+  upProg.timer=setInterval(function(){
+    if(upProg.pct>=95){ clearInterval(upProg.timer); upProg.timer=null; return; }
+    var left=95-upProg.pct;
+    var inc=Math.max(1,Math.round(left/14)+(Math.random()*3|0));
+    upProg.pct=Math.min(95,upProg.pct+inc);
+    renderUpProg();
+  },180);
+}
+function completeUploadProgress(){
+  if(upProg.timer){clearInterval(upProg.timer);upProg.timer=null;}
+  upProg.pct=100;renderUpProg();
+  setTimeout(function(){var el=document.getElementById('uploadProgress');if(el)el.style.display='none';},900);
+}
+function stopUploadProgress(){
+  if(upProg.timer){clearInterval(upProg.timer);upProg.timer=null;}
+  var el=document.getElementById('uploadProgress');if(el)el.style.display='none';
+}
 /* 事件委托：对可点元素在按压瞬间给短震动，保持触感一致 */
 document.addEventListener('pointerdown', function(e){
   var t = e.target && e.target.closest ? e.target.closest('button, a[href], .hero-upload-btn, .nav-link, .post-card, .file-card, .file-info, .theme-btn, .forum-tab, .ranking-tab, .chart-bar-wrapper, .filter-tag, .sort-btn, .rank-item, .filter-toggle-btn, .btn-back-home, .admin-entry, .refresh-btn') : null;
@@ -653,6 +692,7 @@ window.uploadSubmit = async function(e){
   btn.textContent='上传中…';btn.disabled=true;
   toast('正在上传…','info',6000);
   startUploadVibe();
+  startUploadProgress();
   try{
     var base64 = await new Promise(function(rv){var r=new FileReader();r.onload=function(){rv(r.result.split(',')[1]);};r.readAsDataURL(file);});
     var ext = file.name.split('.').pop();
@@ -672,12 +712,13 @@ window.uploadSubmit = async function(e){
     var upFRes=await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json',{method:'PUT',headers,body:JSON.stringify({message:'更新文件列表',content:newContent,sha:fData.sha})});
     if(!upFRes.ok) throw Error('files.json更新失败');
     stopUploadVibe();
+    completeUploadProgress();
     toast('上传成功！资料已共享给同学们 ✅','success',3000);
     document.getElementById('uploadForm').reset();
     document.getElementById('uploadFileHint').textContent='支持 PDF/DOCX/PPTX/XLSX/图片等，不超过25MB';
     document.getElementById('uploaderName').value=State.user.name;
     updateHeroStats();renderResources();
-  }catch(err){ stopUploadVibe(); toast('上传失败：'+err.message,'error',5000); }
+  }catch(err){ stopUploadVibe(); stopUploadProgress(); toast('上传失败：'+err.message,'error',5000); }
   btn.textContent='上传资料';btn.disabled=false;
   return false;
 };
