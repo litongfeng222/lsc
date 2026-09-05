@@ -580,3 +580,13 @@ body::before{
 .upload-progress-label{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:.78rem;color:var(--text-secondary)}
 .upload-progress-pct{font-weight:700;color:var(--primary)}
 
+/* ===== 按钮光影（参考：上浮 / 下沉 + 阴影渐变） ===== */
+button, .btn, .el-button{box-shadow:0 4px 10px rgba(var(--primary-rgb),.18);transition:all .2s ease;transform:translateY(0)}
+button:hover, .btn:hover, .el-button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(var(--primary-rgb),.28)}
+button:active, .btn:active, .el-button:active{transform:translateY(1px);box-shadow:0 2px 6px rgba(var(--primary-rgb),.16)}
+@media (prefers-color-scheme: dark){
+  button, .btn, .el-button{box-shadow:0 4px 12px rgba(0,0,0,.35)}
+  button:hover, .btn:hover, .el-button:hover{box-shadow:0 7px 20px rgba(0,0,0,.45)}
+  button:active, .btn:active, .el-button:active{transform:translateY(1px);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+}
+
