@@ -4,15 +4,16 @@
 
 /* 震动反馈：按压触感（配合毛玻璃交互优化）。仅在支持 Vibration API、未开启系统“减弱动态”时生效，异常静默降级 */
 function haptic(ms){
-  if(!(navigator.vibrate)) return;
+  var v = navigator.vibrate || navigator.webkitVibrate;
+  if(!v) return;
   try{
     if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    navigator.vibrate(ms || 8);
+    v.call(navigator, ms || 8);
   }catch(e){}
 }
 /* 事件委托：对可点元素在按压瞬间给短震动，保持触感一致 */
 document.addEventListener('pointerdown', function(e){
-  var t = e.target && e.target.closest ? e.target.closest('button, .hero-upload-btn, .nav-link, .post-card, .file-card, .file-info, .theme-btn, .forum-tab, .ranking-tab, .chart-bar-wrapper, .filter-tag, .sort-btn, .rank-item, .filter-toggle-btn, .btn-back-home, .admin-entry, .refresh-btn') : null;
+  var t = e.target && e.target.closest ? e.target.closest('button, a[href], .hero-upload-btn, .nav-link, .post-card, .file-card, .file-info, .theme-btn, .forum-tab, .ranking-tab, .chart-bar-wrapper, .filter-tag, .sort-btn, .rank-item, .filter-toggle-btn, .btn-back-home, .admin-entry, .refresh-btn') : null;
   if(!t) return;
   /* “分享资料”这类主操作用强震，其余保持常规力度 */
   haptic(t.closest('.hero-upload-btn') ? 80 : 45);
