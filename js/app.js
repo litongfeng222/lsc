@@ -664,7 +664,7 @@ function initUploadSelect(){
     '<div class="form-group"><label for="uploadSubject">所属科目 <span class="required">*</span></label><select id="uploadSubject" required><option value="">请选择科目</option></select></div>'+
     '<div class="form-group"><label for="uploadDesc">简介（选填）</label><textarea id="uploadDesc" rows="2" placeholder="一句话描述"></textarea></div>'+
     '<div class="form-group"><label for="uploadUsage">使用说明（选填）</label><textarea id="uploadUsage" rows="2" placeholder="例如：适合考前复习，重点看第3页"></textarea></div>'+
-    '<div class="form-group"><label><span class="info-icon" id="expireInfoBtn" onclick="showExpireInfo()" title="了解详情">\u24d8</span> 保留时间 <span class="required">*</span></label><input type="datetime-local" id="uploadExpire" required></div>'+
+    '<div class="form-group"><label class="expire-label"><span class="expire-label-text">保留时间 <span class="required">*</span></span><span class="info-icon" id="expireInfoBtn" onclick="showExpireInfo()" title="了解详情">？</span></label><input type="datetime-local" id="uploadExpire" required></div>'+
     '<div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint" id="uploadFileHint">支持 PDF/DOCX/PPTX/XLSX/图片等，不超过25MB</p></div>'+
     '<div class="form-group"><label for="uploaderName">你的昵称（选填）</label><input type="text" id="uploaderName" placeholder="留空则使用登录昵称"></div>'+
     '<button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">上传资料</button></form>'+
