@@ -1,26 +1,3 @@
 {
-  "files": [
-    {
-      "name": "姐姐",
-      "subject": "chemistry",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/chemistry_%E5%A7%90%E5%A7%90.jpg",
-      "uploader": "测试",
-      "desc": "",
-      "usage": "",
-      "expireAt": 1788599820000,
-      "date": "2026-09-05",
-      "downloads": 0
-    },
-    {
-      "name": "好不好",
-      "subject": "geography",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/geography_%E5%A5%BD%E4%B8%8D%E5%A5%BD.jpg",
-      "uploader": "测试",
-      "desc": "",
-      "usage": "拜拜",
-      "expireAt": 1788596400000,
-      "date": "2026-09-05",
-      "downloads": 0
-    }
-  ]
+  "files": []
 }
