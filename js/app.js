@@ -13,7 +13,7 @@ function haptic(ms){
 /* 事件委托：对可点元素在按压瞬间给短震动，保持触感一致 */
 document.addEventListener('pointerdown', function(e){
   var t = e.target && e.target.closest ? e.target.closest('button, .nav-link, .post-card, .file-card, .file-info, .theme-btn, .forum-tab, .ranking-tab, .chart-bar-wrapper, .filter-tag, .sort-btn, .rank-item, .filter-toggle-btn, .btn-back-home, .admin-entry, .refresh-btn') : null;
-  if(t) haptic(8);
+  if(t) haptic(45);
 }, {passive:true});
 
 async function saveUsersToGitHub(users){
