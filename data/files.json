@@ -1,15 +1,3 @@
 {
-  "files": [
-    {
-      "name": "你那边",
-      "subject": "physics",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/physics_%E4%BD%A0%E9%82%A3%E8%BE%B9.pdf",
-      "uploader": "测试",
-      "desc": "",
-      "usage": "",
-      "expireAt": 1788592740000,
-      "date": "2026-09-05",
-      "downloads": 3
-    }
-  ]
+  "files": []
 }
