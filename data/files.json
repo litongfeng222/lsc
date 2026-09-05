@@ -1,3 +1,15 @@
 {
-  "files": []
+  "files": [
+    {
+      "name": "和合谷",
+      "subject": "english",
+      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/english_%E5%92%8C%E5%90%88%E8%B0%B7.jpg",
+      "uploader": "测试",
+      "desc": "",
+      "usage": "",
+      "expireAt": 1788592080000,
+      "date": "2026-09-05",
+      "downloads": 0
+    }
+  ]
 }
