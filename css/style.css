@@ -459,3 +459,115 @@ input[type=datetime-local]:focus{border-color:var(--primary);box-shadow:0 0 0 3p
   .nav-logo-text{font-size:.95rem}
   .resource-grid{gap:12px}
 }
+
+/* ==========================================================================
+   🪟 全面磨砂玻璃升级 + 画面 / 交互逻辑优化
+   ========================================================================== */
+
+/* —— 玻璃材质与背景光晕变量（随主题色自动适配） —— */
+:root{
+  --glass-blur: blur(18px) saturate(165%);
+  --glass-bg: rgba(255,255,255,.52);
+  --glass-bg-strong: rgba(255,255,255,.70);
+  --glass-border: rgba(255,255,255,.60);
+  --glass-shadow: 0 10px 36px rgba(31,38,135,.08), inset 0 1px 0 rgba(255,255,255,.70);
+  --bg-aurora:
+    radial-gradient(720px 520px at 12% -6%, rgba(var(--primary-rgb),.18), transparent 60%),
+    radial-gradient(640px 480px at 92% 6%, rgba(var(--primary-rgb),.12), transparent 55%),
+    radial-gradient(720px 620px at 8% 80%, rgba(255,140,190,.10), transparent 58%),
+    radial-gradient(560px 560px at 96% 90%, rgba(90,210,255,.10), transparent 56%),
+    radial-gradient(900px 620px at 50% 45%, rgba(255,255,255,.10), transparent 65%);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --glass-blur: blur(18px) saturate(155%);
+    --glass-bg: rgba(36,32,46,.46);
+    --glass-bg-strong: rgba(46,42,58,.66);
+    --glass-border: rgba(255,255,255,.09);
+    --glass-shadow: 0 12px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
+    --bg-aurora:
+      radial-gradient(720px 520px at 12% -6%, rgba(var(--primary-rgb),.18), transparent 60%),
+      radial-gradient(640px 480px at 92% 6%, rgba(var(--primary-rgb),.13), transparent 55%),
+      radial-gradient(720px 620px at 8% 80%, rgba(240,120,180,.08), transparent 58%),
+      radial-gradient(560px 560px at 96% 90%, rgba(80,200,255,.08), transparent 56%),
+      radial-gradient(900px 620px at 50% 45%, rgba(255,255,255,.04), transparent 65%);
+  }
+}
+
+/* —— 背景光晕层（毛玻璃需要背后有色彩才显质感） —— */
+html{background:var(--bg)}
+body{background:transparent}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:var(--bg-aurora);
+  animation:auroraDrift 30s ease-in-out infinite alternate;
+}
+@keyframes auroraDrift{
+  0%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(1.2%,0.8%) scale(1.04)}
+  100%{transform:translate(-0.8%,-0.4%) scale(.985)}
+}
+
+/* —— 主要内容容器全面磨砂玻璃化 —— */
+.file-card,.post-card,.upload-form,.ranking-chart,.rank-item,.ranking-item{
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:var(--glass-blur);
+  backdrop-filter:var(--glass-blur);
+  border-color:var(--glass-border);
+  box-shadow:var(--glass-shadow);
+}
+.file-card:hover,.post-card:hover{
+  background:var(--glass-bg-strong);
+  box-shadow:0 16px 44px rgba(var(--primary-rgb),.20), inset 0 1px 0 rgba(255,255,255,.75);
+}
+.file-card:active,.post-card:active,.rank-item:active{transform:translateY(-1px) scale(.995)}
+
+/* 前三名领奖台：保留金属色条、背景玻璃化 */
+.podium-card{background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border-color:var(--glass-border);box-shadow:var(--glass-shadow)}
+.podium-card.gold{background:linear-gradient(180deg,rgba(255,254,245,.72),rgba(255,248,225,.56))}
+.podium-card.silver{background:linear-gradient(180deg,rgba(253,253,253,.68),rgba(245,245,245,.52))}
+.podium-card.bronze{background:linear-gradient(180deg,rgba(254,249,245,.68),rgba(253,242,233,.52))}
+@media (prefers-color-scheme: dark){
+  .podium-card.gold{background:linear-gradient(180deg,rgba(64,56,24,.60),rgba(52,45,18,.45))}
+  .podium-card.silver{background:linear-gradient(180deg,rgba(50,50,54,.60),rgba(42,42,46,.45))}
+  .podium-card.bronze{background:linear-gradient(180deg,rgba(60,46,34,.60),rgba(50,38,28,.45))}
+}
+
+/* 弹窗 / 面板 / 下拉 / 输入 / 提示 */
+.modal-content{background:var(--glass-bg-strong);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);box-shadow:0 24px 70px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.4)}
+.user-dropdown,.filter-popup{background:var(--glass-bg-strong);-webkit-backdrop-filter:blur(26px) saturate(190%);backdrop-filter:blur(26px) saturate(190%);border-color:var(--glass-border);box-shadow:0 16px 48px rgba(31,38,135,.14), inset 0 1px 0 rgba(255,255,255,.6)}
+.search-box input{background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border-color:var(--glass-border)}
+.search-box input:focus{background:var(--glass-bg-strong)}
+.toast{-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(255,255,255,.35);box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.toast.success{background:rgba(34,197,94,.78)}
+.toast.error{background:rgba(239,68,68,.78)}
+.toast.warning{background:rgba(245,158,11,.82)}
+.toast.info{background:rgba(var(--primary-rgb),.82)}
+
+/* 按钮触感反馈（操作逻辑优化） */
+.btn:active,.btn-back-home:active,.filter-toggle-btn:active,.file-download-btn:active,.file-icon-btn:active{transform:scale(.955)}
+.nav-link:active,.forum-tab:active,.ranking-tab:active,.theme-btn:active{transform:scale(.97)}
+
+/* —— 画面细节 —— */
+.hero::before{animation-duration:9s}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:rgba(var(--primary-rgb),.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(var(--primary-rgb),.55);border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* —— 可达性 / 交互逻辑优化 —— */
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+::selection{background:rgba(var(--primary-rgb),.25)}
+
+/* 尊重系统”减弱动态“设置 */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  body::before{animation:none}
+}
+
+/* 移动端性能：关闭背景流动动画、控制模糊力度 */
+@media (max-width:768px){
+  body::before{animation:none}
+  .file-card,.post-card,.upload-form,.ranking-chart,.rank-item,.ranking-item,.podium-card,.modal-content{backdrop-filter:blur(14px) saturate(150%);-webkit-backdrop-filter:blur(14px) saturate(150%)}
+}
+
