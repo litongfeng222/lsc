@@ -11,6 +11,26 @@ function haptic(ms){
     v.call(navigator, ms || 8);
   }catch(e){}
 }
+/* 上传中震动：闹钟式“间隔不断缩短”的短阵，有节奏、不持续强震 */
+var uploadVibe={timer:null,stop:false};
+function startUploadVibe(){
+  var v=navigator.vibrate||navigator.webkitVibrate;
+  if(!v) return;
+  stopUploadVibe();
+  var gap=520;
+  uploadVibe.stop=false;
+  (function tick(){
+    if(uploadVibe.stop) return;
+    haptic(35);
+    gap=Math.max(150,gap-45);
+    uploadVibe.timer=setTimeout(tick,gap);
+  })();
+}
+function stopUploadVibe(){
+  uploadVibe.stop=true;
+  if(uploadVibe.timer){clearTimeout(uploadVibe.timer);uploadVibe.timer=null;}
+  try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
+}
 /* 事件委托：对可点元素在按压瞬间给短震动，保持触感一致 */
 document.addEventListener('pointerdown', function(e){
   var t = e.target && e.target.closest ? e.target.closest('button, a[href], .hero-upload-btn, .nav-link, .post-card, .file-card, .file-info, .theme-btn, .forum-tab, .ranking-tab, .chart-bar-wrapper, .filter-tag, .sort-btn, .rank-item, .filter-toggle-btn, .btn-back-home, .admin-entry, .refresh-btn') : null;
@@ -632,6 +652,7 @@ window.uploadSubmit = async function(e){
   var btn = document.getElementById('uploadSubmitBtn');
   btn.textContent='上传中…';btn.disabled=true;
   toast('正在上传…','info',6000);
+  startUploadVibe();
   try{
     var base64 = await new Promise(function(rv){var r=new FileReader();r.onload=function(){rv(r.result.split(',')[1]);};r.readAsDataURL(file);});
     var ext = file.name.split('.').pop();
@@ -650,12 +671,13 @@ window.uploadSubmit = async function(e){
     var newContent=btoa(unescape(encodeURIComponent(JSON.stringify({files:State.files},null,2))));
     var upFRes=await fetch('https://api.github.com/repos/litongfeng222/lsc/contents/data/files.json',{method:'PUT',headers,body:JSON.stringify({message:'更新文件列表',content:newContent,sha:fData.sha})});
     if(!upFRes.ok) throw Error('files.json更新失败');
+    stopUploadVibe();
     toast('上传成功！资料已共享给同学们 ✅','success',3000);
     document.getElementById('uploadForm').reset();
     document.getElementById('uploadFileHint').textContent='支持 PDF/DOCX/PPTX/XLSX/图片等，不超过25MB';
     document.getElementById('uploaderName').value=State.user.name;
     updateHeroStats();renderResources();
-  }catch(err){ toast('上传失败：'+err.message,'error',5000); }
+  }catch(err){ stopUploadVibe(); toast('上传失败：'+err.message,'error',5000); }
   btn.textContent='上传资料';btn.disabled=false;
   return false;
 };
