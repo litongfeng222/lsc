@@ -815,35 +815,92 @@ function showUserSetup(){
   openAuthModal('register');
 }
 
-/* ---------- 主题色系统 ---------- */
+/* ---------- 主题色系统（整站换肤） ---------- */
+function hexToRgb(hex){
+  var v = String(hex||'').replace('#','');
+  if(v.length!==6) return '110,143,224';
+  return parseInt(v.substr(0,2),16)+','+parseInt(v.substr(2,2),16)+','+parseInt(v.substr(4,2),16);
+}
+/* 每个主题 = {主色系 + 背景/卡片/文字/边框 + 深色模式全套} */
 const THEMES = [
-  {name:'默认紫', primary:'#5b6ee8', primaryDark:'#4754c4', primaryLight:'#7d8ff5'},
-  {name:'天空蓝', primary:'#3b82f6', primaryDark:'#2563eb', primaryLight:'#60a5fa'},
-  {name:'薄荷青', primary:'#14b8a6', primaryDark:'#0d9488', primaryLight:'#2dd4bf'},
-  {name:'暖阳橙', primary:'#f59e0b', primaryDark:'#d97706', primaryLight:'#fbbf24'},
-  {name:'樱花粉', primary:'#d4839e', primaryDark:'#c4728a', primaryLight:'#e8b0c4'},
-  {name:'石墨黑', primary:'#1e293b', primaryDark:'#0f172a', primaryLight:'#334155'}
+  {
+    name:'马卡龙粉彩', primary:'#6E8FE0', primaryDark:'#5A6FC8', primaryLight:'#AEC3F2',
+    bg:'#FBF6F2', bgCard:'#FFFFFF', text:'#3A3440', textSecondary:'#7B7486', textLight:'#B3ACBC', border:'#F1E4E6',
+    darkPrimary:'#98B7F0', darkPrimaryDark:'#6E8FD8', darkPrimaryLight:'#C3D4F6',
+    darkBg:'#1E1C24', darkBgCard:'#2B2833', darkText:'#F2EFF4', darkTextSecondary:'#B7B0C2', darkTextLight:'#7E788A', darkBorder:'#3E3A48'
+  },
+  {
+    name:'樱花粉', primary:'#E08FB0', primaryDark:'#C76E8F', primaryLight:'#F2BAD0',
+    bg:'#FFF7F9', bgCard:'#FFFFFF', text:'#4A3540', textSecondary:'#8A7480', textLight:'#BCA9B2', border:'#F8E3E8',
+    darkPrimary:'#F0A8C2', darkPrimaryDark:'#D983A0', darkPrimaryLight:'#F6C6DA',
+    darkBg:'#251C21', darkBgCard:'#332830', darkText:'#F6EEF2', darkTextSecondary:'#C0AEB8', darkTextLight:'#8A7A85', darkBorder:'#4A3A44'
+  },
+  {
+    name:'薄荷绿', primary:'#5FBF9C', primaryDark:'#3FA182', primaryLight:'#9AD9C2',
+    bg:'#F2FBF7', bgCard:'#FFFFFF', text:'#2F4038', textSecondary:'#6E847A', textLight:'#A3B8AF', border:'#E1F1EA',
+    darkPrimary:'#6FD4AE', darkPrimaryDark:'#4AAE8C', darkPrimaryLight:'#A5E2C8',
+    darkBg:'#16211C', darkBgCard:'#22302A', darkText:'#EAF4EF', darkTextSecondary:'#AEC8BC', darkTextLight:'#71897E', darkBorder:'#38493F'
+  },
+  {
+    name:'暖阳橙', primary:'#F0A55E', primaryDark:'#D98A3E', primaryLight:'#F7C490',
+    bg:'#FFF9F0', bgCard:'#FFFFFF', text:'#46382B', textSecondary:'#8A7A6A', textLight:'#BCAE9E', border:'#F8EBDA',
+    darkPrimary:'#F5B478', darkPrimaryDark:'#E0914B', darkPrimaryLight:'#F8D0A8',
+    darkBg:'#251D15', darkBgCard:'#342B1F', darkText:'#F6F0E8', darkTextSecondary:'#C2B49C', darkTextLight:'#8A7E6E', darkBorder:'#4B4033'
+  },
+  {
+    name:'梦幻紫', primary:'#A58FE0', primaryDark:'#896EDD', primaryLight:'#C9BCF2',
+    bg:'#FAF7FE', bgCard:'#FFFFFF', text:'#3A3250', textSecondary:'#7B7396', textLight:'#B3ACC9', border:'#EDE6F8',
+    darkPrimary:'#B8A6F0', darkPrimaryDark:'#9A7DE0', darkPrimaryLight:'#D3C6F6',
+    darkBg:'#201C28', darkBgCard:'#2E2936', darkText:'#F2EFF8', darkTextSecondary:'#BAB2D0', darkTextLight:'#7F769A', darkBorder:'#423B52'
+  },
+  {
+    name:'石墨黑', primary:'#6B7280', primaryDark:'#4B5563', primaryLight:'#9CA3AF',
+    bg:'#F5F5F6', bgCard:'#FFFFFF', text:'#1F2937', textSecondary:'#6B7280', textLight:'#9CA3AF', border:'#E5E7EB',
+    darkPrimary:'#9CA3AF', darkPrimaryDark:'#6B7280', darkPrimaryLight:'#B6BCC6',
+    darkBg:'#111318', darkBgCard:'#1C1F27', darkText:'#F3F4F6', darkTextSecondary:'#9CA3AF', darkTextLight:'#6B7280', darkBorder:'#2E323B'
+  }
 ];
 
-function applyTheme(primary, primaryDark, primaryLight){
+function applyTheme(t){
+  if(!t) return;
   var r = document.documentElement;
-  r.style.setProperty('--primary', primary);
-  r.style.setProperty('--primary-dark', primaryDark);
-  r.style.setProperty('--primary-light', primaryLight);
+  var set = function(n,v){ if(v) r.style.setProperty(n,v); };
+  /* 浅色组 */
+  set('--skin-primary', t.primary);
+  set('--skin-primary-dark', t.primaryDark);
+  set('--skin-primary-light', t.primaryLight);
+  r.style.setProperty('--skin-primary-rgb', hexToRgb(t.primary));
+  set('--skin-bg', t.bg);
+  set('--skin-bg-card', t.bgCard);
+  set('--skin-text', t.text);
+  set('--skin-text2', t.textSecondary);
+  set('--skin-text3', t.textLight);
+  set('--skin-border', t.border);
+  /* 深色组 */
+  set('--skin-primary-d', t.darkPrimary);
+  set('--skin-primary-dark-d', t.darkPrimaryDark);
+  set('--skin-primary-light-d', t.darkPrimaryLight);
+  r.style.setProperty('--skin-primary-rgb-d', hexToRgb(t.darkPrimary));
+  set('--skin-bg-d', t.darkBg);
+  set('--skin-bg-card-d', t.darkBgCard);
+  set('--skin-text-d', t.darkText);
+  set('--skin-text2-d', t.darkTextSecondary);
+  set('--skin-text3-d', t.darkTextLight);
+  set('--skin-border-d', t.darkBorder);
 }
 
 function loadTheme(){
   if(!State.user) return;
   var saved = localStorage.getItem('lsc_theme_'+State.user.phone);
   if(saved){
-    try{ var t = JSON.parse(saved); applyTheme(t.primary, t.primaryDark, t.primaryLight); }catch(e){}
+    try{ var t = JSON.parse(saved); applyTheme(t); }catch(e){}
   }
 }
 
 function saveTheme(theme){
   if(!State.user) return;
   localStorage.setItem('lsc_theme_'+State.user.phone, JSON.stringify(theme));
-  applyTheme(theme.primary, theme.primaryDark, theme.primaryLight);
+  applyTheme(theme);
   toast('🎨 主题已切换','success');
 }
 
@@ -858,18 +915,21 @@ function renderThemePicker(){
   var picker = $('#themePicker');
   if(!picker) return;
   var current = JSON.parse(localStorage.getItem('lsc_theme_'+State.user.phone)||'{}');
-  var defaultPrimary = current.primary || '#5b6ee8';
-  picker.innerHTML = THEMES.map(function(t){
+  var defaultPrimary = current.primary || '#6E8FE0';
+  picker.innerHTML = THEMES.map(function(t,idx){
     var active = t.primary === defaultPrimary ? ' active' : '';
-    return '<button class="theme-btn'+active+'" onclick="selectTheme(\''+t.primary+'\',\''+t.primaryDark+'\',\''+t.primaryLight+'\',this)" style="background:'+t.primary+';color:#fff">'+t.name+'</button>';
+    return '<button class="theme-btn'+active+'" onclick="selectTheme('+idx+',this)" style="background:'+t.primary+';color:#fff">'+t.name+'</button>';
   }).join('');
 }
 
-window.selectTheme = function(primary, primaryDark, primaryLight, btn){
+window.selectTheme = function(idx, btn){
+  var t = THEMES[idx];
+  if(!t) return;
   $$('.theme-btn').forEach(function(b){b.classList.remove('active');});
   if(btn) btn.classList.add('active');
-  saveTheme({primary:primary, primaryDark:primaryDark, primaryLight:primaryLight});
+  saveTheme(t);
 };
+
 
 function renderMyFiles(){
   var list = $('#settingsMyFiles');
@@ -1009,10 +1069,10 @@ function renderAdminThemePicker(){
   var picker = $('#adminThemePicker');
   if(!picker) return;
   var current = JSON.parse(localStorage.getItem('lsc_theme_'+State.user.phone)||'{}');
-  var defaultPrimary = current.primary || '#5b6ee8';
-  picker.innerHTML = THEMES.map(function(t){
+  var defaultPrimary = current.primary || '#6E8FE0';
+  picker.innerHTML = THEMES.map(function(t,idx){
     var active = t.primary === defaultPrimary ? ' active' : '';
-    return '<button class="theme-btn'+active+'" onclick="selectTheme(\''+t.primary+'\',\''+t.primaryDark+'\',\''+t.primaryLight+'\',this)" style="background:'+t.primary+';color:#fff">'+t.name+'</button>';
+    return '<button class="theme-btn'+active+'" onclick="selectTheme('+idx+',this)" style="background:'+t.primary+';color:#fff">'+t.name+'</button>';
   }).join('');
 }
 
