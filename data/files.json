@@ -1,17 +1,3 @@
 {
-  "files": [
-    {
-      "name": "偶遇",
-      "subject": "biology",
-      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/biology_%E5%81%B6%E9%81%87.jpg",
-      "uploader": "测试",
-      "desc": "",
-      "usage": "",
-      "expireAt": 1788596820000,
-      "date": "2026-09-05",
-      "downloads": 2,
-      "rating": 3,
-      "ratingCount": 1
-    }
-  ]
+  "files": []
 }
