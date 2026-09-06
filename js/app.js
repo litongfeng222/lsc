@@ -387,10 +387,16 @@ function initNavbar(){
   links.forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
-      const page = link.dataset.page;
-      switchPage(page);
       toggle.classList.remove('active');
       menu.classList.remove('open');
+      // “设置”菜单项复用右下角设置按钮的功能(管理员面板/个人设置智能路由)
+      if(link.id === 'navSettingsItem'){
+        var ae = document.getElementById('adminEntry');
+        if(ae) ae.click();
+        return;
+      }
+      const page = link.dataset.page;
+      switchPage(page);
     });
   });
 }
