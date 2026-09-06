@@ -681,7 +681,7 @@ function initUploadSelect(){
     '<div class="form-group"><label for="uploadName">名称 <span class="required">*</span></label><input type="text" id="uploadName" placeholder="例如：高一数学月考卷" required></div>'+
     '<div class="form-group"><label for="uploadSubject">科目 <span class="required">*</span></label><select id="uploadSubject" required><option value="">请选择科目</option></select></div>'+
     '<div class="form-group"><label for="uploadUsage">使用说明（选填）</label><textarea id="uploadUsage" rows="2" placeholder="例如：适合考前复习，重点看第3页"></textarea></div>'+
-    '<div class="form-group"><label class="expire-label"><span class="expire-label-text">保留时间 <span class="required">*</span></span><span class="info-icon" id="expireInfoBtn" onclick="showExpireInfo()" title="了解详情">？</span></label><input type="text" id="uploadExpire" placeholder="点击选择日期和时间" readonly required></div>'+
+    '<div class="form-group"><label class="expire-label"><span class="expire-label-text">保留时间 <span class="required">*</span></span><span class="info-icon" id="expireInfoBtn" onclick="showExpireInfo()" title="了解详情">？</span></label><input type="datetime-local" id="uploadExpire" required></div>'+
     '<div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint" id="uploadFileHint">文件不宜过大，建议不超过25MB</p></div>'+
     '<button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">上传资料</button></form>'+
     '<div class="back-home-wrap"><button class="btn btn-back-home" onclick="switchPage(\'resources\')">📂 返回资源中心</button></div>';
@@ -1294,7 +1294,6 @@ async function init(){
   initAdminEntry();
   initUserSettingsModal();
   initRefreshBtn();
-  initCustomDateTimePicker();
   initUserButton();
   initAuthModal();
   loadTheme();
@@ -1330,92 +1329,3 @@ document.addEventListener('DOMContentLoaded', init);
 })();
 
 
-/* ============================================================
-   跨平台日期时间选择器（替代原生 datetime-local）
-   兼容：Windows/iOS/Android/鸿蒙 所有浏览器
-   ============================================================ */
-function initCustomDateTimePicker(){
-  if(document.getElementById('dtPickerOverlay')) return;
-  var overlay = document.createElement('div');
-  overlay.id = 'dtPickerOverlay';
-  overlay.className = 'dtpicker-overlay';
-  overlay.innerHTML =
-    '<div class="dtpicker" id="dtPickerPanel">'+
-      '<div class="dtp-head"><button type="button" class="dtp-nav" id="dtpPrev">‹</button><span class="dtp-title" id="dtpTitle"></span><button type="button" class="dtp-nav" id="dtpNext">›</button></div>'+
-      '<div class="dtp-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>'+
-      '<div class="dtp-grid" id="dtpGrid"></div>'+
-      '<div class="dtp-time"><select id="dtpHour"></select><span class="dtp-colon">:</span><select id="dtpMin"></select></div>'+
-      '<div class="dtp-actions"><button type="button" class="dtp-cancel" id="dtpCancel">取消</button><button type="button" class="dtp-ok" id="dtpOk">确定</button></div>'+
-    '</div>';
-  document.body.appendChild(overlay);
-
-  var state = {y:0, m:0, d:0, input:null};
-  var panel = overlay.querySelector('#dtPickerPanel');
-  var grid = overlay.querySelector('#dtpGrid');
-  var title = overlay.querySelector('#dtpTitle');
-  var hSel = overlay.querySelector('#dtpHour');
-  var mSel = overlay.querySelector('#dtpMin');
-
-  var i, o;
-  for(i=0;i<24;i++){ o=document.createElement('option'); o.value=('0'+i).slice(-2); o.textContent=('0'+i).slice(-2); hSel.appendChild(o); }
-  for(i=0;i<=55;i+=5){ o=document.createElement('option'); o.value=('0'+i).slice(-2); o.textContent=('0'+i).slice(-2); mSel.appendChild(o); }
-
-  function renderGrid(){
-    title.textContent = state.y + '年' + (state.m+1) + '月';
-    var first = new Date(state.y, state.m, 1);
-    var startDow = first.getDay();
-    var days = new Date(state.y, state.m+1, 0).getDate();
-    var html = '';
-    for(var k=0;k<startDow;k++) html += '<span class="dtp-empty"></span>';
-    for(var d=1; d<=days; d++){
-      var cls = 'dtp-day' + (d===state.d ? ' sel' : '');
-      html += '<span class="'+cls+'" data-d="'+d+'">'+d+'</span>';
-    }
-    grid.innerHTML = html;
-  }
-
-  function open(input){
-    state.input = input;
-    var now = new Date();
-    state.y = now.getFullYear(); state.m = now.getMonth(); state.d = now.getDate();
-    hSel.value = ('0'+now.getHours()).slice(-2);
-    var defMin = Math.min(Math.round(now.getMinutes()/5)*5, 55);
-    mSel.value = ('0'+defMin).slice(-2);
-    var cur = input.value; // 已有值格式: YYYY-MM-DDTHH:MM
-    if(cur){
-      var t = cur.split('T');
-      if(t[0]){
-        var p = t[0].split('-');
-        if(p.length===3){ state.y=+p[0]; state.m=(+p[1])-1; state.d=+p[2]; }
-      }
-      if(t[1]){
-        var hm = t[1].split(':');
-        if(hSel.querySelector('option[value="'+hm[0]+'"]')) hSel.value = hm[0];
-        var mm = hm[1] ? Math.min(Math.round(+hm[1]/5)*5, 55) : 30;
-        var mmS = ('0'+mm).slice(-2);
-        if(mSel.querySelector('option[value="'+mmS+'"]')) mSel.value = mmS;
-      }
-    }
-    renderGrid();
-    overlay.style.display = 'flex';
-  }
-  function close(){ overlay.style.display = 'none'; }
-
-  overlay.addEventListener('click', function(e){ if(e.target === overlay) close(); });
-  overlay.querySelector('#dtpPrev').addEventListener('click', function(e){ e.stopPropagation(); state.m--; if(state.m<0){state.m=11;state.y--;} renderGrid(); });
-  overlay.querySelector('#dtpNext').addEventListener('click', function(e){ e.stopPropagation(); state.m++; if(state.m>11){state.m=0;state.y++;} renderGrid(); });
-  overlay.querySelector('#dtpCancel').addEventListener('click', function(e){ e.stopPropagation(); close(); });
-  grid.addEventListener('click', function(e){ e.stopPropagation(); if(e.target.classList && e.target.classList.contains('dtp-day')){ state.d = +e.target.getAttribute('data-d'); renderGrid(); } });
-  overlay.querySelector('#dtpOk').addEventListener('click', function(e){
-    e.stopPropagation();
-    var dd=('0'+state.d).slice(-2), mm=('0'+(state.m+1)).slice(-2);
-    if(state.input) state.input.value = state.y + '-' + mm + '-' + dd + 'T' + hSel.value + ':' + mSel.value;
-    close();
-  });
-
-  // 点击“保留时间”输入框时打开选择器
-  document.addEventListener('click', function(e){
-    var t = e.target;
-    if(t && t.id === 'uploadExpire'){ open(t); }
-  });
-}
