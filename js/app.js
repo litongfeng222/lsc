@@ -398,10 +398,22 @@ function initNavbar(){
 function switchPage(page){
   $$('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === page));
   $$('.page-section').forEach(s => s.style.display = (s.id === page) ? '' : 'none');
-  window.scrollTo({top:0, behavior:'smooth'});
   if(page === 'resources') renderResources();
   if(page === 'ranking') renderRanking();
-  if(page === 'upload') initUploadSelect();
+  if(page === 'upload'){
+    initUploadSelect();
+    // 自动上滚：让 hero 蓝块滚出屏幕，dock栏(导航栏)下沿对齐 hero 下沿，省去手动滑动一步
+    requestAnimationFrame(()=>{
+      const hero = document.getElementById('home');
+      if(!hero) return;
+      const raw = getComputedStyle(document.documentElement).getPropertyValue('--nav-h');
+      const navH = parseFloat(raw) || 60;
+      const target = Math.max(0, (hero.getBoundingClientRect().bottom + window.pageYOffset) - navH);
+      window.scrollTo({top:target, behavior:'smooth'});
+    });
+  } else {
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
 }
 window.switchPage = switchPage;
 
