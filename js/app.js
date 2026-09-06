@@ -1193,13 +1193,18 @@ function initUserSettingsModal(){
 
 function initRefreshBtn(){
   var btn = document.getElementById('refreshBtn');
-  if(!btn) return;
-  btn.addEventListener('click', function(){
+  var doRefresh = function(){
     toast('正在刷新...','info');
     setTimeout(function(){
       window.location.href = window.location.href.split('?')[0].split('#')[0] + '?t=' + Date.now();
     }, 300);
-  });
+  };
+  if(btn) btn.addEventListener('click', doRefresh);
+  // 进入页面时自动刷新一次：仅当 URL 未带 t 参数且本会话还没自动刷过，避免死循环
+  if(location.search.indexOf('t=') === -1 && !sessionStorage.getItem('lsc_auto_refreshed')){
+    sessionStorage.setItem('lsc_auto_refreshed','1');
+    doRefresh();
+  }
 }
 
 /* ---------- 过期文件清理 ---------- */
