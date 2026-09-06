@@ -678,17 +678,14 @@ function initUploadSelect(){
   }
   formWrap.innerHTML = '<div id="uploadTokenHint" class="upload-token-hint"></div>'+
     '<form id="uploadForm" class="upload-form" onsubmit="return window.uploadSubmit(event)">'+
-    '<div class="form-group"><label for="uploadName">资料名称 <span class="required">*</span></label><input type="text" id="uploadName" placeholder="例如：高一数学月考卷" required></div>'+
-    '<div class="form-group"><label for="uploadSubject">所属科目 <span class="required">*</span></label><select id="uploadSubject" required><option value="">请选择科目</option></select></div>'+
-    '<div class="form-group"><label for="uploadDesc">简介（选填）</label><textarea id="uploadDesc" rows="2" placeholder="一句话描述"></textarea></div>'+
+    '<div class="form-group"><label for="uploadName">名称 <span class="required">*</span></label><input type="text" id="uploadName" placeholder="例如：高一数学月考卷" required></div>'+
+    '<div class="form-group"><label for="uploadSubject">科目 <span class="required">*</span></label><select id="uploadSubject" required><option value="">请选择科目</option></select></div>'+
     '<div class="form-group"><label for="uploadUsage">使用说明（选填）</label><textarea id="uploadUsage" rows="2" placeholder="例如：适合考前复习，重点看第3页"></textarea></div>'+
     '<div class="form-group"><label class="expire-label"><span class="expire-label-text">保留时间 <span class="required">*</span></span><span class="info-icon" id="expireInfoBtn" onclick="showExpireInfo()" title="了解详情">？</span></label><input type="datetime-local" id="uploadExpire" required></div>'+
-    '<div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint" id="uploadFileHint">支持 PDF/DOCX/PPTX/XLSX/图片等，不超过25MB</p></div>'+
-    '<div class="form-group"><label for="uploaderName">你的昵称（选填）</label><input type="text" id="uploaderName" placeholder="留空则使用登录昵称"></div>'+
+    '<div class="form-group"><label for="uploadFile">选择文件 <span class="required">*</span></label><input type="file" id="uploadFile" required><p class="form-hint" id="uploadFileHint">文件不宜过大，建议不超过25MB</p></div>'+
     '<button type="submit" class="btn btn-primary btn-block" id="uploadSubmitBtn">上传资料</button></form>'+
     '<div class="back-home-wrap"><button class="btn btn-back-home" onclick="switchPage(\'resources\')">📂 返回资源中心</button></div>';
   State.subjects.forEach(s => { var o=document.createElement('option'); o.value=s.id; o.textContent=s.name; document.getElementById('uploadSubject').appendChild(o); });
-  document.getElementById('uploaderName').value = State.user.name;
   var h=document.getElementById('uploadTokenHint');
   h.style.display = 'none';
   document.getElementById('uploadFile').onchange=function(){ var f=this.files[0]; if(!f)return; document.getElementById('uploadFileHint').textContent='已选择：'+f.name+'（'+(f.size/1024/1024).toFixed(1)+'MB）'; if(f.size>25*1024*1024)toast('文件超过25MB，GitHub可能上传失败','warning',4000); };
@@ -701,8 +698,8 @@ window.uploadSubmit = async function(e){
   var name = document.getElementById('uploadName').value.trim();
   var subject = document.getElementById('uploadSubject').value;
   var file = document.getElementById('uploadFile').files[0];
-  var uploader = document.getElementById('uploaderName').value.trim() || State.user.name;
-  var desc = document.getElementById('uploadDesc').value.trim();
+  var uploader = State.user.name;
+  var desc = '';
   var usage = document.getElementById('uploadUsage')?document.getElementById('uploadUsage').value.trim():'';
   var expireVal = document.getElementById('uploadExpire')?document.getElementById('uploadExpire').value:'';
   var expireAt = expireVal ? new Date(expireVal).getTime() : 0;
@@ -738,8 +735,7 @@ window.uploadSubmit = async function(e){
     completeUploadProgress();
     toast('上传成功！资料已共享给同学们 ✅','success',3000);
     document.getElementById('uploadForm').reset();
-    document.getElementById('uploadFileHint').textContent='支持 PDF/DOCX/PPTX/XLSX/图片等，不超过25MB';
-    document.getElementById('uploaderName').value=State.user.name;
+    document.getElementById('uploadFileHint').textContent='文件不宜过大，建议不超过25MB';
     updateHeroStats();renderResources();
   }catch(err){ stopUploadVibe(); stopUploadProgress(); toast('上传失败：'+err.message,'error',5000); }
   btn.textContent='上传资料';btn.disabled=false;

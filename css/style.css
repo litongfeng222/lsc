@@ -215,6 +215,22 @@ img{max-width:100%;display:block}
 .form-group input,.form-group select,.form-group textarea{padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);transition:var(--transition)}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(var(--primary-rgb),.1)}
 .form-hint{font-size:.76rem;color:var(--text-light)}
+/* ===== 分享资料表单 UI 优化 ===== */
+.upload-form{padding:30px 26px;gap:22px}
+.upload-form .form-group{gap:9px}
+.upload-form .form-group label{display:flex;align-items:center;font-size:.98rem;font-weight:700;color:var(--text)}
+.upload-form .form-group label .required{margin-left:2px}
+.upload-form input,.upload-form select,.upload-form textarea{padding:13px 15px;font-size:1rem;border-radius:12px}
+.upload-form input:focus,.upload-form select:focus,.upload-form textarea:focus{box-shadow:0 0 0 3px rgba(var(--primary-rgb),.14)}
+.upload-form input[type="file"]{padding:20px 16px;border:1.5px dashed var(--primary);background:rgba(var(--primary-rgb),.05);cursor:pointer;text-align:center;color:var(--text-light)}
+.upload-form input[type="file"]::file-selector-button{background:var(--primary);color:#fff;border:none;padding:11px 20px;border-radius:9px;font-weight:700;margin-right:14px;cursor:pointer;transition:var(--transition)}
+.upload-form input[type="file"]::file-selector-button:hover{background:var(--primary-dark)}
+.upload-form input[type="datetime-local"]{font-size:.9rem}
+.upload-form .form-hint{font-size:.82rem;margin-top:2px}
+.upload-form .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;font-size:1.06rem;font-weight:800;padding:15px;border-radius:12px;box-shadow:0 6px 18px rgba(var(--primary-rgb),.32),inset 0 0 0 1px rgba(255,255,255,.12)}
+.upload-form .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(var(--primary-rgb),.45)}
+.upload-form .btn-primary:disabled{opacity:.6;transform:none}
+.back-home-wrap{margin-top:22px}
 
 /* ===== Ranking ===== */
 .ranking-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-card);border-radius:10px;border:1px solid var(--border);transition:var(--transition)}
@@ -591,7 +607,7 @@ button:active, .btn:active, .el-button:active{transform:translateY(1px);box-shad
 }
 
 /* 分享资料 → 保留时间旁的问题说明按钮（移右侧 + 光圈，凸显按钮感） */
-.expire-label{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.expire-label{display:flex;align-items:center;justify-content:flex-start;gap:6px}
 .info-icon{width:26px;height:26px;font-size:15px;font-weight:800;margin:0;background:linear-gradient(135deg,var(--primary),var(--primary-dark));box-shadow:0 0 0 4px rgba(var(--primary-rgb),.14),0 0 14px rgba(var(--primary-rgb),.45);animation:infoPulse 2.4s ease-in-out infinite}
 .info-icon:hover{background:var(--primary-dark);transform:scale(1.18);box-shadow:0 0 0 6px rgba(var(--primary-rgb),.22),0 0 22px rgba(var(--primary-rgb),.65)}
 @keyframes infoPulse{0%,100%{box-shadow:0 0 0 4px rgba(var(--primary-rgb),.12),0 0 12px rgba(var(--primary-rgb),.4)}50%{box-shadow:0 0 0 7px rgba(var(--primary-rgb),.20),0 0 20px rgba(var(--primary-rgb),.6)}}
