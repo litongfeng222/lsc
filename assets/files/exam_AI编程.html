@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>看见AI的力量 - 高中生做的小程序案例</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;
+  background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%);
+  color:#fff;line-height:1.8;min-height:100vh;
+}
+.container{max-width:1100px;margin:0 auto;padding:30px 20px 60px}
+
+/* ===== 顶部Hero ===== */
+.hero{text-align:center;padding:40px 20px 50px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:rgba(255,255,255,0.06);border-radius:50%;animation:float 8s ease-in-out infinite}
+.hero::after{content:"";position:absolute;bottom:-80px;left:-80px;width:250px;height:250px;background:rgba(255,255,255,0.05);border-radius:50%;animation:float 10s ease-in-out infinite reverse}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,20px)}}
+.hero h1{font-size:38px;margin-bottom:14px;letter-spacing:2px;position:relative;z-index:1}
+.hero .subtitle{font-size:18px;opacity:0.85;margin-bottom:8px;position:relative;z-index:1}
+.hero .tagline{font-size:14px;opacity:0.7;font-style:italic;position:relative;z-index:1}
+.hero .badges{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;position:relative;z-index:1}
+.hero .badge{background:rgba(255,255,255,0.15);padding:5px 16px;border-radius:18px;font-size:12px;backdrop-filter:blur(4px)}
+
+/* ===== 案例卡片网格 ===== */
+.section-title{font-size:24px;margin:30px 0 20px;text-align:center;letter-spacing:1px}
+.section-title span{display:inline-block;background:linear-gradient(135deg,#fbbf24,#f59e0b);padding:6px 22px;border-radius:18px;font-size:14px;letter-spacing:2px}
+
+.case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:40px}
+
+.case-card{
+  background:rgba(255,255,255,0.95);color:#1f2937;border-radius:16px;padding:24px 22px;
+  position:relative;overflow:hidden;transition:all 0.3s;
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+}
+.case-card:hover{transform:translateY(-6px);box-shadow:0 16px 32px rgba(0,0,0,0.2)}
+.case-card::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:var(--accent)}
+.case-card .emoji{font-size:48px;margin-bottom:12px;display:block}
+.case-card h3{font-size:20px;color:var(--accent-dark);margin-bottom:6px;font-weight:bold}
+.case-card .meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.case-card .meta-tag{font-size:11px;padding:3px 10px;border-radius:10px;background:var(--accent-light);color:var(--accent-dark);font-weight:500}
+.case-card .problem{background:#fef3c7;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400e;margin-bottom:10px;border-left:3px solid #f59e0b}
+.case-card .problem strong{display:block;margin-bottom:3px;font-size:12px;color:#78350f}
+.case-card .features{font-size:13px;color:#4b5563}
+.case-card .features li{padding:3px 0 3px 18px;position:relative}
+.case-card .features li::before{content:"✓";position:absolute;left:0;color:var(--accent);font-weight:bold}
+
+/* ===== 案例配色 ===== */
+.case-card.c1{--accent:#3b82f6;--accent-dark:#1e40af;--accent-light:#dbeafe}
+.case-card.c2{--accent:#ef4444;--accent-dark:#991b1b;--accent-light:#fee2e2}
+.case-card.c3{--accent:#10b981;--accent-dark:#065f46;--accent-light:#d1fae5}
+.case-card.c4{--accent:#8b5cf6;--accent-dark:#5b21b6;--accent-light:#ede9fe}
+.case-card.c5{--accent:#f59e0b;--accent-dark:#92400e;--accent-light:#fef3c7}
+.case-card.c6{--accent:#ec4899;--accent-dark:#9d174d;--accent-light:#fce7f3}
+
+/* ===== 揭晓区 ===== */
+.reveal{
+  background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);
+  border-radius:20px;padding:36px 30px;text-align:center;
+  box-shadow:0 12px 30px rgba(245,158,11,0.3);
+  margin-bottom:40px;position:relative;overflow:hidden;
+}
+.reveal::before{content:"";position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:rgba(255,255,255,0.15);border-radius:50%}
+.reveal::after{content:"";position:absolute;bottom:-60px;left:-60px;width:180px;height:180px;background:rgba(255,255,255,0.1);border-radius:50%}
+.reveal h2{font-size:30px;color:#fff;margin-bottom:12px;letter-spacing:2px;position:relative;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.reveal .big{font-size:42px;font-weight:900;margin:18px 0;color:#fff;position:relative;z-index:1;text-shadow:0 2px 10px rgba(0,0,0,0.2)}
+.reveal .sub{font-size:16px;color:rgba(255,255,255,0.95);position:relative;z-index:1}
+.reveal .stats{display:flex;justify-content:center;gap:30px;margin-top:24px;flex-wrap:wrap;position:relative;z-index:1}
+.reveal .stat{text-align:center;color:#fff}
+.reveal .stat-num{font-size:32px;font-weight:900;display:block;text-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.reveal .stat-label{font-size:13px;opacity:0.9;margin-top:4px}
+
+/* ===== 引出问题 ===== */
+.question{
+  background:rgba(255,255,255,0.95);color:#1f2937;border-radius:20px;
+  padding:36px 30px;text-align:center;margin-bottom:40px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.15);
+}
+.question .q-icon{font-size:54px;margin-bottom:14px}
+.question h3{font-size:24px;color:#312e81;margin-bottom:16px}
+.question p{font-size:16px;color:#4b5563;margin-bottom:8px}
+.question .q-answer{
+  display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;padding:14px 28px;border-radius:14px;font-size:18px;font-weight:bold;
+  margin-top:20px;box-shadow:0 6px 16px rgba(99,102,241,0.3);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+
+/* ===== 课程主题 ===== */
+.theme-card{
+  background:linear-gradient(135deg,#06b6d4,#0891b2);
+  border-radius:20px;padding:30px;text-align:center;color:#fff;
+  box-shadow:0 12px 30px rgba(6,182,212,0.3);
+}
+.theme-card h2{font-size:30px;margin-bottom:14px;letter-spacing:2px}
+.theme-card p{font-size:16px;opacity:0.95;margin-bottom:6px}
+.theme-card .tech{display:flex;justify-content:center;gap:16px;margin-top:20px;flex-wrap:wrap}
+.theme-card .tech-tag{background:rgba(255,255,255,0.2);padding:6px 18px;border-radius:14px;font-size:13px;backdrop-filter:blur(4px)}
+
+/* ===== 引导思考 ===== */
+.thinking{
+  background:rgba(255,255,255,0.08);border:2px dashed rgba(255,255,255,0.3);
+  border-radius:16px;padding:24px;margin:30px 0;
+}
+.thinking h3{font-size:18px;margin-bottom:14px;color:#fbbf24}
+.thinking ol{padding-left:24px;font-size:15px}
+.thinking li{padding:6px 0;color:rgba(255,255,255,0.9)}
+
+@media (max-width:600px){
+  .hero h1{font-size:28px}
+  .hero .subtitle{font-size:15px}
+  .reveal h2{font-size:24px}
+  .reveal .big{font-size:32px}
+  .reveal .stats{gap:20px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- 顶部Hero -->
+<div class="hero">
+  <h1>看见AI的力量 🚀</h1>
+  <div class="subtitle">高中生做的微信小程序案例</div>
+  <div class="tagline">你以为这些是程序员做的？再想想...</div>
+  <div class="badges">
+    <span class="badge">Vibe Coding</span>
+    <span class="badge">微信小程序</span>
+    <span class="badge">高中生作品</span>
+    <span class="badge">真实案例</span>
+  </div>
+</div>
+
+<!-- 案例标题 -->
+<div class="section-title">
+  <span>📱 6个由高中生用AI做的小程序</span>
+</div>
+
+<!-- 案例网格 -->
+<div class="case-grid">
+
+  <div class="case-card c1">
+    <span class="emoji">🔍</span>
+    <h3>附中教师办公室搜索</h3>
+    <div class="meta">
+      <span class="meta-tag">校园生活</span>
+      <span class="meta-tag">查老师</span>
+    </div>
+    <div class="problem">
+      <strong>😣 真实痛点</strong>
+      答疑或找老师批改作业时，不知道老师办公室及工位在哪
+    </div>
+    <ul class="features">
+      <li>按姓名/学科搜索教师</li>
+      <li>显示办公地点和工位</li>
+      <li>支持拼音首字母查找</li>
+      <li>点击一键导航</li>
+    </ul>
+  </div>
+
+  <div class="case-card c2">
+    <span class="emoji">📜</span>
+    <h3>我爱古诗词</h3>
+    <div class="meta">
+      <span class="meta-tag">学习工具</span>
+      <span class="meta-tag">古诗文</span>
+    </div>
+    <div class="problem">
+      <strong>😣 真实痛点</strong>
+      背不下来课内古诗词，要默写时很焦虑
+    </div>
+    <ul class="features">
+      <li>分年级整理课内古诗词</li>
+      <li>随机抽背模式</li>
+      <li>自我默写测试</li>
+      <li>易错字标记</li>
+    </ul>
+  </div>
+
+  <div class="case-card c3">
+    <span class="emoji">📒</span>
+    <h3>错题宝</h3>
+    <div class="meta">
+      <span class="meta-tag">学习工具</span>
+      <span class="meta-tag">错题整理</span>
+    </div>
+    <div class="problem">
+      <strong>😣 真实痛点</strong>
+      错题整理麻烦、复习无重点、同类题反复出错
+    </div>
+    <ul class="features">
+      <li>拍照/手输快速录入错题</li>
+      <li>按学科自动分类</li>
+      <li>智能复习提醒</li>
+      <li>同类题汇总</li>
+    </ul>
+  </div>
+
+  <div class="case-card c4">
+    <span class="emoji">🏠</span>
+    <h3>宿舍熄灯打卡</h3>
+    <div class="meta">
+      <span class="meta-tag">校园生活</span>
+      <span class="meta-tag">宿管神器</span>
+    </div>
+    <div class="problem">
+      <strong>😣 真实痛点</strong>
+      宿管挨个敲门检查费时费力，学生也嫌麻烦
+    </div>
+    <ul class="features">
+      <li>一键打卡签到</li>
+      <li>实时统计出勤率</li>
+      <li>未打卡自动提醒</li>
+      <li>支持调休登记</li>
+    </ul>
+  </div>
+
+  <div class="case-card c5">
+    <span class="emoji">🍱</span>
+    <h3>食堂今天吃啥</h3>
+    <div class="meta">
+      <span class="meta-tag">校园生活</span>
+      <span class="meta-tag">省时利器</span>
+    </div>
+    <div class="problem">
+      <strong>😣 真实痛点</strong>
+      食堂排队时间长，到了才发现想吃的菜没了
+    </div>
+    <ul class="features">
+      <li>显示各窗口今日菜单</li>
+      <li>实时排队人数估算</li>
+      <li>"心选"菜品提醒（卖完前通知）</li>
+      <li>卡内余额查询</li>
+    </ul>
+  </div>
+
+  <div class="case-card c6">
+    <span class="emoji">⏰</span>
+    <h3>高考倒计时</h3>
+    <div class="meta">
+      <span class="meta-tag">学习工具</span>
+      <span class="meta-tag">激励神器</span>
+    </div>
+    <div class="problem">
+      <strong>😣 真实痛点</strong>
+      想时刻看到高考倒计时、节假日倒计时，但找不到满意的
+    </div>
+    <ul class="features">
+      <li>高考倒计时桌面挂件</li>
+      <li>自定义重要日期</li>
+      <li>每日励志一句话</li>
+      <li>学习时长统计</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- 揭晓 -->
+<div class="reveal">
+  <h2>🎉 揭晓答案</h2>
+  <div class="big">这6个小程序<br>全部由高中生用AI做的！</div>
+  <div class="sub">不是专业程序员 · 不是计算机专业 · 只需要 Vibe Coding</div>
+  <div class="stats">
+    <div class="stat"><span class="stat-num">0</span><div class="stat-label">代码基础</div></div>
+    <div class="stat"><span class="stat-num">30min</span><div class="stat-label">平均耗时</div></div>
+    <div class="stat"><span class="stat-num">100%</span><div class="stat-label">AI协作完成</div></div>
+  </div>
+</div>
+
+<!-- 引出问题 -->
+<div class="question">
+  <div class="q-icon">🤔</div>
+  <h3>看到这里，你有没有想过...</h3>
+  <p>如果我能用 AI 做出这些小程序...</p>
+  <p>我就能解决身边任何"不方便"的事！</p>
+  <p style="font-size:18px;color:#6366f1;font-weight:bold;margin-top:18px">那今天这节课，我们就来学这个 ✨</p>
+  <div class="q-answer">今天我们也能用AI做出自己的小程序！</div>
+</div>
+
+<!-- 课程主题 -->
+<div class="theme-card">
+  <h2>🎯 本节课主题</h2>
+  <p>《氛围编程初体验——和AI一起做我的第一个小程序》</p>
+  <p>学会3件事：Vibe Coding · 工程思维 · 任务规划</p>
+  <div class="tech">
+    <span class="tech-tag">🎨 想清楚</span>
+    <span class="tech-tag">📝 说清楚</span>
+    <span class="tech-tag">🤖 AI写代码</span>
+    <span class="tech-tag">✅ 验证效果</span>
+  </div>
+</div>
+
+<!-- 引导思考 -->
+<div class="thinking">
+  <h3>💭 看完这些案例，请思考：</h3>
+  <ol>
+    <li>你最想做的小程序是什么？（解决你自己或身边人的什么问题？）</li>
+    <li>如果让AI做一个小程序，你需要告诉AI什么？</li>
+    <li>为什么有的人写一句话AI就做出好东西，有的人写很多句AI却做得很差？</li>
+    <li>课程结束时，你能完成自己的"方案设计"吗？</li>
+  </ol>
+</div>
+
+<div style="text-align:center;color:rgba(255,255,255,0.6);font-size:13px;margin-top:30px">
+  📱 本案例展示页 ｜ 用于高中信息技术课"氛围编程初体验"导入环节
+</div>
+
+</div>
+</body>
+</html>
