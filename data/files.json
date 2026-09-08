@@ -1,3 +1,15 @@
 {
-  "files": []
+  "files": [
+    {
+      "name": "vv",
+      "subject": "math",
+      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/math_vv.txt",
+      "uploader": "测试",
+      "desc": "",
+      "usage": "",
+      "expireAt": 1788871920000,
+      "date": "2026-09-08",
+      "downloads": 0
+    }
+  ]
 }
