@@ -746,7 +746,7 @@ window.loginSubmit = async function(e){
   e && e.preventDefault();
   var phone = document.getElementById('loginPhone').value.trim();
   var pwd = document.getElementById('loginPassword').value;
-  if(!/^1[3-9]\d{9}$/.test(phone)){ toast('请输入正确的手机号（11位，以1开头，第二位3-9）','warning'); return false; }
+  if(!isValidBeijingMobile(phone)){ toast('手机号格式错误','warning'); return false; }
   if(!pwd){ toast('请输入密码','warning'); return false; }
   var btn = document.getElementById('loginForm').querySelector('button[type=submit]');
   btn.textContent='登录中…';btn.disabled=true;
@@ -772,7 +772,7 @@ window.registerSubmit = async function(e){
   var pwd = document.getElementById('regPassword').value;
   var pwd2 = document.getElementById('regPassword2').value;
   if(!name){ toast('请输入昵称','warning');return false; }
-  if(!/^1[3-9]\d{9}$/.test(phone)){ toast('请输入正确的11位手机号（第二位3-9）','warning');return false; }
+  if(!isValidBeijingMobile(phone)){ toast('手机号格式错误','warning');return false; }
   if(pwd.length<6){ toast('密码至少6位','warning');return false; }
   if(pwd!==pwd2){ toast('两次密码不一致','warning');return false; }
   var btn = document.getElementById('registerForm').querySelector('button[type=submit]');
@@ -793,6 +793,24 @@ window.registerSubmit = async function(e){
   btn.textContent='注册';btn.disabled=false;
   return false;
 };
+
+/* ---------- 手机号校验（仅北京） ---------- */
+// 北京手机号第4-7位地区码白名单（基于常见北京号段，可按需增补）
+var BJ_AREA_CODES = (function(){
+  var m={}, add=function(a,b){ for(var i=a;i<=b;i++){ var s='0000'+i; m[s.slice(-4)]=1; } };
+  // 北京移动/联通/电信常见H码区段（第4-7位）
+  add(1000,1199); add(1370,1379); add(1380,1389); add(1390,1399);
+  add(1500,1529); add(1550,1559); add(1560,1569); add(1570,1599);
+  add(1800,1829); add(1860,1869); add(1880,1889); add(1980,1989); add(1990,1999);
+  return m;
+})();
+
+function isValidBeijingMobile(phone){
+  // ① 11位纯数字，首字符为1
+  if(!/^1\d{10}$/.test(phone)) return false;
+  // ② 第4-7位（4位地区编码）归属北京
+  return !!BJ_AREA_CODES[phone.substr(3,4)];
+}
 
 function calcPwdStrength(pwd){
   if(!pwd) return {level:'',label:'',width:0};
