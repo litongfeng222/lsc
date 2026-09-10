@@ -1,28 +1,3 @@
 {
-  "users": [
-    {
-      "name": "李同丰",
-      "phone": "15652249583",
-      "password": "15fe67e68dae7be76c86e1de85349f53dd5ebca819616d3eec7ee241e602050d",
-      "registeredAt": 1785749708656
-    },
-    {
-      "name": "学习搭子",
-      "phone": "18888888888",
-      "password": "0d169ef631cd81d5816a2c85d1239d58307cca4a948bdde4d0e39d4abe2f0028",
-      "registeredAt": 1786019833190
-    },
-    {
-      "name": "测试",
-      "phone": "16666666666",
-      "password": "d5af5b6d4fa94d7d2766b326a67a013bdc85c261e9851e1f5cbbcbe80f1d494f",
-      "registeredAt": 1787640318201
-    },
-    {
-      "name": "测试",
-      "phone": "13810840220",
-      "password": "a723429b401680126ee4c8c766fef7696f354f510e691b48b84063c9df94434a",
-      "registeredAt": 1788846339467
-    }
-  ]
+  "users": []
 }
