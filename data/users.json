@@ -1,3 +1,10 @@
 {
-  "users": []
+  "users": [
+    {
+      "name": "李同丰",
+      "phone": "18901060808",
+      "password": "79eeedb36060da7248064d915c5c6f45366ea3e7332f7eed1ef3161f8e60a778",
+      "registeredAt": 1789068613236
+    }
+  ]
 }
