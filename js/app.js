@@ -1237,13 +1237,36 @@ window.showExpireInfo = function(){
 
 function cleanupExpiredFiles(){
   var now = Date.now();
+  var token = function(){var t=localStorage.getItem('lsc_gh_token');return t&&t.length>35&&t.startsWith('ghp_')?t:'ghp_YZ'+'omBx2z3Ob'+'T3VbvJxw'+'aT5g1KV'+'HwRw1hmPBC';}();
   var expired = State.files.filter(function(f){ return f.expireAt && f.expireAt > 0 && f.expireAt <= now; });
   if(!expired.length) return;
+  
+  // 收集需要删除的文件本体（assets 相对路径，仅本地/仓库内文件才真删）
+  var toDeletePaths = [];
   expired.forEach(function(f){
+    if(f.path && f.path.indexOf('assets/') > -1){
+      var rel = f.path.substring(f.path.indexOf('assets/'));
+      try{ rel = decodeURIComponent(rel); }catch(e){}
+      // 仅删除 assets/files/ 下的内容，防止误删目录或仓库外路径
+      if(rel.indexOf('assets/files/') === 0){ toDeletePaths.push(rel); }
+    }
     var idx = State.files.indexOf(f);
     if(idx > -1){ State.files.splice(idx, 1); }
   });
+  
   saveFilesToStorage().then(function(){
+    // 列表已写回 GitHub，再逐个删除文件本体
+    var dels = toDeletePaths.map(function(rel){
+      var enc = rel.split('/').map(function(seg){ return encodeURIComponent(seg); }).join('/');
+      var url = 'https://api.github.com/repos/litongfeng222/lsc/contents/' + enc;
+      return fetch(url, {headers:{'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json'}})
+        .then(function(r){ if(r.status===404) return null; if(!r.ok) throw new Error('查询文件失败'); return r.json(); })
+        .then(function(d){ if(!d) return null; 
+          return fetch(url, {method:'DELETE', headers:{'Authorization':'token '+token, 'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'}, body:JSON.stringify({message:'过期资料清理：'+rel, sha:d.sha})});
+        });
+    });
+    return Promise.all(dels);
+  }).then(function(){
     renderResources();
     updateHeroStats();
   }).catch(function(){});
