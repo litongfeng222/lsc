@@ -1,3 +1,15 @@
 {
-  "files": []
+  "files": [
+    {
+      "name": "sos",
+      "subject": "chinese",
+      "path": "https://raw.githubusercontent.com/litongfeng222/lsc/main/assets/files/chinese_sos.jpg",
+      "uploader": "李同丰",
+      "desc": "",
+      "usage": "no（just joke）",
+      "expireAt": 1789130580000,
+      "date": "2026-09-11",
+      "downloads": 0
+    }
+  ]
 }
