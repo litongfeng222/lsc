@@ -1006,16 +1006,15 @@ function applyTheme(t){
 }
 
 function loadTheme(){
-  if(!State.user) return;
-  var saved = localStorage.getItem('lsc_theme_'+State.user.phone);
+  // 主题全局记住（不依赖登录），刷新不丢
+  var saved = localStorage.getItem('lsc_theme');
   if(saved){
     try{ var t = JSON.parse(saved); applyTheme(t); }catch(e){}
   }
 }
 
 function saveTheme(theme){
-  if(!State.user) return;
-  localStorage.setItem('lsc_theme_'+State.user.phone, JSON.stringify(theme));
+  localStorage.setItem('lsc_theme', JSON.stringify(theme));
   applyTheme(theme);
   toast('🎨 主题已切换','success');
 }
@@ -1030,7 +1029,7 @@ function openUserSettings(){
 function renderThemePicker(){
   var picker = $('#themePicker');
   if(!picker) return;
-  var current = JSON.parse(localStorage.getItem('lsc_theme_'+State.user.phone)||'{}');
+  var current = JSON.parse(localStorage.getItem('lsc_theme')||'{}');
   var defaultPrimary = current.primary || '#6E8FE0';
   picker.innerHTML = THEMES.map(function(t,idx){
     var active = t.primary === defaultPrimary ? ' active' : '';
@@ -1184,7 +1183,7 @@ window.adminDeleteFile = async function(path){
 function renderAdminThemePicker(){
   var picker = $('#adminThemePicker');
   if(!picker) return;
-  var current = JSON.parse(localStorage.getItem('lsc_theme_'+State.user.phone)||'{}');
+  var current = JSON.parse(localStorage.getItem('lsc_theme')||'{}');
   var defaultPrimary = current.primary || '#6E8FE0';
   picker.innerHTML = THEMES.map(function(t,idx){
     var active = t.primary === defaultPrimary ? ' active' : '';
